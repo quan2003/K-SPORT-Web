@@ -1,0 +1,13 @@
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+.playwright/
+node_modules
+.next/
+*.tsbuildinfo
+.taste-skill/
+
+# Production secrets
+.env*
+!.env.example
+
+.vercel
