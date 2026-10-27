@@ -9,6 +9,11 @@ import { MoreLink } from "@/components/portal-ui";
 import { getEvents, getNews, getRanking, getSchedule, isCurrentOrUpcomingMatch, sortEvents, sortMatches } from "@/lib/public-data";
 
 const formatDate = (value: string) => new Intl.DateTimeFormat("vi-VN", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
+const compactEventName = (name: string) => name
+  .replace(/^Giải vô địch (các câu lạc bộ|các CLB) Karate tỉnh /i, "Giải CLB Karate ")
+  .replace(/ mở rộng lần thứ (\d+) - Năm (\d{4})/i, " mở rộng $1 · $2")
+  .replace(/ năm (\d{4})$/i, " · $1")
+  .replace(/^Giải CLB Karate Phú Thọ mở rộng \d+ · (\d{4})$/i, "Phú Thọ mở rộng · $1");
 
 export default async function Home() {
   const [events, matches, news, ranking] = await Promise.all([getEvents(), getSchedule(), getNews(), getRanking()]);
@@ -55,14 +60,14 @@ export default async function Home() {
           {featuredEvent ? (
             <div className="event-layout" data-reveal>
               <Link href={`/events/${featuredEvent.slug}`} className="featured-event">
-                <Image src={featuredEvent.image ?? "/images/karate-venue.png"} alt="" width={1536} height={1024} />
-                <div><h3>{featuredEvent.name}</h3><p><time>{formatDate(featuredEvent.date)}</time> · {featuredEvent.location}</p></div>
+                <Image src={featuredEvent.image ?? "/images/karate-venue.png"} alt="" width={1536} height={1024} sizes="(max-width: 760px) 100vw, (max-width: 1280px) 60vw, 66vw" />
+                <div><h3 title={featuredEvent.name}>{compactEventName(featuredEvent.name)}</h3><p><time>{formatDate(featuredEvent.date)}</time> · {featuredEvent.location}</p></div>
               </Link>
-              <div className="event-rows">{orderedEvents.slice(1, 4).map((event) => <Link key={event.slug} href={`/events/${event.slug}`}><time>{formatDate(event.date)}</time><div><h3>{event.name}</h3><p>{event.location}</p></div><span>{event.status}</span></Link>)}</div>
+              <div className="event-rows">{orderedEvents.slice(1, 4).map((event) => <Link key={event.slug} href={`/events/${event.slug}`}><time>{formatDate(event.date)}</time><div><h3 title={event.name}>{compactEventName(event.name)}</h3><p>{event.location}</p></div><span>{event.status}</span></Link>)}</div>
             </div>
           ) : (
             <div className="event-empty-layout" data-reveal>
-              <Image src="/images/karate-venue.png" alt="Không gian thi đấu Karate" width={1536} height={1024} />
+              <Image src="/images/karate-venue.png" alt="Không gian thi đấu Karate" width={1536} height={1024} sizes="(max-width: 760px) 100vw, 66vw" />
               <EmptyState title="Giải đấu đang được cập nhật" description="Danh sách giải sẽ xuất hiện khi dữ liệu chính thức được đồng bộ từ ban tổ chức." href="/events" action="Mở trang giải đấu" />
             </div>
           )}
@@ -77,12 +82,12 @@ export default async function Home() {
           <div className="section-heading" data-reveal><div><h2>Tin tức Karate</h2><p>Thông tin chuyên môn, hoạt động và góc nhìn về Karate.</p></div><MoreLink href="/news">Xem tất cả tin</MoreLink></div>
           {leadStory ? (
             <div className="news-layout" data-reveal>
-              <Link href={`/news/${leadStory.slug}`} className="lead-story"><Image src={leadStory.image} alt="" width={1536} height={1024} /><div><h3>{leadStory.title}</h3><p><span>{leadStory.category}</span> · <time>{formatDate(leadStory.publishedAt)}</time></p></div></Link>
+              <Link href={`/news/${leadStory.slug}`} className="lead-story"><Image src={leadStory.image} alt="" width={1536} height={1024} sizes="(max-width: 760px) 100vw, 66vw" /><div><h3>{leadStory.title}</h3><p><span>{leadStory.category}</span> · <time>{formatDate(leadStory.publishedAt)}</time></p></div></Link>
               <div className="story-list">{news.slice(1, 3).map((item) => <Link href={`/news/${item.slug}`} key={item.slug}><Image src={item.image} alt="" width={600} height={400} /><div><h3>{item.title}</h3><p><span>{item.category}</span> · <time>{formatDate(item.publishedAt)}</time></p></div></Link>)}</div>
             </div>
           ) : (
             <div className="news-empty-layout" data-reveal>
-              <Image src="/images/karate-training.png" alt="Trang phục và thảm tập Karate" width={1536} height={1024} />
+              <Image src="/images/karate-training.png" alt="Trang phục và thảm tập Karate" width={1536} height={1024} sizes="(max-width: 760px) 100vw, 66vw" />
               <EmptyState title="Tin tức đang được cập nhật" description="Các bài viết đã biên tập sẽ xuất hiện tại đây khi chuyên mục được kết nối dữ liệu." href="/news" action="Mở chuyên mục" />
             </div>
           )}
@@ -109,7 +114,7 @@ export default async function Home() {
         </section>
 
         <section className="cta-band" data-reveal>
-          <Image src="/images/karate-venue.png" alt="Nhà thi đấu Karate" width={1536} height={1024} />
+          <Image src="/images/karate-venue.png" alt="Nhà thi đấu Karate" width={1536} height={1024} sizes="(max-width: 760px) 100vw, 59vw" />
           <div><h2>Sẵn sàng vận hành giải đấu.</h2><p>Trao đổi về quy mô, nội dung thi và phạm vi vận hành phù hợp.</p><Link className="button light" href="/contact">Liên hệ K-SPORT <span aria-hidden="true">→</span></Link><a href="mailto:lienhe@k-sport.net">lienhe@k-sport.net</a></div>
         </section>
       </main>

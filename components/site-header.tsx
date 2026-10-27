@@ -79,7 +79,7 @@ export function SiteHeader() {
         ))}
       </nav>
       <div className={`header-search-wrap${searchOpen ? " is-open" : ""}`}>
-        {searchOpen && <form className="header-search-form" role="search" onSubmit={(event) => { event.preventDefault(); router.push(`/events${query.trim() ? `?query=${encodeURIComponent(query.trim())}` : ""}`); }}><label className="sr-only" htmlFor="site-search">Tìm kiếm</label><input id="site-search" name="query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm giải đấu…" autoFocus /><button type="submit" aria-label="Thực hiện tìm kiếm">→</button></form>}
+        {searchOpen && <form className="header-search-form" role="search" onSubmit={(event) => { event.preventDefault(); router.push(`/events${query.trim() ? `?query=${encodeURIComponent(query.trim())}` : ""}`); }}><label className="sr-only" htmlFor="site-search">Tìm kiếm</label><input id="site-search" name="query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm giải đấu…" autoComplete="off" spellCheck={false} autoFocus /><button type="submit" aria-label="Thực hiện tìm kiếm">→</button></form>}
         <button className="header-search" type="button" aria-label={searchOpen ? "Đóng tìm kiếm" : "Mở tìm kiếm"} aria-expanded={searchOpen} onClick={() => setSearchOpen((value) => !value)}>
           <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" strokeWidth="2" /><path d="m16 16 5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" /></svg>
         </button>
@@ -91,9 +91,9 @@ export function SiteHeader() {
         <nav ref={mobileNavRef} id="mobile-nav" className="mobile-nav" aria-label="Điều hướng di động" aria-modal="true" role="dialog">
           <button type="button" onClick={() => closeMenu(true)} aria-label="Đóng menu">Đóng</button>
           {links.map(([label, href]) => <Link key={href} href={href} onClick={() => setOpen(false)}>{label}</Link>)}
-          <Link href="/software" onClick={() => setOpen(false)}>Phần mềm K-SPORT</Link>
+          <Link className="mobile-primary" href="/software" onClick={() => setOpen(false)}>Phần mềm K-SPORT</Link>
           <Link href="/admin" onClick={() => setOpen(false)}>Khu vực quản trị</Link>
-          <form className="mobile-search-form" role="search" onSubmit={(event) => { event.preventDefault(); router.push(`/events${query.trim() ? `?query=${encodeURIComponent(query.trim())}` : ""}`); setOpen(false); }}><label htmlFor="mobile-site-search">Tìm kiếm giải đấu</label><input id="mobile-site-search" name="query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nhập tên giải đấu" /><button type="submit">Tìm kiếm →</button></form>
+          <form className="mobile-search-form" role="search" onSubmit={(event) => { event.preventDefault(); router.push(`/events${query.trim() ? `?query=${encodeURIComponent(query.trim())}` : ""}`); setOpen(false); }}><label htmlFor="mobile-site-search">Tìm kiếm giải đấu</label><input id="mobile-site-search" name="query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nhập tên giải đấu…" autoComplete="off" spellCheck={false} /><button type="submit">Tìm kiếm →</button></form>
         </nav>
       )}
     </header>
