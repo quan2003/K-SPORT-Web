@@ -2,7 +2,7 @@ export type EventStatus = "Đang diễn ra" | "Sắp diễn ra" | "Đã kết th
 
 export type TournamentEvent = { slug: string; name: string; discipline: string; location: string; date: string; endDate: string; status: EventStatus; categories: string[]; description?: string; image?: string };
 export type Match = { id: string; time: string; date: string; tatami: string; category: string; red: string; blue: string; redScore?: number; blueScore?: number; state: "Sắp diễn ra" | "Đang thi đấu" | "Đã kết thúc"; eventSlug?: string; eventName?: string };
-export type Athlete = { id: string; name: string; clubId?: string; club: string; category: string; publicResult?: string; image?: string };
+export type Athlete = { id: string; name: string; clubId?: string; club: string; category: string; publicResult?: string; image?: string; photoUrl?: string };
 export type Club = { id: string; name: string; region: string; athleteCount?: number };
 export type RankingEntry = { rank: number; athleteId: string; name: string; club: string; category: string; points: number; season?: string };
 export type NewsItem = { slug: string; title: string; category: string; publishedAt: string; summary: string; image: string; body?: string[] };
@@ -19,6 +19,20 @@ function requestHeaders(): HeadersInit {
     Accept: "application/json",
     ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
   };
+}
+
+function toAbsolutePublicUrl(value?: string) {
+  if (!value || !apiBaseUrl) return value;
+  try {
+    return new URL(value, `${new URL(apiBaseUrl).origin}/`).toString();
+  } catch {
+    return value;
+  }
+}
+
+function normalizeAthlete(athlete: Athlete): Athlete {
+  const photoUrl = toAbsolutePublicUrl(athlete.photoUrl);
+  return photoUrl ? { ...athlete, photoUrl, image: photoUrl } : athlete;
 }
 
 async function getCollection<T>(path: string, revalidate = 60): Promise<T[]> {
@@ -61,8 +75,11 @@ export const getEvents = () => getCollection<TournamentEvent>("/events");
 export const getEvent = (slug: string) => getRecord<TournamentEvent>(`/events/${encodeURIComponent(slug)}`);
 export const getSchedule = () => getCollection<Match>("/schedule", 15);
 export const getResults = () => getCollection<Match>("/results", 15);
-export const getAthletes = () => getCollection<Athlete>("/athletes");
-export const getAthlete = (id: string) => getRecord<Athlete>(`/athletes/${encodeURIComponent(id)}`);
+export const getAthletes = async () => (await getCollection<Athlete>("/athletes")).map(normalizeAthlete);
+export const getAthlete = async (id: string) => {
+  const athlete = await getRecord<Athlete>(`/athletes/${encodeURIComponent(id)}`);
+  return athlete ? normalizeAthlete(athlete) : null;
+};
 export const getClubs = () => getCollection<Club>("/clubs");
 export const getClub = (id: string) => getRecord<Club>(`/clubs/${encodeURIComponent(id)}`);
 export const getRanking = () => getCollection<RankingEntry>("/ranking", 60);

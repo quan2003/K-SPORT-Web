@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "admin.luuquancoder.id.vn",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "api.k-sport.net",
+        pathname: "/**",
+      },
     ],
   },
 };

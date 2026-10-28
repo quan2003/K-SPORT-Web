@@ -9,7 +9,7 @@ import { HomeMotion } from "@/components/home-motion";
 export function PageHero({ title, description, image = "/images/karate-venue.png", className = "" }: { title: string; description: string; image?: string; className?: string }) {
   return (
     <section className={`page-hero ${className}`.trim()}>
-      <Image src={image} alt="" fill sizes="100vw" priority />
+      <Image src={image} alt="" fill sizes="(max-width: 760px) 66vw, 52vw" priority />
       <div><h1>{className.includes("schedule-page-hero") ? <>LỊCH <em>THI ĐẤU</em></> : title}</h1><p>{description}</p></div>
     </section>
   );

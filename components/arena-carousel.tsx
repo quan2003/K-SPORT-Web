@@ -12,6 +12,10 @@ function compactCategory(category: string) {
     .replace(/\s*[–-]\s*/g, " · ");
 }
 
+function displayCategory(category: string) {
+  return category || compactCategory(category);
+}
+
 export function ArenaCarousel({ matches }: { matches: Match[] }) {
   const [active, setActive] = useState(0);
 
@@ -29,14 +33,14 @@ export function ArenaCarousel({ matches }: { matches: Match[] }) {
     <div className="arena-console" data-ui data-reveal>
       <div className="arena-focus-row" key={current.id}>
         <div className="arena-time"><time>{current.time}</time><span>Tatami {current.tatami}</span></div>
-        <div className="arena-category"><strong title={current.category}>{compactCategory(current.category)}</strong><span>{current.state}</span></div>
+        <div className="arena-category"><strong title={current.category}>{displayCategory(current.category)}</strong><span>{current.state}</span></div>
         <div className="arena-fighter red-fighter"><span><small>Aka</small><strong>{current.red}</strong></span></div>
         <div className="arena-score"><b>{current.redScore ?? "–"}</b><span>:</span><b>{current.blueScore ?? "–"}</b></div>
         <div className="arena-fighter blue-fighter"><span><small>Ao</small><strong>{current.blue}</strong></span></div>
       </div>
-      <div className="arena-queue" aria-label="Chọn trận đấu">
-        {matches.map((match, index) => <button type="button" aria-label={`${match.time}, ${match.category}, Tatami ${match.tatami}`} aria-pressed={active === index} onClick={() => setActive(index)} key={match.id}><time>{match.time}</time><span>{compactCategory(match.category)}</span><small>Tatami {match.tatami}</small></button>)}
-      </div>
+      {matches.length > 1 ? <div className="arena-queue" aria-label="Chọn trận đấu">
+        {matches.map((match, index) => <button type="button" aria-label={`${match.time}, ${match.category}, Tatami ${match.tatami}`} aria-pressed={active === index} onClick={() => setActive(index)} key={match.id}><time>{match.time}</time><span>{displayCategory(match.category)}</span><small>Tatami {match.tatami}</small></button>)}
+      </div> : null}
     </div>
   );
 }

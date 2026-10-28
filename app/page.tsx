@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArenaCarousel } from "@/components/arena-carousel";
 import { EmptyState } from "@/components/empty-state";
+import { HomeHeroSlider } from "@/components/home-hero-slider";
 import { HomeMotion } from "@/components/home-motion";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -15,10 +16,19 @@ const compactEventName = (name: string) => name
   .replace(/ năm (\d{4})$/i, " · $1")
   .replace(/^Giải CLB Karate Phú Thọ mở rộng \d+ · (\d{4})$/i, "Phú Thọ mở rộng · $1");
 
+const displayEventName = (name: string) => name || compactEventName(name);
+
 export default async function Home() {
   const [events, matches, news, ranking] = await Promise.all([getEvents(), getSchedule(), getNews(), getRanking()]);
   const orderedEvents = sortEvents(events);
-  const upcomingMatches = sortMatches(matches.filter((match) => isCurrentOrUpcomingMatch(match))).slice(0, 3);
+  const endedEventSlugs = new Set(events.filter((event) => event.status === "Đã kết thúc").map((event) => event.slug));
+  const endedEventNames = new Set(events.filter((event) => event.status === "Đã kết thúc").map((event) => event.name));
+  const visibleMatches = matches.filter((match) => {
+    if (match.eventSlug && endedEventSlugs.has(match.eventSlug)) return false;
+    if (match.eventName && endedEventNames.has(match.eventName)) return false;
+    return true;
+  });
+  const upcomingMatches = sortMatches(visibleMatches.filter((match) => isCurrentOrUpcomingMatch(match))).slice(0, 3);
   const featuredEvent = orderedEvents[0];
   const leadStory = news[0];
 
@@ -27,14 +37,7 @@ export default async function Home() {
       <HomeMotion />
       <SiteHeader />
       <main id="main-content">
-        <section className="home-hero">
-          <Image src="/images/karate-hero.png" alt="Hai võ sĩ Karate thi đấu trên thảm" fill sizes="100vw" priority />
-          <div className="hero-content">
-            <p className="hero-eyebrow" data-reveal>{/* taste-skill-ignore: reference art direction uses a compact hero eyebrow */}Cổng thông tin và phần mềm quản lý giải đấu Karate</p>
-            <h1 data-reveal>Karate Việt Nam,<br /><span>trong một nhịp đấu.</span></h1>
-            <p data-reveal>Kết nối giải đấu – vận hành chuyên nghiệp – lan tỏa tinh thần Karate vì một cộng đồng mạnh mẽ hơn.</p>
-            <div className="hero-actions" data-reveal><Link className="button red" href="/events">Xem giải đấu <span aria-hidden="true">→</span></Link><Link className="text-action" href="/software">Tìm hiểu phần mềm</Link></div>
-          </div>
+        <HomeHeroSlider events={orderedEvents}>
           <div className="hero-match-rail" data-ui aria-label="Lịch thi đấu sắp tới">
             <div className="rail-intro" data-reveal><strong>Lịch thi đấu sắp diễn ra</strong><p>Chỉ hiển thị các trận có ngày thi đấu từ hôm nay trở đi.</p><Link href="/schedule">Xem toàn bộ <span aria-hidden="true">→</span></Link></div>
             <div className="rail-matches">
@@ -53,7 +56,7 @@ export default async function Home() {
               )}
             </div>
           </div>
-        </section>
+        </HomeHeroSlider>
 
         <section className="section events-feature">
           <div className="section-heading" data-reveal><div><h2>Giải đấu</h2><p>Thông tin tập trung về thời gian, địa điểm, nội dung thi và trạng thái tổ chức.</p></div><MoreLink href="/events">Xem tất cả</MoreLink></div>
@@ -61,9 +64,9 @@ export default async function Home() {
             <div className="event-layout" data-reveal>
               <Link href={`/events/${featuredEvent.slug}`} className="featured-event">
                 <Image src={featuredEvent.image ?? "/images/karate-venue.png"} alt="" width={1536} height={1024} sizes="(max-width: 760px) 100vw, (max-width: 1280px) 60vw, 66vw" />
-                <div><h3 title={featuredEvent.name}>{compactEventName(featuredEvent.name)}</h3><p><time>{formatDate(featuredEvent.date)}</time> · {featuredEvent.location}</p></div>
+                <div><h3 title={featuredEvent.name}>{displayEventName(featuredEvent.name)}</h3><p><time>{formatDate(featuredEvent.date)}</time> · {featuredEvent.location}</p></div>
               </Link>
-              <div className="event-rows">{orderedEvents.slice(1, 4).map((event) => <Link key={event.slug} href={`/events/${event.slug}`}><time>{formatDate(event.date)}</time><div><h3 title={event.name}>{compactEventName(event.name)}</h3><p>{event.location}</p></div><span>{event.status}</span></Link>)}</div>
+              <div className="event-rows">{orderedEvents.slice(1, 4).map((event) => <Link key={event.slug} href={`/events/${event.slug}`}><time>{formatDate(event.date)}</time><div><h3 title={event.name}>{displayEventName(event.name)}</h3><p>{event.location}</p></div><span>{event.status}</span></Link>)}</div>
             </div>
           ) : (
             <div className="event-empty-layout" data-reveal>
@@ -75,7 +78,7 @@ export default async function Home() {
 
         <section className="arena-section">
           <div className="section-heading inverse" data-reveal><div><h2>Trên thảm đấu</h2><p>Theo dõi thứ tự trận, tatami và trạng thái thi đấu từ một giao diện tập trung.</p></div><MoreLink href="/schedule">Mở lịch thi đấu</MoreLink></div>
-          <ArenaCarousel matches={matches} />
+          <ArenaCarousel matches={visibleMatches} />
         </section>
 
         <section className="section news-section">
