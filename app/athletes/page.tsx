@@ -41,7 +41,11 @@ export default async function AthletesPage({ searchParams }: { searchParams: Pro
         <form className="filter-bar" method="get"><label>Tìm vận động viên hoặc câu lạc bộ<input name="query" type="search" placeholder="Nhập họ tên hoặc câu lạc bộ…" autoComplete="off" defaultValue={query} /></label><label>Loại nội dung<select name="category" defaultValue={category}><option value="all">Tất cả nội dung</option><option value="Kata">Kata</option><option value="Kumite">Kumite</option></select></label><button className="filter-submit" type="submit">Tìm kiếm</button></form>
         {visibleAthletes.length > 0 ? <>
           <div className="athlete-list">{visibleAthletes.map((athlete) => <Link href={`/athletes/${athlete.id}`} key={athlete.id}><AthleteAvatar name={athlete.name} src={athlete.image} /><div><h2>{athlete.name}</h2><p>{athlete.club}</p><small>{athlete.category}</small></div><span>Xem hồ sơ <span aria-hidden="true">→</span></span></Link>)}</div>
-          {pageCount > 1 ? <nav className="pagination" aria-label="Phân trang vận động viên">{currentPage > 1 ? <Link href={pageHref(currentPage - 1, query, category)}>Trang trước</Link> : <span aria-hidden="true" />}<span>Trang {currentPage} / {pageCount}</span>{currentPage < pageCount ? <Link href={pageHref(currentPage + 1, query, category)}>Trang sau</Link> : <span aria-hidden="true" />}</nav> : null}
+          {pageCount > 1 ? <nav className="pagination" aria-label="Phân trang vận động viên">
+            {currentPage > 1 ? <Link className="pagination-control" href={pageHref(currentPage - 1, query, category)}><span aria-hidden="true">←</span> Trang trước</Link> : <span className="pagination-control is-disabled" aria-disabled="true"><span aria-hidden="true">←</span> Trang trước</span>}
+            <span className="pagination-status">Trang <strong>{currentPage}</strong> trên {pageCount}</span>
+            {currentPage < pageCount ? <Link className="pagination-control pagination-next" href={pageHref(currentPage + 1, query, category)}>Trang sau <span aria-hidden="true">→</span></Link> : <span className="pagination-control pagination-next is-disabled" aria-disabled="true">Trang sau <span aria-hidden="true">→</span></span>}
+          </nav> : null}
         </> : <EmptyState title={athletes.length ? "Không tìm thấy vận động viên" : "Danh sách vận động viên đang được cập nhật"} description={athletes.length ? "Thử tên, câu lạc bộ hoặc loại nội dung khác." : "Hồ sơ sẽ xuất hiện sau khi dữ liệu công khai được đồng bộ và kiểm tra."} />}
       </section>
     </InternalLayout>

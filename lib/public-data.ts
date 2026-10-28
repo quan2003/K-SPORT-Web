@@ -2,7 +2,7 @@ export type EventStatus = "Đang diễn ra" | "Sắp diễn ra" | "Đã kết th
 
 export type TournamentEvent = { slug: string; name: string; discipline: string; location: string; date: string; endDate: string; status: EventStatus; categories: string[]; description?: string; image?: string };
 export type Match = { id: string; time: string; date: string; tatami: string; category: string; red: string; blue: string; redScore?: number; blueScore?: number; state: "Sắp diễn ra" | "Đang thi đấu" | "Đã kết thúc"; eventSlug?: string; eventName?: string };
-export type Athlete = { id: string; name: string; clubId?: string; club: string; category: string; publicResult?: string; image?: string; photoUrl?: string };
+export type Athlete = { id: string; athleteCode?: string; name: string; clubId?: string; club: string; category: string; country?: string; totalMatches?: number; wins?: number; winRate?: number | null; publicResult?: string; image?: string; photoUrl?: string };
 export type Club = { id: string; name: string; region: string; athleteCount?: number };
 export type RankingEntry = { rank: number; athleteId: string; name: string; club: string; category: string; points: number; season?: string };
 export type NewsItem = { slug: string; title: string; category: string; publishedAt: string; summary: string; image: string; body?: string[] };

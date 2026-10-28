@@ -89,10 +89,9 @@ export function SiteHeader() {
       </button>
       {open && (
         <nav ref={mobileNavRef} id="mobile-nav" className="mobile-nav" aria-label="Điều hướng di động" aria-modal="true" role="dialog">
-          <button type="button" onClick={() => closeMenu(true)} aria-label="Đóng menu">Đóng</button>
+          <button className="mobile-menu-close" type="button" onClick={() => closeMenu(true)} aria-label="Đóng menu">×</button>
           {links.map(([label, href]) => <Link key={href} href={href} onClick={() => setOpen(false)}>{label}</Link>)}
           <Link className="mobile-primary" href="/software" onClick={() => setOpen(false)}>Phần mềm K-SPORT</Link>
-          <Link href="/admin" onClick={() => setOpen(false)}>Khu vực quản trị</Link>
           <form className="mobile-search-form" role="search" onSubmit={(event) => { event.preventDefault(); router.push(`/events${query.trim() ? `?query=${encodeURIComponent(query.trim())}` : ""}`); setOpen(false); }}><label htmlFor="mobile-site-search">Tìm kiếm giải đấu</label><input id="mobile-site-search" name="query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nhập tên giải đấu…" autoComplete="off" spellCheck={false} /><button type="submit">Tìm kiếm →</button></form>
         </nav>
       )}
