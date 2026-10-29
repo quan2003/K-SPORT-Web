@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         hostname: "api.k-sport.net",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "marketplace.canva.com",
+        pathname: "/**",
+      },
     ],
   },
 };

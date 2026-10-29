@@ -1,4 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AdminDashboard } from "@/components/admin-dashboard";
 export const metadata: Metadata = { title: "Quản trị K-SPORT" };
-export default function AdminPage() { return <><div className="admin-title"><div><p className="admin-context">K-SPORT ADMIN</p><h1>Tổng quan vận hành</h1><p>Quản lý nội dung công khai và quyền truy cập trên cổng K-SPORT.</p></div><Link className="button red" href="/login">Đăng nhập quản trị →</Link></div><section className="admin-empty"><h2>Kết nối Identity API để bắt đầu</h2><p>Khu vực này đã có cấu trúc phân quyền cho quản trị viên, biên tập viên và người xem. Dữ liệu sẽ chỉ xuất hiện sau khi hệ thống xác thực được kết nối.</p><div className="admin-actions"><Link href="/admin/news">Quản lý tin tức</Link><Link href="/admin/users">Quản lý người dùng</Link></div></section></>; }
+export default function AdminPage() { return <AdminDashboard />; }

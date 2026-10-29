@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ContentImage } from "@/components/content-image";
 import { ArenaCarousel } from "@/components/arena-carousel";
 import { EmptyState } from "@/components/empty-state";
 import { HomeHeroSlider } from "@/components/home-hero-slider";
@@ -7,7 +8,8 @@ import { HomeMotion } from "@/components/home-motion";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { MoreLink } from "@/components/portal-ui";
-import { getEvents, getNews, getRanking, getSchedule, isCurrentOrUpcomingMatch, sortEvents, sortMatches } from "@/lib/public-data";
+import { getBanners, getEvents, getNews, getRanking, getSchedule, isCurrentOrUpcomingMatch, sortEvents, sortMatches } from "@/lib/public-data";
+import { mockRanking } from "@/lib/mock-data";
 
 const formatDate = (value: string) => new Intl.DateTimeFormat("vi-VN", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
 const compactEventName = (name: string) => name
@@ -19,7 +21,8 @@ const compactEventName = (name: string) => name
 const displayEventName = (name: string) => name || compactEventName(name);
 
 export default async function Home() {
-  const [events, matches, news, ranking] = await Promise.all([getEvents(), getSchedule(), getNews(), getRanking()]);
+  const [events, matches, news, ranking, banners] = await Promise.all([getEvents(), getSchedule(), getNews(), getRanking(), getBanners()]);
+  const usesMockRanking = ranking === mockRanking;
   const orderedEvents = sortEvents(events);
   const endedEventSlugs = new Set(events.filter((event) => event.status === "Đã kết thúc").map((event) => event.slug));
   const endedEventNames = new Set(events.filter((event) => event.status === "Đã kết thúc").map((event) => event.name));
@@ -37,7 +40,7 @@ export default async function Home() {
       <HomeMotion />
       <SiteHeader />
       <main id="main-content">
-        <HomeHeroSlider events={orderedEvents}>
+        <HomeHeroSlider events={orderedEvents} banners={banners}>
           <div className="hero-match-rail" data-ui aria-label="Lịch thi đấu sắp tới">
             <div className="rail-intro" data-reveal><strong>Lịch thi đấu sắp diễn ra</strong><p>Chỉ hiển thị các trận có ngày thi đấu từ hôm nay trở đi.</p><Link href="/schedule">Xem toàn bộ <span aria-hidden="true">→</span></Link></div>
             <div className="rail-matches">
@@ -85,8 +88,8 @@ export default async function Home() {
           <div className="section-heading" data-reveal><div><h2>Tin tức Karate</h2><p>Thông tin chuyên môn, hoạt động và góc nhìn về Karate.</p></div><MoreLink href="/news">Xem tất cả tin</MoreLink></div>
           {leadStory ? (
             <div className="news-layout" data-reveal>
-              <Link href={`/news/${leadStory.slug}`} className="lead-story"><Image src={leadStory.image} alt="" width={1536} height={1024} sizes="(max-width: 760px) 100vw, 66vw" /><div><h3>{leadStory.title}</h3><p><span>{leadStory.category}</span> · <time>{formatDate(leadStory.publishedAt)}</time></p></div></Link>
-              <div className="story-list">{news.slice(1, 3).map((item) => <Link href={`/news/${item.slug}`} key={item.slug}><Image src={item.image} alt="" width={600} height={400} /><div><h3>{item.title}</h3><p><span>{item.category}</span> · <time>{formatDate(item.publishedAt)}</time></p></div></Link>)}</div>
+              <Link href={`/news/${leadStory.slug}`} className="lead-story"><ContentImage src={leadStory.image} alt="" width={1536} height={1024} /><div><h3>{leadStory.title}</h3><p><span>{leadStory.category}</span> · <time>{formatDate(leadStory.publishedAt)}</time></p></div></Link>
+              <div className="story-list">{news.slice(1, 3).map((item) => <Link href={`/news/${item.slug}`} key={item.slug}><ContentImage src={item.image} alt="" width={600} height={400} /><div><h3>{item.title}</h3><p><span>{item.category}</span> · <time>{formatDate(item.publishedAt)}</time></p></div></Link>)}</div>
             </div>
           ) : (
             <div className="news-empty-layout" data-reveal>
@@ -103,6 +106,7 @@ export default async function Home() {
           </div>
           <div className="ranking-block" data-reveal>
             <div className="section-heading compact"><div><h2>Bảng xếp hạng</h2><p>Xếp hạng theo nội dung thi đấu.</p></div><MoreLink href="/ranking">Toàn bộ</MoreLink></div>
+            {usesMockRanking ? <p className="sample-data-note">Dữ liệu minh họa</p> : null}
             {ranking.length > 0 ? <ol>{ranking.slice(0, 5).map((item) => <li key={item.athleteId}><b>{item.rank}</b><span><strong>{item.name}</strong><small>{item.club}</small></span><em>{new Intl.NumberFormat("vi-VN").format(item.points)}</em></li>)}</ol> : <EmptyState title="Bảng xếp hạng đang được cập nhật" description="Điểm và thứ hạng sẽ xuất hiện sau khi dữ liệu chính thức được công bố." compact />}
           </div>
         </section>

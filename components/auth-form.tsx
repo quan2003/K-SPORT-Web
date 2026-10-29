@@ -1,26 +1,36 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm() {
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("Biểu mẫu đã sẵn sàng. Cần kết nối Identity API để xác thực tài khoản.");
+    const form = new FormData(event.currentTarget);
+    setIsSubmitting(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/login", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: form.get("username"), password: form.get("password") }) });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.message || "Không thể đăng nhập");
+      // A full navigation avoids the App Router reusing the unauthenticated
+      // route cache immediately after the server sets the HttpOnly cookie.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign("/admin");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể đăng nhập");
+    } finally { setIsSubmitting(false); }
   }
 
-  const isLogin = mode === "login";
   return (
     <form className="auth-form" onSubmit={submit}>
-      {!isLogin && <label htmlFor="full-name">Họ và tên<input id="full-name" name="name" autoComplete="name" required /></label>}
-      <label htmlFor="auth-email">Email<input id="auth-email" name="email" type="email" autoComplete="email" spellCheck={false} required /></label>
-      <label htmlFor="auth-password">Mật khẩu<input id="auth-password" name="password" type="password" autoComplete={isLogin ? "current-password" : "new-password"} required /></label>
-      {!isLogin && <label className="auth-check" htmlFor="terms"><input id="terms" name="terms" type="checkbox" required />Tôi đồng ý với điều khoản sử dụng K-SPORT.</label>}
-      <button className="button red" type="submit">{isLogin ? "Đăng nhập" : "Tạo tài khoản"}<span aria-hidden="true">→</span></button>
+      <label htmlFor="auth-username">Tên đăng nhập<input id="auth-username" name="username" autoComplete="username" spellCheck={false} required /></label>
+      <label htmlFor="auth-password">Mật khẩu<input id="auth-password" name="password" type="password" autoComplete="current-password" required /></label>
+      <button className="button red" type="submit" disabled={isSubmitting}>{isSubmitting ? "Đang đăng nhập…" : "Đăng nhập"}<span aria-hidden="true">→</span></button>
       <p className="auth-status" aria-live="polite">{message}</p>
-      <p className="auth-switch">{isLogin ? "Chưa có tài khoản?" : "Đã có tài khoản?"} <Link href={isLogin ? "/register" : "/login"}>{isLogin ? "Đăng ký" : "Đăng nhập"}</Link></p>
+      <p className="auth-switch">Tài khoản được quản trị viên K-SPORT cấp riêng.</p>
     </form>
   );
 }

@@ -4,6 +4,7 @@ import { AthleteAvatar } from "@/components/athlete-avatar";
 import { EmptyState } from "@/components/empty-state";
 import { InternalLayout, PageHero } from "@/components/portal-ui";
 import { getAthletes } from "@/lib/public-data";
+import { mockAthletes } from "@/lib/mock-data";
 
 export const metadata: Metadata = { title: "Vận động viên", description: "Hồ sơ thi đấu công khai của vận động viên Karate." };
 
@@ -24,6 +25,7 @@ export default async function AthletesPage({ searchParams }: { searchParams: Pro
   const category = typeof params.category === "string" ? params.category : "all";
   const requestedPage = typeof params.page === "string" ? Number.parseInt(params.page, 10) : 1;
   const athletes = await getAthletes();
+  const usesMockData = athletes.every((athlete) => mockAthletes.some((mockAthlete) => mockAthlete.id === athlete.id));
   const normalizedQuery = query.toLocaleLowerCase("vi");
   const filteredAthletes = athletes.filter((athlete) =>
     (!normalizedQuery || athlete.name.toLocaleLowerCase("vi").includes(normalizedQuery) || athlete.club.toLocaleLowerCase("vi").includes(normalizedQuery)) &&
@@ -37,6 +39,7 @@ export default async function AthletesPage({ searchParams }: { searchParams: Pro
     <InternalLayout>
       <PageHero title="Vận động viên" description="Tra cứu hồ sơ công khai theo tên, câu lạc bộ và nội dung thi đấu." image="/images/athlete-portrait.png" />
       <section className="content-section athlete-directory">
+        {usesMockData ? <p className="sample-data-note">Dữ liệu minh họa — hồ sơ vận động viên được tạo để xem trước giao diện.</p> : null}
         <div className="directory-intro"><div><h2>Danh sách vận động viên</h2><p>Chỉ hiển thị tên, câu lạc bộ, nội dung và kết quả đã được phép công bố.</p></div><p><strong>{filteredAthletes.length}</strong> hồ sơ</p></div>
         <form className="filter-bar" method="get"><label>Tìm vận động viên hoặc câu lạc bộ<input name="query" type="search" placeholder="Nhập họ tên hoặc câu lạc bộ…" autoComplete="off" defaultValue={query} /></label><label>Loại nội dung<select name="category" defaultValue={category}><option value="all">Tất cả nội dung</option><option value="Kata">Kata</option><option value="Kumite">Kumite</option></select></label><button className="filter-submit" type="submit">Tìm kiếm</button></form>
         {visibleAthletes.length > 0 ? <>

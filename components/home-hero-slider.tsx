@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ContentImage } from "@/components/content-image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { TournamentEvent } from "@/lib/public-data";
+import type { PublicBanner, TournamentEvent } from "@/lib/public-data";
 
 const formatDateRange = (event: TournamentEvent) => {
   const formatter = new Intl.DateTimeFormat("vi-VN", { day: "numeric", month: "long", year: "numeric" });
@@ -12,12 +13,17 @@ const formatDateRange = (event: TournamentEvent) => {
   return end ? `${start} – ${end}` : start;
 };
 
-export function HomeHeroSlider({ events, children }: { events: TournamentEvent[]; children: React.ReactNode }) {
+type HeroSlide = { kind: "banner"; item: PublicBanner } | { kind: "event"; item: TournamentEvent };
+
+export function HomeHeroSlider({ events, banners, children }: { events: TournamentEvent[]; banners: PublicBanner[]; children: React.ReactNode }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const regionRef = useRef<HTMLElement>(null);
-  const slides = useMemo(() => events.filter((event) => event.status !== "Đã kết thúc").slice(0, 4), [events]);
+  const slides = useMemo<HeroSlide[]>(() => [
+    ...banners.map((item) => ({ kind: "banner" as const, item })),
+    ...events.filter((event) => event.status !== "Đã kết thúc").map((item) => ({ kind: "event" as const, item })),
+  ].slice(0, 4), [banners, events]);
   const totalSlides = slides.length + 1;
 
   useEffect(() => {
@@ -66,11 +72,19 @@ export function HomeHeroSlider({ events, children }: { events: TournamentEvent[]
             <div className="hero-actions" data-reveal><Link className="button red" href="/events">Xem giải đấu <span aria-hidden="true">→</span></Link><Link className="text-action" href="/software">Tìm hiểu phần mềm</Link></div>
           </div>
         </div>
-        {slides.map((event, index) => {
+        {slides.map((slide, index) => {
           const slideIndex = index + 1;
+          if (slide.kind === "banner") {
+            const banner = slide.item;
+            return <div className={`home-slide${active === slideIndex ? " is-active" : ""}`} aria-hidden={active !== slideIndex} inert={active !== slideIndex} key={banner.id}>
+              <ContentImage className="home-slide-image" src={banner.image || "/images/karate-hero.png"} alt="" width={1920} height={1080} loading="lazy" />
+              <div className="hero-content event-hero-content"><p className="hero-eyebrow" data-reveal>{banner.eyebrow}</p><h2 data-reveal>{banner.title}</h2><p data-reveal>{banner.description}</p><div className="hero-actions" data-reveal>{banner.primaryLabel && banner.primaryHref ? <Link className="button red" href={banner.primaryHref}>{banner.primaryLabel} <span aria-hidden="true">→</span></Link> : null}{banner.secondaryLabel && banner.secondaryHref ? <Link className="text-action" href={banner.secondaryHref}>{banner.secondaryLabel}</Link> : null}</div></div>
+            </div>;
+          }
+          const event = slide.item;
           return (
             <div className={`home-slide${active === slideIndex ? " is-active" : ""}`} aria-hidden={active !== slideIndex} inert={active !== slideIndex} key={event.slug}>
-              <Image className="home-slide-image" src={event.image ?? "/images/karate-venue.png"} alt="" fill sizes="100vw" loading="lazy" />
+              <ContentImage className="home-slide-image" src={event.image ?? "/images/karate-venue.png"} alt="" width={1920} height={1080} loading="lazy" />
               <div className="hero-content event-hero-content">
                 <h2 data-reveal aria-label={event.name} title={event.name}>{event.name}</h2>
                 <p data-reveal>{formatDateRange(event)} · {event.location}</p>
