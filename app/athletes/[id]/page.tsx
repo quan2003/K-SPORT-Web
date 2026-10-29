@@ -36,6 +36,15 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
     .sort((left, right) => right.points - left.points || left.category.localeCompare(right.category, "vi"));
   const eventDates = new Map(events.map((event) => [event.slug, event.date]));
   const historyEntries = rankingEntries.filter((entry) => !eventQuery || `${entry.eventName} ${entry.category}`.toLocaleLowerCase("vi").includes(eventQuery));
+  const medalTotals = rankingEntries.reduce(
+    (totals, entry) => ({
+      gold: totals.gold + (entry.medals?.gold ?? 0),
+      silver: totals.silver + (entry.medals?.silver ?? 0),
+      bronze: totals.bronze + (entry.medals?.bronze ?? 0),
+    }),
+    { gold: 0, silver: 0, bronze: 0 },
+  );
+  const medalTotal = medalTotals.gold + medalTotals.silver + medalTotals.bronze;
   return (
     <InternalLayout>
       <section className="athlete-profile">
@@ -55,7 +64,7 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
             <h2>{athlete.category}</h2>
             <p className="athlete-profile-club">{athlete.club}</p>
             <div className="athlete-profile-result"><span>{athlete.publicResult || "Chưa có kết quả công khai"}</span><strong>{rankingEntries.length ? `#${rankingEntries[0].rank}` : "—"}</strong><p>{rankingEntries.length ? `${new Intl.NumberFormat("vi-VN").format(rankingEntries[0].points)} điểm xếp hạng` : "Điểm xếp hạng đang cập nhật"}</p></div>
-            {rankingEntries.length > 0 ? <section className="athlete-ranking-summary" aria-labelledby="athlete-ranking-title"><div><p id="athlete-ranking-title">Thành tích công khai</p><Link href="/ranking">Xem bảng xếp hạng <span aria-hidden="true">→</span></Link></div><ol>{rankingEntries.slice(0, 3).map((entry) => <li key={`${entry.eventSlug}-${entry.category}`}><b>#{entry.rank}</b><span><strong>{entry.eventName}</strong><small>{entry.category}{entry.season ? ` · ${entry.season}` : ""}</small></span><em>{new Intl.NumberFormat("vi-VN").format(entry.points)} điểm</em></li>)}</ol></section> : null}
+            {rankingEntries.length > 0 ? <section className="athlete-ranking-summary" aria-labelledby="athlete-ranking-title"><div><p id="athlete-ranking-title">Thành tích công khai</p><Link href="/ranking">Xem bảng xếp hạng <span aria-hidden="true">→</span></Link></div>{medalTotal > 0 ? <dl className="athlete-medal-totals" aria-label={`Tổng ${medalTotal} huy chương`}><div className="medal-gold"><dt>Vàng</dt><dd>{medalTotals.gold}</dd></div><div className="medal-silver"><dt>Bạc</dt><dd>{medalTotals.silver}</dd></div><div className="medal-bronze"><dt>Đồng</dt><dd>{medalTotals.bronze}</dd></div><div className="medal-total"><dt>Tổng</dt><dd>{medalTotal}</dd></div></dl> : null}<ol>{rankingEntries.slice(0, 3).map((entry) => <li key={`${entry.eventSlug}-${entry.category}`}><b>#{entry.rank}</b><span><strong>{entry.eventName}</strong><small>{entry.category}{entry.season ? ` · ${entry.season}` : ""}</small></span><em>{new Intl.NumberFormat("vi-VN").format(entry.points)} điểm</em></li>)}</ol></section> : null}
           </div>
         </div>
         <section className="athlete-event-history" aria-labelledby="athlete-history-title">

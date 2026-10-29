@@ -299,9 +299,17 @@ time, .ranking-table em { font-variant-numeric: tabular-nums; }
 .ranking-table { border-top: 5px solid var(--red); }
 .ranking-head, .ranking-table > a { min-height: 76px; display: grid; grid-template-columns: 100px 1.2fr 1fr 140px; align-items: center; gap: 22px; padding: 0 24px; border-bottom: 2px solid var(--line); }
 .ranking-head { background: var(--navy); color: #fff; font-weight: 600; }
-.ranking-table > a b { font: 700 31px "Barlow Condensed"; color: var(--red); }
-.ranking-table > a em { display: flex; align-items: center; justify-content: flex-end; gap: 18px; text-align: right; font-style: normal; font-weight: 600; }
-.ranking-table > a em i { color: var(--blue); font-size: 22px; font-style: normal; }
+.ranking-table > a .rank-position { display: inline-flex; align-items: center; gap: 12px; font: 700 26px/1 "Barlow Condensed"; color: var(--navy); }
+.ranking-table > a .rank-position > span { min-width: 32px; text-align: center; }
+.ranking-table > a .rank-position-1 > span,
+.ranking-table > a .rank-position-2 > span,
+.ranking-table > a .rank-position-3 > span { display: inline-grid; width: 36px; height: 36px; min-width: 36px; place-items: center; border-radius: 50%; color: #fff; }
+.ranking-table > a .rank-position-1 > span { background: #e5ad00; }
+.ranking-table > a .rank-position-2 > span { background: #9ca3af; }
+.ranking-table > a .rank-position-3 > span { background: #aa6727; }
+.ranking-table > a .rank-movement { color: var(--navy); font: 700 23px/1 "Barlow"; font-style: normal; }
+.ranking-table > a em { display: block; text-align: left; font-style: normal; font-weight: 600; }
+.ranking-table > a em i { margin-left: 18px; color: var(--blue); font-size: 22px; font-style: normal; }
 
 .athlete-directory { margin-top: 64px; }
 .directory-intro { margin-bottom: 34px; }
@@ -406,6 +414,14 @@ dd { margin: 0; }
 .athlete-ranking-summary > div { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .athlete-ranking-summary > div > p { margin: 0; color: var(--navy); font: 700 32px/1 "Barlow Condensed"; }
 .athlete-ranking-summary > div > a { color: var(--blue); font-weight: 600; }
+.athlete-profile .athlete-medal-totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 18px 0 0; }
+.athlete-profile .athlete-medal-totals > div { min-height: 62px; padding: 10px 12px; display: block; border: 0; border-left: 4px solid var(--line); background: #fff; }
+.athlete-profile .athlete-medal-totals dt { color: var(--muted); font-size: 13px; font-weight: 600; }
+.athlete-profile .athlete-medal-totals dd { margin: 2px 0 0; color: var(--ink); font: 700 28px/1 "Barlow Condensed"; }
+.athlete-profile .athlete-medal-totals .medal-gold { border-color: #e5ad00; }
+.athlete-profile .athlete-medal-totals .medal-silver { border-color: #9ca3af; }
+.athlete-profile .athlete-medal-totals .medal-bronze { border-color: #aa6727; }
+.athlete-profile .athlete-medal-totals .medal-total { border-color: var(--navy); }
 .athlete-ranking-summary ol { margin: 18px 0 0; padding: 0; list-style: none; }
 .athlete-ranking-summary li { min-height: 70px; display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; align-items: center; gap: 16px; border-top: 1px solid var(--line); }
 .athlete-ranking-summary li > b { color: var(--red); font: 700 30px/1 "Barlow Condensed"; }
@@ -715,6 +731,7 @@ a:hover { opacity: .78; }
   .athlete-profile-result > strong { font-size: 60px; }
   .athlete-ranking-summary { margin-top: 32px; }
   .athlete-ranking-summary > div > p { font-size: 28px; }
+  .athlete-profile .athlete-medal-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .athlete-event-history > div:first-child { align-items: stretch; flex-direction: column; gap: 18px; }
   .athlete-event-history form { min-width: 0; }
   .athlete-history-head { display: none; }
