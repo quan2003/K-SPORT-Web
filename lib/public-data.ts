@@ -4,7 +4,7 @@ export type TournamentEvent = { slug: string; name: string; discipline: string; 
 export type Match = { id: string; time: string; date: string; tatami: string; category: string; red: string; blue: string; redScore?: number; blueScore?: number; state: "Sắp diễn ra" | "Đang thi đấu" | "Đã kết thúc"; eventSlug?: string; eventName?: string };
 export type Athlete = { id: string; athleteCode?: string; name: string; clubId?: string; club: string; category: string; country?: string; totalMatches?: number; wins?: number; winRate?: number | null; publicResult?: string; image?: string; photoUrl?: string };
 export type Club = { id: string; name: string; region: string; athleteCount?: number };
-export type RankingEntry = { rank: number; athleteId: string; name: string; club: string; category: string; points: number; season?: string };
+export type RankingEntry = { rank: number; athleteId: string; name: string; club: string; category: string; points: number; season?: string; eventSlug: string; eventName: string; eventDate?: string; medals?: { gold?: number; silver?: number; bronze?: number } };
 export type NewsItem = { slug: string; title: string; category: string; publishedAt: string; summary: string; image: string; body?: string[] };
 
 export type MatchDisplayState = Match["state"] | "Chờ cập nhật kết quả";
@@ -13,6 +13,19 @@ type CollectionPayload<T> = T[] | { items: T[] };
 const apiBaseUrl = process.env.KSPORT_PUBLIC_API_URL?.replace(/\/$/, "");
 const apiToken = process.env.KSPORT_PUBLIC_API_TOKEN;
 const requestTimeoutMs = 8_000;
+const countryNames: Record<string, string> = {
+  VN: "Việt Nam",
+  JP: "Nhật Bản",
+  KR: "Hàn Quốc",
+  CN: "Trung Quốc",
+  TH: "Thái Lan",
+  ID: "Indonesia",
+  MY: "Malaysia",
+  PH: "Philippines",
+  SG: "Singapore",
+  LA: "Lào",
+  KH: "Campuchia",
+};
 
 function requestHeaders(): HeadersInit {
   return {
@@ -32,7 +45,12 @@ function toAbsolutePublicUrl(value?: string) {
 
 function normalizeAthlete(athlete: Athlete): Athlete {
   const photoUrl = toAbsolutePublicUrl(athlete.photoUrl);
-  return photoUrl ? { ...athlete, photoUrl, image: photoUrl } : athlete;
+  const country = athlete.country?.trim().toUpperCase();
+  return {
+    ...athlete,
+    ...(country ? { country: countryNames[country] || athlete.country } : {}),
+    ...(photoUrl ? { photoUrl, image: photoUrl } : {}),
+  };
 }
 
 async function getCollection<T>(path: string, revalidate = 60): Promise<T[]> {

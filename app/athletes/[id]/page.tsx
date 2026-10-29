@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AthleteAvatar } from "@/components/athlete-avatar";
 import { InternalLayout } from "@/components/portal-ui";
-import { getAthlete, getAthletes, getRanking } from "@/lib/public-data";
+import { getAthlete, getAthletes, getEvents, getRanking } from "@/lib/public-data";
 
 export async function generateStaticParams() { return (await getAthletes()).map(({ id }) => ({ id })); }
 
@@ -12,9 +12,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return athlete ? { title: athlete.name, description: `Hồ sơ thi đấu công khai của ${athlete.name}.` } : { title: "Vận động viên" };
 }
 
-export default async function AthleteDetail({ params }: { params: Promise<{ id: string }> }) {
+const formatDate = (value?: string) => value ? new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${value}T00:00:00`)) : "—";
+
+const medalLabel = (entry: { medals?: { gold?: number; silver?: number; bronze?: number } }) => {
+  if (entry.medals?.gold) return "Huy chương vàng";
+  if (entry.medals?.silver) return "Huy chương bạc";
+  if (entry.medals?.bronze) return "Huy chương đồng";
+  return "#";
+};
+
+export default async function AthleteDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = await params;
-  const [athlete, athletes, ranking] = await Promise.all([getAthlete(id), getAthletes(), getRanking()]);
+  const pageParams = await searchParams;
+  const eventQuery = typeof pageParams.event === "string" ? pageParams.event.trim().toLocaleLowerCase("vi") : "";
+  const [athlete, athletes, ranking, events] = await Promise.all([getAthlete(id), getAthletes(), getRanking(), getEvents()]);
   if (!athlete) notFound();
   const orderedAthletes = [...athletes].sort((left, right) => left.name.localeCompare(right.name, "vi"));
   const athleteIndex = orderedAthletes.findIndex((item) => item.id === athlete.id);
@@ -23,6 +34,8 @@ export default async function AthleteDetail({ params }: { params: Promise<{ id: 
   const rankingEntries = ranking
     .filter((item) => item.athleteId === athlete.id)
     .sort((left, right) => right.points - left.points || left.category.localeCompare(right.category, "vi"));
+  const eventDates = new Map(events.map((event) => [event.slug, event.date]));
+  const historyEntries = rankingEntries.filter((entry) => !eventQuery || `${entry.eventName} ${entry.category}`.toLocaleLowerCase("vi").includes(eventQuery));
   return (
     <InternalLayout>
       <section className="athlete-profile">
@@ -32,15 +45,23 @@ export default async function AthleteDetail({ params }: { params: Promise<{ id: 
           {nextAthlete ? <Link href={`/athletes/${nextAthlete.id}`}>VĐV sau <span aria-hidden="true">→</span></Link> : <span aria-disabled="true">VĐV sau <span aria-hidden="true">→</span></span>}
         </nav>
         <div className="athlete-profile-grid">
-          <div className="athlete-profile-media"><AthleteAvatar name={athlete.name} src={athlete.image} priority className="athlete-avatar-profile" /></div>
+          <aside className="athlete-profile-media">
+            <AthleteAvatar name={athlete.name} src={athlete.image} priority className="athlete-avatar-profile" />
+            <h1>{athlete.name}</h1>
+            <dl><div><dt>Mã VĐV</dt><dd>{athlete.athleteCode ?? athlete.id}</dd></div><div><dt>Quốc gia</dt><dd>{athlete.country || "—"}</dd></div><div><dt>Tổng số trận</dt><dd>{athlete.totalMatches ?? 0}</dd></div><div><dt>Tỷ lệ thắng</dt><dd>{typeof athlete.winRate === "number" ? `${athlete.winRate}%` : "—"}</dd></div></dl>
+          </aside>
           <div className="athlete-profile-copy">
             <p className="athlete-profile-eyebrow">Hồ sơ vận động viên</p>
-            <h1>{athlete.name}</h1>
+            <h2>{athlete.category}</h2>
             <p className="athlete-profile-club">{athlete.club}</p>
-            <dl><div><dt>Mã VĐV</dt><dd>{athlete.athleteCode ?? athlete.id}</dd></div><div><dt>Quốc gia</dt><dd>{athlete.country || "—"}</dd></div><div><dt>Hạng mục</dt><dd>{athlete.category}</dd></div><div><dt>Tổng số trận</dt><dd>{athlete.totalMatches ?? 0}</dd></div><div><dt>Tỷ lệ thắng</dt><dd>{typeof athlete.winRate === "number" ? `${athlete.winRate}% (${athlete.wins ?? 0} trận thắng)` : "—"}</dd></div>{athlete.publicResult ? <div><dt>Kết quả công khai</dt><dd>{athlete.publicResult}</dd></div> : null}</dl>
-            {rankingEntries.length > 0 ? <section className="athlete-ranking-summary" aria-labelledby="athlete-ranking-title"><div><p id="athlete-ranking-title">Xếp hạng công khai</p><Link href="/ranking">Xem bảng xếp hạng <span aria-hidden="true">→</span></Link></div><ol>{rankingEntries.slice(0, 3).map((entry) => <li key={`${entry.category}-${entry.season ?? "all"}`}><b>#{entry.rank}</b><span><strong>{entry.category}</strong>{entry.season ? <small>Mùa giải {entry.season}</small> : null}</span><em>{new Intl.NumberFormat("vi-VN").format(entry.points)} điểm</em></li>)}</ol></section> : null}
+            <div className="athlete-profile-result"><span>{athlete.publicResult || "Chưa có kết quả công khai"}</span><strong>{rankingEntries.length ? `#${rankingEntries[0].rank}` : "—"}</strong><p>{rankingEntries.length ? `${new Intl.NumberFormat("vi-VN").format(rankingEntries[0].points)} điểm xếp hạng` : "Điểm xếp hạng đang cập nhật"}</p></div>
+            {rankingEntries.length > 0 ? <section className="athlete-ranking-summary" aria-labelledby="athlete-ranking-title"><div><p id="athlete-ranking-title">Thành tích công khai</p><Link href="/ranking">Xem bảng xếp hạng <span aria-hidden="true">→</span></Link></div><ol>{rankingEntries.slice(0, 3).map((entry) => <li key={`${entry.eventSlug}-${entry.category}`}><b>#{entry.rank}</b><span><strong>{entry.eventName}</strong><small>{entry.category}{entry.season ? ` · ${entry.season}` : ""}</small></span><em>{new Intl.NumberFormat("vi-VN").format(entry.points)} điểm</em></li>)}</ol></section> : null}
           </div>
         </div>
+        <section className="athlete-event-history" aria-labelledby="athlete-history-title">
+          <div><div><p className="athlete-profile-eyebrow">Lịch sử thi đấu</p><h2 id="athlete-history-title">Thành tích theo giải</h2></div><form method="get" role="search"><label className="sr-only" htmlFor="athlete-event-search">Tìm giải đấu hoặc hạng mục</label><input id="athlete-event-search" name="event" type="search" placeholder="Tìm giải đấu hoặc hạng mục…" defaultValue={eventQuery} /><button type="submit" aria-label="Tìm lịch sử thi đấu">→</button></form></div>
+          {historyEntries.length > 0 ? <div className="athlete-history-table"><div className="athlete-history-head"><span>Ngày</span><span>Giải đấu</span><span>Hạng mục</span><span>Thành tích</span><span>Điểm</span></div>{historyEntries.map((entry) => <div className="athlete-history-row" key={`${entry.eventSlug}-${entry.category}`}><time>{formatDate(entry.eventDate || eventDates.get(entry.eventSlug))}</time><strong>{entry.eventName}</strong><span>{entry.category}</span><span>{medalLabel(entry)} {medalLabel(entry) === "#" ? entry.rank : ""}</span><em>{new Intl.NumberFormat("vi-VN").format(entry.points)}</em></div>)}</div> : <p className="athlete-history-empty">Chưa có thành tích công khai phù hợp.</p>}
+        </section>
       </section>
     </InternalLayout>
   );
