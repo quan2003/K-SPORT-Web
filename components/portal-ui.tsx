@@ -35,7 +35,7 @@ export function MatchRows({ matches, results = false }: { matches: Match[]; resu
       {matches.map((match) => (
         <article className="match-row" key={match.id}>
           <time dateTime={`${match.date}T${match.time}`}><strong>{match.time}</strong><span>{new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${match.date}T00:00:00+07:00`))}</span></time>
-          <strong>{getMatDisplayName(match.tatami) ?? "Chưa có thông tin thảm"}</strong>
+          <strong>{getMatDisplayName(match.tatami)}</strong>
           <div><strong>{match.category}</strong><span>{match.eventName ?? "Giải đấu K-SPORT"}</span></div>
           <div className="fighter aka-fighter"><span>{match.red}</span><b>{match.redScore ?? "–"}</b></div>
           <div className="versus" aria-label="đấu với">VS</div>

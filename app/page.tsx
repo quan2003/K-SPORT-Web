@@ -47,7 +47,7 @@ export default async function Home() {
               {upcomingMatches.length > 0 ? upcomingMatches.map((match) => (
                 <article key={match.id}>
                   <div className="rail-time"><time dateTime={`${match.date}T${match.time}`}>{match.time}</time><span>{formatDate(match.date)}</span></div>
-                  <div className="rail-match-copy"><strong>{match.category}</strong><span>{match.eventName ?? "Giải đấu K-SPORT"}</span><small>{getMatDisplayName(match.tatami) ?? "Chưa có thông tin thảm"}</small></div>
+                  <div className="rail-match-copy"><strong>{match.category}</strong><span>{match.eventName ?? "Giải đấu K-SPORT"}</span><small>{getMatDisplayName(match.tatami)}</small></div>
                   <p><span className="aka-dot" />{match.red}<br /><span className="ao-dot" />{match.blue}</p>
                 </article>
               )) : (

@@ -24,7 +24,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const sourceCategories = selectedEvent?.categories ?? events.flatMap((item) => item.categories);
   const categories = [...new Set(sourceCategories)].sort((left, right) => left.localeCompare(right, "vi"));
   const types = [...new Set(sourceCategories.map(competitionType))].filter((item) => item !== "Khác");
-  const tatamis = [...new Set(matches.map((match) => match.tatami).filter((item) => getMatDisplayName(item)))].sort((left, right) => left.localeCompare(right, "vi", { numeric: true }));
+  const tatamis = [...new Set(matches.map((match) => match.tatami).filter(Boolean))].sort((left, right) => left.localeCompare(right, "vi", { numeric: true }));
   const filteredMatches = matches.filter((match) =>
     (event === "all" || match.eventSlug === event) &&
     (!date || match.date === date) &&

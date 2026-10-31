@@ -29,7 +29,7 @@ export function ArenaCarousel({ matches }: { matches: Match[] }) {
   }
 
   const current = matches[active];
-  const currentMat = getMatDisplayName(current.tatami) ?? "Chưa có thông tin thảm";
+  const currentMat = getMatDisplayName(current.tatami);
   return (
     <div className="arena-console" data-ui data-reveal>
       <div className="arena-focus-row" key={current.id}>
@@ -41,7 +41,7 @@ export function ArenaCarousel({ matches }: { matches: Match[] }) {
       </div>
       {matches.length > 1 ? <div className="arena-queue" aria-label="Chọn trận đấu">
         {matches.map((match, index) => {
-          const mat = getMatDisplayName(match.tatami) ?? "Chưa có thông tin thảm";
+          const mat = getMatDisplayName(match.tatami);
           return <button type="button" aria-label={`${match.time}, ${match.category}, ${mat}`} aria-pressed={active === index} onClick={() => setActive(index)} key={match.id}><time>{match.time}</time><span>{displayCategory(match.category)}</span><small>{mat}</small></button>;
         })}
       </div> : null}

@@ -176,17 +176,11 @@ export function competitionType(category: string) {
   return "Khác";
 }
 
-/**
- * The public API still exposes this field as `tatami`. Keep that contract at
- * the boundary, while presenting its Vietnamese name consistently in the UI.
- * A bare "Tatami" value is an API placeholder, not usable mat information.
- */
+/** Keep the public API field name at the boundary and localize its UI label. */
 export function getMatDisplayName(value?: string) {
   const raw = value?.trim();
-  if (!raw || /^tatami$/i.test(raw)) return null;
-
-  const identifier = raw.replace(/^(tatami|thảm)\s*/i, "").trim();
-  return identifier ? `Thảm ${identifier}` : null;
+  const identifier = raw?.replace(/^(tatami|thảm)\s*/i, "").trim();
+  return identifier ? `Thảm ${identifier}` : "Thảm";
 }
 
 export function sortEvents(events: TournamentEvent[]) {
