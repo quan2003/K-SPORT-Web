@@ -3,6 +3,7 @@ export type EventStatus = "Đang diễn ra" | "Sắp diễn ra" | "Đã kết th
 export type TournamentEvent = { slug: string; name: string; discipline: string; location: string; date: string; endDate: string; status: EventStatus; categories: string[]; description?: string; image?: string };
 export type Match = { id: string; time: string; date: string; tatami: string; category: string; red: string; blue: string; redScore?: number; blueScore?: number; state: "Sắp diễn ra" | "Đang thi đấu" | "Đã kết thúc"; eventSlug?: string; eventName?: string };
 export type Athlete = { id: string; athleteCode?: string; name: string; clubId?: string; club: string; category: string; country?: string; totalMatches?: number; wins?: number; winRate?: number | null; publicResult?: string; image?: string; photoUrl?: string };
+export type AthleteDirectoryEntry = Athlete & { categories: string[]; sourceIds: string[] };
 export type Club = { id: string; name: string; region: string; athleteCount?: number };
 export type RankingEntry = { rank: number; athleteId: string; name: string; club: string; category: string; points: number; rankChange?: number; season?: string; eventSlug: string; eventName: string; eventDate?: string; medals?: { gold?: number; silver?: number; bronze?: number } };
 export type NewsItem = { slug: string; title: string; category: string; publishedAt: string; summary: string; image: string; body?: string[] };
@@ -54,6 +55,34 @@ function normalizeAthlete(athlete: Athlete): Athlete {
     ...(country ? { country: countryNames[country] || athlete.country } : {}),
     ...(photoUrl ? { photoUrl, image: photoUrl } : {}),
   };
+}
+
+/**
+ * A tournament can return one registration record for every discipline an
+ * athlete enters. The public directory must present those records as one
+ * person, but only when the API provides the same stable athlete code.
+ *
+ * Never fall back to name matching here: people at the same club can share a
+ * name, and merging them would expose the wrong public record.
+ */
+export function groupAthletesForDirectory(athletes: Athlete[]): AthleteDirectoryEntry[] {
+  const groups = new Map<string, AthleteDirectoryEntry>();
+
+  for (const athlete of athletes) {
+    const athleteCode = athlete.athleteCode?.trim();
+    const groupKey = athleteCode ? `code:${athleteCode.toLocaleLowerCase("vi")}` : `record:${athlete.id}`;
+    const current = groups.get(groupKey);
+
+    if (current) {
+      current.sourceIds.push(athlete.id);
+      if (!current.categories.includes(athlete.category)) current.categories.push(athlete.category);
+      continue;
+    }
+
+    groups.set(groupKey, { ...athlete, categories: [athlete.category], sourceIds: [athlete.id] });
+  }
+
+  return [...groups.values()];
 }
 
 const abbreviatedWeekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

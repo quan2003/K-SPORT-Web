@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AthleteAvatar } from "@/components/athlete-avatar";
 import { EmptyState } from "@/components/empty-state";
 import { InternalLayout, PageHero } from "@/components/portal-ui";
-import { getAthletes } from "@/lib/public-data";
+import { getAthletes, groupAthletesForDirectory } from "@/lib/public-data";
 
 export const metadata: Metadata = { title: "Vận động viên", description: "Hồ sơ thi đấu công khai của vận động viên Karate." };
 
@@ -24,10 +24,11 @@ export default async function AthletesPage({ searchParams }: { searchParams: Pro
   const category = typeof params.category === "string" ? params.category : "all";
   const requestedPage = typeof params.page === "string" ? Number.parseInt(params.page, 10) : 1;
   const athletes = await getAthletes();
+  const athleteDirectory = groupAthletesForDirectory(athletes);
   const normalizedQuery = query.toLocaleLowerCase("vi");
-  const filteredAthletes = athletes.filter((athlete) =>
+  const filteredAthletes = athleteDirectory.filter((athlete) =>
     (!normalizedQuery || athlete.name.toLocaleLowerCase("vi").includes(normalizedQuery) || athlete.club.toLocaleLowerCase("vi").includes(normalizedQuery)) &&
-    (category === "all" || athlete.category.toLocaleLowerCase("vi").startsWith(category.toLocaleLowerCase("vi")))
+    (category === "all" || athlete.categories.some((item) => item.toLocaleLowerCase("vi").startsWith(category.toLocaleLowerCase("vi"))))
   );
   const pageCount = Math.max(1, Math.ceil(filteredAthletes.length / pageSize));
   const currentPage = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), pageCount) : 1;
@@ -40,7 +41,7 @@ export default async function AthletesPage({ searchParams }: { searchParams: Pro
         <div className="directory-intro"><div><h2>Danh sách vận động viên</h2><p>Chỉ hiển thị tên, câu lạc bộ, nội dung và kết quả đã được phép công bố.</p></div><p><strong>{filteredAthletes.length}</strong> hồ sơ</p></div>
         <form className="filter-bar" method="get"><label>Tìm vận động viên hoặc câu lạc bộ<input name="query" type="search" placeholder="Nhập họ tên hoặc câu lạc bộ…" autoComplete="off" defaultValue={query} /></label><label>Loại nội dung<select name="category" defaultValue={category}><option value="all">Tất cả nội dung</option><option value="Kata">Kata</option><option value="Kumite">Kumite</option></select></label><button className="filter-submit" type="submit">Tìm kiếm</button></form>
         {visibleAthletes.length > 0 ? <>
-          <div className="athlete-list">{visibleAthletes.map((athlete) => <Link href={`/athletes/${athlete.id}`} key={athlete.id}><AthleteAvatar name={athlete.name} src={athlete.image} /><div><h2>{athlete.name}</h2><p>{athlete.club}</p><small>{athlete.category}</small></div><span>Xem hồ sơ <span aria-hidden="true">→</span></span></Link>)}</div>
+          <div className="athlete-list">{visibleAthletes.map((athlete) => <Link href={`/athletes/${athlete.id}`} key={athlete.id}><AthleteAvatar name={athlete.name} src={athlete.image} /><div><h2>{athlete.name}</h2><p>{athlete.club}</p><small>{athlete.categories.join(" · ")}</small></div><span>Xem hồ sơ <span aria-hidden="true">→</span></span></Link>)}</div>
           {pageCount > 1 ? <nav className="pagination" aria-label="Phân trang vận động viên">
             {currentPage > 1 ? <Link className="pagination-control" href={pageHref(currentPage - 1, query, category)}><span aria-hidden="true">←</span> Trang trước</Link> : <span className="pagination-control is-disabled" aria-disabled="true"><span aria-hidden="true">←</span> Trang trước</span>}
             <span className="pagination-status">Trang <strong>{currentPage}</strong> trên {pageCount}</span>

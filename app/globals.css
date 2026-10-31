@@ -410,6 +410,7 @@ dd { margin: 0; }
 .athlete-profile-copy { min-height: 464px; padding: clamp(30px, 3.4vw, 52px); background: var(--surface); }
 .athlete-profile-eyebrow { margin: 0 0 15px; color: var(--red); font-size: 14px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .athlete-profile-copy h2 { max-width: 800px; margin-bottom: 14px; color: var(--navy); font-size: clamp(2.8rem, 4vw, 4.2rem); }
+.athlete-profile-categories { margin: -4px 0 14px; color: var(--ink); font-size: 20px; font-weight: 600; line-height: 1.45; }
 .athlete-profile-club { margin: 0; color: var(--muted); font-size: 22px; }
 .athlete-profile-result { margin: 42px 0 0; padding-top: 20px; border-top: 5px solid var(--navy); display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 4px 24px; }
 .athlete-profile-result > span { color: var(--red); font-weight: 700; }

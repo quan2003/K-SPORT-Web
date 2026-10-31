@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AthleteAvatar } from "@/components/athlete-avatar";
 import { InternalLayout } from "@/components/portal-ui";
-import { getAthlete, getAthletes, getEvents, getRanking } from "@/lib/public-data";
+import { getAthlete, getAthletes, getEvents, getRanking, groupAthletesForDirectory } from "@/lib/public-data";
 
 // Athlete data changes during a tournament. Render the requested profile at
 // request time instead of generating every athlete page during each deploy.
@@ -29,12 +29,14 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
   const eventQuery = typeof pageParams.event === "string" ? pageParams.event.trim().toLocaleLowerCase("vi") : "";
   const [athlete, athletes, ranking, events] = await Promise.all([getAthlete(id), getAthletes(), getRanking(), getEvents()]);
   if (!athlete) notFound();
-  const orderedAthletes = [...athletes].sort((left, right) => left.name.localeCompare(right.name, "vi"));
-  const athleteIndex = orderedAthletes.findIndex((item) => item.id === athlete.id);
+  const athleteDirectory = groupAthletesForDirectory(athletes);
+  const athleteProfile = athleteDirectory.find((item) => item.sourceIds.includes(athlete.id)) ?? { ...athlete, categories: [athlete.category], sourceIds: [athlete.id] };
+  const orderedAthletes = [...athleteDirectory].sort((left, right) => left.name.localeCompare(right.name, "vi"));
+  const athleteIndex = orderedAthletes.findIndex((item) => item.sourceIds.includes(athlete.id));
   const previousAthlete = athleteIndex > 0 ? orderedAthletes[athleteIndex - 1] : null;
   const nextAthlete = athleteIndex >= 0 && athleteIndex < orderedAthletes.length - 1 ? orderedAthletes[athleteIndex + 1] : null;
   const rankingEntries = ranking
-    .filter((item) => item.athleteId === athlete.id)
+    .filter((item) => athleteProfile.sourceIds.includes(item.athleteId))
     .sort((left, right) => right.points - left.points || left.category.localeCompare(right.category, "vi"));
   const rankingPoints = rankingEntries.reduce((total, entry) => total + entry.points, 0);
   const eventDates = new Map(events.map((event) => [event.slug, event.date]));
@@ -64,7 +66,8 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
           </aside>
           <div className="athlete-profile-copy">
             <p className="athlete-profile-eyebrow">Hồ sơ vận động viên</p>
-            <h2>{athlete.category}</h2>
+            <h2>Nội dung thi đấu</h2>
+            <p className="athlete-profile-categories">{athleteProfile.categories.join(" · ")}</p>
             <p className="athlete-profile-club">{athlete.club}</p>
             <div className="athlete-profile-result"><span>{athlete.publicResult || "Chưa có kết quả công khai"}</span><strong>{rankingEntries.length ? `#${rankingEntries[0].rank}` : "—"}</strong><p>{rankingEntries.length ? `${new Intl.NumberFormat("vi-VN").format(rankingPoints)} điểm xếp hạng` : "Điểm xếp hạng đang cập nhật"}</p></div>
             {rankingEntries.length > 0 ? <section className="athlete-ranking-summary" aria-labelledby="athlete-ranking-title"><div><p id="athlete-ranking-title">Thành tích công khai</p><Link href="/ranking">Xem bảng xếp hạng <span aria-hidden="true">→</span></Link></div>{medalTotal > 0 ? <dl className="athlete-medal-totals" aria-label={`Tổng ${medalTotal} huy chương`}><div className="medal-gold"><dt>Vàng</dt><dd>{medalTotals.gold}</dd></div><div className="medal-silver"><dt>Bạc</dt><dd>{medalTotals.silver}</dd></div><div className="medal-bronze"><dt>Đồng</dt><dd>{medalTotals.bronze}</dd></div><div className="medal-total"><dt>Tổng</dt><dd>{medalTotal}</dd></div></dl> : null}<ol>{rankingEntries.slice(0, 3).map((entry) => <li key={`${entry.eventSlug}-${entry.category}`}><b>#{entry.rank}</b><span><strong>{entry.eventName}</strong><small>{entry.category}{entry.season ? ` · ${entry.season}` : ""}</small></span><em>{new Intl.NumberFormat("vi-VN").format(entry.points)} điểm</em></li>)}</ol></section> : null}
