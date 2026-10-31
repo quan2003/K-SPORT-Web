@@ -1,5 +1,3 @@
-import { mockAthletes, mockRanking } from "@/lib/mock-data";
-
 export type EventStatus = "Đang diễn ra" | "Sắp diễn ra" | "Đã kết thúc";
 
 export type TournamentEvent = { slug: string; name: string; discipline: string; location: string; date: string; endDate: string; status: EventStatus; categories: string[]; description?: string; image?: string };
@@ -122,18 +120,14 @@ export const getEvents = () => getCollection<TournamentEvent>("/events");
 export const getEvent = (slug: string) => getRecord<TournamentEvent>(`/events/${encodeURIComponent(slug)}`);
 export const getSchedule = () => getCollection<Match>("/schedule", 15);
 export const getResults = () => getCollection<Match>("/results", 15);
-export const getAthletes = async () => mockAthletes.map(normalizeAthlete);
+export const getAthletes = async () => (await getCollection<Athlete>("/athletes", 15)).map(normalizeAthlete);
 export const getAthlete = async (id: string) => {
-  const mockAthlete = mockAthletes.find((item) => item.id === id);
-  if (mockAthlete) return normalizeAthlete(mockAthlete);
   const athlete = await getRecord<Athlete>(`/athletes/${encodeURIComponent(id)}`);
   return athlete ? normalizeAthlete(athlete) : null;
 };
 export const getClubs = () => getCollection<Club>("/clubs");
 export const getClub = (id: string) => getRecord<Club>(`/clubs/${encodeURIComponent(id)}`);
-// Bảng xếp hạng đang ở giai đoạn dựng UI nên luôn dùng bộ dữ liệu minh họa.
-// Thay bằng endpoint /ranking khi dữ liệu công khai đã được phê duyệt để xuất bản.
-export const getRanking = async () => mockRanking;
+export const getRanking = () => getCollection<RankingEntry>("/ranking", 15);
 export const getNews = async () => (await getCollection<NewsItem>("/news", 300)).map(normalizeNewsItem);
 // Banner content was added after the initial public API rollout. Keep the
 // public homepage operational until every VPS instance has been deployed.
