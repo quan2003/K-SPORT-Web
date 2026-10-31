@@ -21,7 +21,7 @@ export function ArenaCarousel({ matches }: { matches: Match[] }) {
 
   if (matches.length === 0) {
     return (
-      <div className="arena-console arena-empty" data-ui data-reveal>
+      <div className="arena-console arena-empty" data-ui>
         <div className="arena-empty-head"><strong>K-SPORT</strong><span>Trung tâm trận đấu</span></div>
         <EmptyState title="Chưa có trận đấu được công bố" description="Lịch, thông tin thảm và trạng thái trận đấu sẽ được đồng bộ từ hệ thống điều hành." compact />
       </div>
@@ -31,7 +31,7 @@ export function ArenaCarousel({ matches }: { matches: Match[] }) {
   const current = matches[active];
   const currentMat = getMatDisplayName(current.tatami);
   return (
-    <div className="arena-console" data-ui data-reveal>
+    <div className="arena-console" data-ui>
       <div className="arena-focus-row" key={current.id}>
         <div className="arena-time"><time>{current.time}</time><span>{currentMat}</span></div>
         <div className="arena-category"><strong title={current.category}>{displayCategory(current.category)}</strong><span>{current.state}</span></div>

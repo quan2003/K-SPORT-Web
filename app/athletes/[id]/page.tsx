@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import { AthleteAvatar } from "@/components/athlete-avatar";
 import { InternalLayout } from "@/components/portal-ui";
 import { getAthlete, getAthletes, getEvents, getRanking } from "@/lib/public-data";
-import { isMockAthlete } from "@/lib/mock-data";
 
-export async function generateStaticParams() { return (await getAthletes()).map(({ id }) => ({ id })); }
+// Athlete data changes during a tournament. Render the requested profile at
+// request time instead of generating every athlete page during each deploy.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const athlete = await getAthlete((await params).id);
@@ -50,7 +51,6 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
   return (
     <InternalLayout>
       <section className="athlete-profile">
-        {isMockAthlete(athlete.id) ? <p className="sample-data-note athlete-sample-note">Dữ liệu minh họa — hồ sơ và thành tích này không phải dữ liệu thi đấu chính thức.</p> : null}
         <nav className="athlete-profile-navigation" aria-label="Điều hướng hồ sơ vận động viên">
           {previousAthlete ? <Link href={`/athletes/${previousAthlete.id}`}><span aria-hidden="true">←</span> VĐV trước</Link> : <span aria-disabled="true"><span aria-hidden="true">←</span> VĐV trước</span>}
           <Link href="/athletes">Tất cả VĐV</Link>

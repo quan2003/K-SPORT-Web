@@ -13,7 +13,9 @@ export type MatchDisplayState = Match["state"] | "Chờ cập nhật kết quả
 type CollectionPayload<T> = T[] | { items: T[] };
 const apiBaseUrl = process.env.KSPORT_PUBLIC_API_URL?.replace(/\/$/, "");
 const apiToken = process.env.KSPORT_PUBLIC_API_TOKEN;
-const requestTimeoutMs = 8_000;
+// The public results service builds some athlete profiles from tournament data.
+// On a cold request that can take longer than the former 8-second limit.
+const requestTimeoutMs = 20_000;
 const countryNames: Record<string, string> = {
   VN: "Việt Nam",
   JP: "Nhật Bản",
