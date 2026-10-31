@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { InternalLayout, MatchRows, PageHero } from "@/components/portal-ui";
-import { competitionType, getEvents, getMatDisplayName, getSchedule, isCurrentOrUpcomingMatch, sortMatches } from "@/lib/public-data";
+import { competitionType, getEvents, getMatDisplayName, getSchedule, sortMatches } from "@/lib/public-data";
 
 export const metadata: Metadata = { title: "Lịch thi đấu", description: "Lịch thi đấu Karate theo giải, thời gian, nội dung và thảm." };
 
@@ -17,9 +17,10 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const tatami = valueOf(params.tatami);
   const date = valueOf(params.date, "");
   const [events, rawMatches] = await Promise.all([getEvents(), getSchedule()]);
-  // Public schedule only lists matches that are upcoming or currently in progress.
-  // Confirmed completed matches belong on the results page; stale pending records stay private.
-  const matches = sortMatches(rawMatches.filter((match) => isCurrentOrUpcomingMatch(match)));
+  // Keep the full published timetable available throughout an ongoing event.
+  // The result column distinguishes completed matches; hiding past dates makes
+  // it impossible to look up yesterday's schedule while the tournament runs.
+  const matches = sortMatches(rawMatches);
   const selectedEvent = events.find((item) => item.slug === event);
   const sourceCategories = selectedEvent?.categories ?? events.flatMap((item) => item.categories);
   const categories = [...new Set(sourceCategories)].sort((left, right) => left.localeCompare(right, "vi"));
