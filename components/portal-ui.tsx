@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getMatchDisplayState, type Match } from "@/lib/public-data";
+import { getMatDisplayName, getMatchDisplayState, type Match } from "@/lib/public-data";
 import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -19,7 +19,7 @@ export function MatchRows({ matches, results = false }: { matches: Match[]; resu
   if (matches.length === 0) {
     return (
       <div className="match-list empty-table" data-ui>
-        <div className="match-head" aria-hidden="true"><span>Thời gian</span><span>Tatami</span><span>Nội dung thi đấu</span><span>Aka (đỏ)</span><span>VS</span><span>Ao (xanh)</span><span>Trạng thái</span></div>
+        <div className="match-head" aria-hidden="true"><span>Thời gian</span><span>Thảm</span><span>Nội dung thi đấu</span><span>Aka (đỏ)</span><span>VS</span><span>Ao (xanh)</span><span>Trạng thái</span></div>
         <EmptyState
           title={results ? "Kết quả đang được cập nhật" : "Lịch thi đấu đang được cập nhật"}
           description={results ? "Kết quả chính thức sẽ xuất hiện sau khi được ban tổ chức công bố." : "Thông tin lịch thi đấu sẽ được hiển thị tại đây ngay khi có dữ liệu chính thức từ ban tổ chức."}
@@ -31,11 +31,11 @@ export function MatchRows({ matches, results = false }: { matches: Match[]; resu
 
   return (
     <div className="match-list" data-ui>
-      <div className="match-head" aria-hidden="true"><span>Thời gian</span><span>Tatami</span><span>Nội dung thi đấu</span><span>Aka (đỏ)</span><span>VS</span><span>Ao (xanh)</span><span>Trạng thái</span></div>
+      <div className="match-head" aria-hidden="true"><span>Thời gian</span><span>Thảm</span><span>Nội dung thi đấu</span><span>Aka (đỏ)</span><span>VS</span><span>Ao (xanh)</span><span>Trạng thái</span></div>
       {matches.map((match) => (
         <article className="match-row" key={match.id}>
           <time dateTime={`${match.date}T${match.time}`}><strong>{match.time}</strong><span>{new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${match.date}T00:00:00+07:00`))}</span></time>
-          <strong>{match.tatami || "Chưa phân"}</strong>
+          <strong>{getMatDisplayName(match.tatami) ?? "Chưa có thông tin thảm"}</strong>
           <div><strong>{match.category}</strong><span>{match.eventName ?? "Giải đấu K-SPORT"}</span></div>
           <div className="fighter aka-fighter"><span>{match.red}</span><b>{match.redScore ?? "–"}</b></div>
           <div className="versus" aria-label="đấu với">VS</div>

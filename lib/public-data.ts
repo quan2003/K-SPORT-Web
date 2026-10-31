@@ -176,6 +176,19 @@ export function competitionType(category: string) {
   return "Khác";
 }
 
+/**
+ * The public API still exposes this field as `tatami`. Keep that contract at
+ * the boundary, while presenting its Vietnamese name consistently in the UI.
+ * A bare "Tatami" value is an API placeholder, not usable mat information.
+ */
+export function getMatDisplayName(value?: string) {
+  const raw = value?.trim();
+  if (!raw || /^tatami$/i.test(raw)) return null;
+
+  const identifier = raw.replace(/^(tatami|thảm)\s*/i, "").trim();
+  return identifier ? `Thảm ${identifier}` : null;
+}
+
 export function sortEvents(events: TournamentEvent[]) {
   const order: Record<EventStatus, number> = { "Đang diễn ra": 0, "Sắp diễn ra": 1, "Đã kết thúc": 2 };
   return [...events].sort((left, right) => order[left.status] - order[right.status] || left.date.localeCompare(right.date));
@@ -183,6 +196,6 @@ export function sortEvents(events: TournamentEvent[]) {
 
 export const featureNotes = [
   ["Thiết lập nội dung", "Quản lý Kata, Kumite, nhóm tuổi và hạng cân trong một cấu trúc thống nhất."],
-  ["Điều phối trận đấu", "Phân bổ tatami, thứ tự gọi trận và trạng thái vận hành theo thời gian thực."],
+  ["Điều phối trận đấu", "Phân bổ thảm, thứ tự gọi trận và trạng thái vận hành theo thời gian thực."],
   ["Công bố kết quả", "Đồng bộ kết quả từ bàn điều hành đến cổng thông tin công khai."],
 ] as const;

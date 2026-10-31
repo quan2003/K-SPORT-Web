@@ -8,7 +8,7 @@ import { HomeMotion } from "@/components/home-motion";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { MoreLink } from "@/components/portal-ui";
-import { getBanners, getEvents, getNews, getRanking, getSchedule, isCurrentOrUpcomingMatch, sortEvents, sortMatches } from "@/lib/public-data";
+import { getBanners, getEvents, getMatDisplayName, getNews, getRanking, getSchedule, isCurrentOrUpcomingMatch, sortEvents, sortMatches } from "@/lib/public-data";
 import { mockRanking } from "@/lib/mock-data";
 
 const formatDate = (value: string) => new Intl.DateTimeFormat("vi-VN", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
@@ -47,13 +47,13 @@ export default async function Home() {
               {upcomingMatches.length > 0 ? upcomingMatches.map((match) => (
                 <article key={match.id}>
                   <div className="rail-time"><time dateTime={`${match.date}T${match.time}`}>{match.time}</time><span>{formatDate(match.date)}</span></div>
-                  <div className="rail-match-copy"><strong>{match.category}</strong><span>{match.eventName ?? "Giải đấu K-SPORT"}</span><small>{match.tatami ? `Tatami ${match.tatami}` : "Tatami chưa được phân"}</small></div>
+                  <div className="rail-match-copy"><strong>{match.category}</strong><span>{match.eventName ?? "Giải đấu K-SPORT"}</span><small>{getMatDisplayName(match.tatami) ?? "Chưa có thông tin thảm"}</small></div>
                   <p><span className="aka-dot" />{match.red}<br /><span className="ao-dot" />{match.blue}</p>
                 </article>
               )) : (
                 <div className="rail-empty">
                   <strong>Chưa có giờ thi đấu mới được công bố</strong>
-                  <p>Giải sắp tới đã có thông tin, nhưng lịch trận và tatami vẫn đang chờ ban tổ chức cập nhật.</p>
+                  <p>Giải sắp tới đã có thông tin, nhưng lịch trận và thông tin thảm vẫn đang chờ ban tổ chức cập nhật.</p>
                   <Link href={featuredEvent ? `/events/${featuredEvent.slug}` : "/events"}>Xem giải sắp tới <span aria-hidden="true">→</span></Link>
                 </div>
               )}
@@ -80,7 +80,7 @@ export default async function Home() {
         </section>
 
         <section className="arena-section">
-          <div className="section-heading inverse" data-reveal><div><h2>Trên thảm đấu</h2><p>Theo dõi thứ tự trận, tatami và trạng thái thi đấu từ một giao diện tập trung.</p></div><MoreLink href="/schedule">Mở lịch thi đấu</MoreLink></div>
+          <div className="section-heading inverse" data-reveal><div><h2>Trên thảm đấu</h2><p>Theo dõi thứ tự trận, thảm và trạng thái thi đấu từ một giao diện tập trung.</p></div><MoreLink href="/schedule">Mở lịch thi đấu</MoreLink></div>
           <ArenaCarousel matches={visibleMatches} />
         </section>
 
