@@ -15,7 +15,7 @@ export function HomeMotion() {
         (entry.target as HTMLElement).dataset.visible = "true";
         observer.unobserve(entry.target);
       });
-    }, { rootMargin: "0px 0px -8%", threshold: 0.12 });
+    }, { rootMargin: "0px 0px -6%", threshold: 0.01 });
 
     revealItems.forEach((item) => observer.observe(item));
 

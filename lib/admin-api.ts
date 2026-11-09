@@ -6,7 +6,8 @@ function resolveAdminApiBase() {
   const explicit = process.env.KSPORT_ADMIN_API_URL?.replace(/\/$/, "");
   if (explicit) return explicit;
   const publicApi = process.env.KSPORT_PUBLIC_API_URL?.replace(/\/$/, "");
-  return publicApi?.replace(/\/api\/public$/, "") ?? "";
+  if (publicApi) return publicApi.replace(/\/api\/public$/, "");
+  return "https://admin.luuquancoder.id.vn";
 }
 
 export async function adminApiFetch(path: string, init: RequestInit = {}) {
@@ -16,7 +17,12 @@ export async function adminApiFetch(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-  return fetch(`${baseUrl}${path}`, { ...init, headers, cache: "no-store" });
+  return fetch(`${baseUrl}${path}`, {
+    ...init,
+    headers,
+    cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(6_000),
+  });
 }
 
 export function getAdminApiBase() {

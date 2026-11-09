@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AthleteAvatar } from "@/components/athlete-avatar";
-import { InternalLayout } from "@/components/portal-ui";
-import { getAthlete, getAthletes, getEvents, getRanking, groupAthletesForDirectory } from "@/lib/public-data";
+import { AthletePass } from "@/components/athlete-pass";
+import { AutoRefresh } from "@/components/auto-refresh";
+import { InternalLayout, MatchRows } from "@/components/portal-ui";
+import { getAthlete, getAthletes, getEvents, getRanking, getSchedule, groupAthletesForDirectory, sortMatches } from "@/lib/public-data";
 
 // Athlete data changes during a tournament. Render the requested profile at
 // request time instead of generating every athlete page during each deploy.
@@ -27,7 +29,7 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
   const { id } = await params;
   const pageParams = await searchParams;
   const eventQuery = typeof pageParams.event === "string" ? pageParams.event.trim().toLocaleLowerCase("vi") : "";
-  const [athlete, athletes, ranking, events] = await Promise.all([getAthlete(id), getAthletes(), getRanking(), getEvents()]);
+  const [athlete, athletes, ranking, events, schedule] = await Promise.all([getAthlete(id), getAthletes(), getRanking(), getEvents(), getSchedule()]);
   if (!athlete) notFound();
   const athleteDirectory = groupAthletesForDirectory(athletes);
   const athleteProfile = athleteDirectory.find((item) => item.sourceIds.includes(athlete.id)) ?? { ...athlete, categories: [athlete.category], sourceIds: [athlete.id] };
@@ -35,6 +37,14 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
   const athleteIndex = orderedAthletes.findIndex((item) => item.sourceIds.includes(athlete.id));
   const previousAthlete = athleteIndex > 0 ? orderedAthletes[athleteIndex - 1] : null;
   const nextAthlete = athleteIndex >= 0 && athleteIndex < orderedAthletes.length - 1 ? orderedAthletes[athleteIndex + 1] : null;
+  const athleteNameClean = athlete.name.trim().toLocaleLowerCase("vi");
+  const athleteMatches = sortMatches(
+    schedule.filter((match) => {
+      const red = match.red?.trim().toLocaleLowerCase("vi") || "";
+      const blue = match.blue?.trim().toLocaleLowerCase("vi") || "";
+      return red.includes(athleteNameClean) || blue.includes(athleteNameClean);
+    })
+  );
   const rankingEntries = ranking
     .filter((item) => athleteProfile.sourceIds.includes(item.athleteId))
     .sort((left, right) => right.points - left.points || left.category.localeCompare(right.category, "vi"));
@@ -50,9 +60,25 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
     { gold: 0, silver: 0, bronze: 0 },
   );
   const medalTotal = medalTotals.gold + medalTotals.silver + medalTotals.bronze;
+  const liveMatch = athleteMatches.find((match) => match.state === "Đang thi đấu");
+  const upcomingMatches = athleteMatches.filter((match) => match.state === "Sắp diễn ra");
+  const focusMatch = liveMatch || upcomingMatches[0] || null;
+  const isLive = Boolean(liveMatch);
+  const remainingCount = athleteMatches.filter((match) => match.state !== "Đã kết thúc").length;
+
   return (
     <InternalLayout>
+      <AutoRefresh intervalMs={30_000} />
       <section className="athlete-profile">
+        <AthletePass
+          athleteName={athlete.name}
+          athleteCode={athleteProfile.athleteCode ?? athlete.id}
+          club={athlete.club}
+          focusMatch={focusMatch}
+          isLive={isLive}
+          remainingCount={remainingCount}
+          updatedAt={new Date()}
+        />
         <nav className="athlete-profile-navigation" aria-label="Điều hướng hồ sơ vận động viên">
           {previousAthlete ? <Link href={`/athletes/${previousAthlete.id}`}><span aria-hidden="true">←</span> VĐV trước</Link> : <span aria-disabled="true"><span aria-hidden="true">←</span> VĐV trước</span>}
           <Link href="/athletes">Tất cả VĐV</Link>
@@ -62,10 +88,15 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
           <aside className="athlete-profile-media">
             <AthleteAvatar name={athlete.name} src={athlete.image} priority className="athlete-avatar-profile" />
             <h1>{athlete.name}</h1>
-            <dl><div><dt>Mã VĐV</dt><dd>{athlete.athleteCode ?? athlete.id}</dd></div><div><dt>Quốc gia</dt><dd>{athlete.country || "—"}</dd></div><div><dt>Tổng số trận</dt><dd>{athlete.totalMatches ?? 0}</dd></div><div><dt>Tỷ lệ thắng</dt><dd>{typeof athlete.winRate === "number" ? `${athlete.winRate}%` : "—"}</dd></div></dl>
+            <dl>
+              <div><dt>Mã VĐV</dt><dd>{athleteProfile.athleteCode ?? athlete.id}</dd></div>
+              <div><dt>Quốc gia</dt><dd>{athleteProfile.country || "—"}</dd></div>
+              <div><dt>Trận đã đấu</dt><dd>{athleteProfile.totalMatches ?? 0}</dd></div>
+              <div><dt>Trận thắng</dt><dd>{athleteProfile.wins ?? 0}</dd></div>
+              <div><dt>Tỷ lệ thắng</dt><dd>{athleteProfile.totalMatches ? `${Math.round(((athleteProfile.wins ?? 0) / athleteProfile.totalMatches) * 100)}%` : (typeof athleteProfile.winRate === "number" ? `${athleteProfile.winRate}%` : "—")}</dd></div>
+            </dl>
           </aside>
           <div className="athlete-profile-copy">
-            <p className="athlete-profile-eyebrow">Hồ sơ vận động viên</p>
             <h2>Nội dung thi đấu</h2>
             <p className="athlete-profile-categories">{athleteProfile.categories.join(" · ")}</p>
             <p className="athlete-profile-club">{athlete.club}</p>
@@ -73,8 +104,17 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
             {rankingEntries.length > 0 ? <section className="athlete-ranking-summary" aria-labelledby="athlete-ranking-title"><div><p id="athlete-ranking-title">Thành tích công khai</p><Link href="/ranking">Xem bảng xếp hạng <span aria-hidden="true">→</span></Link></div>{medalTotal > 0 ? <dl className="athlete-medal-totals" aria-label={`Tổng ${medalTotal} huy chương`}><div className="medal-gold"><dt>Vàng</dt><dd>{medalTotals.gold}</dd></div><div className="medal-silver"><dt>Bạc</dt><dd>{medalTotals.silver}</dd></div><div className="medal-bronze"><dt>Đồng</dt><dd>{medalTotals.bronze}</dd></div><div className="medal-total"><dt>Tổng</dt><dd>{medalTotal}</dd></div></dl> : null}<ol>{rankingEntries.slice(0, 3).map((entry) => <li key={`${entry.eventSlug}-${entry.category}`}><b>#{entry.rank}</b><span><strong>{entry.eventName}</strong><small>{entry.category}{entry.season ? ` · ${entry.season}` : ""}</small></span><em>{new Intl.NumberFormat("vi-VN").format(entry.points)} điểm</em></li>)}</ol></section> : null}
           </div>
         </div>
+        <section className="athlete-matches-section" aria-labelledby="athlete-matches-title">
+          <div className="athlete-section-heading">
+            <div>
+              <h2 id="athlete-matches-title">Trận đấu của vận động viên</h2>
+            </div>
+            <p className="athlete-matches-count"><strong>{athleteMatches.length}</strong> trận đã xếp lịch</p>
+          </div>
+          <MatchRows matches={athleteMatches} />
+        </section>
         <section className="athlete-event-history" aria-labelledby="athlete-history-title">
-          <div><div><p className="athlete-profile-eyebrow">Lịch sử thi đấu</p><h2 id="athlete-history-title">Thành tích theo giải</h2></div><form method="get" role="search"><label className="sr-only" htmlFor="athlete-event-search">Tìm giải đấu hoặc hạng mục</label><input id="athlete-event-search" name="event" type="search" placeholder="Tìm giải đấu hoặc hạng mục…" defaultValue={eventQuery} /><button type="submit" aria-label="Tìm lịch sử thi đấu">→</button></form></div>
+          <div><div><h2 id="athlete-history-title">Thành tích theo giải</h2></div><form method="get" role="search"><label className="sr-only" htmlFor="athlete-event-search">Tìm giải đấu hoặc hạng mục</label><input id="athlete-event-search" name="event" type="search" placeholder="Tìm giải đấu hoặc hạng mục…" autoComplete="off" spellCheck={false} defaultValue={eventQuery} /><button type="submit" aria-label="Tìm lịch sử thi đấu">→</button></form></div>
           {historyEntries.length > 0 ? <div className="athlete-history-table"><div className="athlete-history-head"><span>Ngày</span><span>Giải đấu</span><span>Hạng mục</span><span>Thành tích</span><span>Điểm</span></div>{historyEntries.map((entry) => <div className="athlete-history-row" key={`${entry.eventSlug}-${entry.category}`}><time>{formatDate(entry.eventDate || eventDates.get(entry.eventSlug))}</time><strong>{entry.eventName}</strong><span>{entry.category}</span><span>{medalLabel(entry)} {medalLabel(entry) === "#" ? entry.rank : ""}</span><em>{new Intl.NumberFormat("vi-VN").format(entry.points)}</em></div>)}</div> : <p className="athlete-history-empty">Chưa có thành tích công khai phù hợp.</p>}
         </section>
       </section>

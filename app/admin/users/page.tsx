@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
-import { AdminDirectory } from "@/components/admin-directory";
+import { AdminUsersManager } from "@/components/admin-users-manager";
 
-export const metadata: Metadata = { title: "Quản lý người dùng" };
+export const metadata: Metadata = {
+  title: "Người dùng & Phân quyền · K-SPORT Admin",
+  description: "Quản lý tài khoản điều hành, phân quyền Ban Tổ Chức (BTC) và trọng tài",
+};
 
-export default function AdminUsersPage() { return <AdminDirectory kind="users" />; }
+export default function AdminUsersPage() {
+  return <AdminUsersManager />;
+}

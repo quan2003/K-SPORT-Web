@@ -48,6 +48,7 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
   const router = useRouter();
   const [items, setItems] = useState<ContentItem[]>([]);
   const [editing, setEditing] = useState<ContentItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState<ContentItem | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [filter, setFilter] = useState<ContentFilter>("all");
   const [query, setQuery] = useState("");
@@ -143,12 +144,18 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
     finally { setIsSaving(false); }
   }
 
-  async function remove(item: ContentItem) {
-    if (!window.confirm(`Xóa “${item.title}”? Hành động này không thể hoàn tác.`)) return;
-    const response = await fetch(`/api/admin/content/${kind}/${item.id}`, { method: "DELETE" });
+  function promptRemove(item: ContentItem) {
+    setDeletingItem(item);
+  }
+
+  async function executeRemove() {
+    if (!deletingItem) return;
+    const target = deletingItem;
+    setDeletingItem(null);
+    const response = await fetch(`/api/admin/content/${kind}/${target.id}`, { method: "DELETE" });
     if (requireLogin(response)) return;
     if (!response.ok) return showToast("error", "Không thể xóa nội dung");
-    showToast("success", "Đã xóa nội dung.");
+    showToast("success", `Đã xóa “${target.title}” thành công.`);
     await load();
   }
 
@@ -167,7 +174,36 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
       <div className="admin-list-header"><div><h2 id="admin-list-heading">Danh sách {contentName}</h2><p>{items.length} {contentName} trong hệ thống.</p></div><button className="button red" type="button" onClick={() => openEditor()}>{isNews ? "Tạo bài viết" : "Tạo banner"}</button></div>
       <div className="admin-list-tabs" role="tablist" aria-label="Lọc trạng thái nội dung">{([['all', 'Tất cả'], ['published', 'Đang công khai'], ['draft', 'Bản nháp']] as const).map(([value, label]) => <button type="button" role="tab" aria-selected={filter === value} key={value} onClick={() => setFilter(value)}>{label}</button>)}</div>
       <div className="admin-list-toolbar"><label className="admin-search"><span className="sr-only">Tìm {contentName}</span><input type="search" name="content-search" autoComplete="off" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Tìm ${contentName}…`} /></label><span>{filteredItems.length} kết quả</span></div>
-      {isLoading ? <p className="admin-list-state" aria-live="polite">Đang tải nội dung…</p> : filteredItems.length ? <div className="admin-table-wrap"><table className="admin-content-table"><thead><tr><th scope="col">{isNews ? "Bài viết" : "Banner"}</th><th scope="col">Trạng thái</th><th scope="col">{isNews ? "Ngày đăng" : "Thứ tự"}</th><th scope="col"><span className="sr-only">Thao tác</span></th></tr></thead><tbody>{filteredItems.map((item) => <tr key={item.id}><td><div className="admin-content-title">{item.image ? <ContentImage src={item.image} alt="" width={112} height={72} /> : <div className="admin-content-thumb-empty" aria-hidden="true">Không ảnh</div>}<strong>{item.title}</strong></div></td><td><span className={item.isPublished ? "admin-status is-live" : "admin-status is-draft"}>{item.isPublished ? "Đang công khai" : "Bản nháp"}</span></td><td className="admin-content-date">{isNews ? formatAdminDate(item.publishedAt) : String(item.position ?? "—")}</td><td><div className="admin-content-card-actions"><button type="button" onClick={() => openEditor(item)} aria-label={`Sửa ${item.title}`}>Sửa</button><button type="button" onClick={() => remove(item)} aria-label={`Xóa ${item.title}`}>Xóa</button></div></td></tr>)}</tbody></table></div> : <div className="admin-list-state"><strong>{query || filter !== "all" ? "Không tìm thấy nội dung phù hợp." : `Chưa có ${contentName}.`}</strong><p>{query || filter !== "all" ? "Thử thay đổi từ khóa hoặc bộ lọc." : `Tạo ${contentName} đầu tiên để bắt đầu.`}</p></div>}
+      {isLoading ? <p className="admin-list-state" aria-live="polite">Đang tải nội dung…</p> : filteredItems.length ? <div className="admin-table-wrap"><table className="admin-content-table"><thead><tr><th scope="col">{isNews ? "Bài viết" : "Banner"}</th><th scope="col">Trạng thái</th><th scope="col">{isNews ? "Ngày đăng" : "Thứ tự"}</th><th scope="col"><span className="sr-only">Thao tác</span></th></tr></thead><tbody>{filteredItems.map((item) => <tr key={item.id}><td><div className="admin-content-title">{item.image ? <ContentImage src={item.image} alt="" width={112} height={72} /> : <div className="admin-content-thumb-empty" aria-hidden="true">Không ảnh</div>}<strong>{item.title}</strong></div></td><td><span className={item.isPublished ? "admin-status is-live" : "admin-status is-draft"}>{item.isPublished ? "Đang công khai" : "Bản nháp"}</span></td><td className="admin-content-date">{isNews ? formatAdminDate(item.publishedAt) : String(item.position ?? "—")}</td><td><div className="admin-content-card-actions"><button type="button" onClick={() => openEditor(item)} aria-label={`Sửa ${item.title}`}>Sửa</button><button type="button" onClick={() => promptRemove(item)} aria-label={`Xóa ${item.title}`}>Xóa</button></div></td></tr>)}</tbody></table></div> : <div className="admin-list-state"><strong>{query || filter !== "all" ? "Không tìm thấy nội dung phù hợp." : `Chưa có ${contentName}.`}</strong><p>{query || filter !== "all" ? "Thử thay đổi từ khóa hoặc bộ lọc." : `Tạo ${contentName} đầu tiên để bắt đầu.`}</p></div>}
     </section>}
+
+    {/* In-app Confirmation Modal (Replaces native browser alert) */}
+    {deletingItem && (
+      <div className="admin-modal-overlay" role="dialog" aria-modal="true">
+        <div className="admin-confirm-box">
+          <div className="confirm-icon-wrap red">🗑️</div>
+          <h3>Xác nhận xóa {contentName}?</h3>
+          <p>
+            Bạn có chắc chắn muốn xóa &ldquo;<strong>{deletingItem.title}</strong>&rdquo;? Hành động này sẽ gỡ nội dung khỏi cổng K-SPORT.
+          </p>
+          <div className="admin-confirm-actions">
+            <button
+              type="button"
+              className="button ghost"
+              onClick={() => setDeletingItem(null)}
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="button"
+              className="button red"
+              onClick={executeRemove}
+            >
+              Xác nhận xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   </>;
 }

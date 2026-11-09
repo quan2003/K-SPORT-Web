@@ -1,22 +1,38 @@
-import Image from "next/image";
-import Link from "next/link";
-import { ContentImage } from "@/components/content-image";
 import type { Metadata } from "next";
-import { EmptyState } from "@/components/empty-state";
-import { InternalLayout, PageHero } from "@/components/portal-ui";
+import { InternalLayout } from "@/components/portal-ui";
+import { NewsCatalogView } from "@/components/news/news-catalog-view";
 import { getNews } from "@/lib/public-data";
 
-export const metadata: Metadata = { title: "Tin tức", description: "Tin tức Karate được công bố trên cổng K-SPORT." };
-
-const formatDate = (value: string) => new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(value));
+export const metadata: Metadata = {
+  title: "Tin Tức & Hoạt Động Karate Việt Nam | K-SPORT",
+  description: "Bản tin chính thức về các giải đấu Karate, hoạt động trọng tài, ứng dụng công nghệ điều hành thảm đấu và câu chuyện võ đường.",
+};
 
 export default async function NewsPage() {
   const news = await getNews();
+
   return (
     <InternalLayout>
-      <PageHero title="Tin tức Karate" description="Thông tin, kiến thức và góc nhìn về hoạt động Karate." image="/images/karate-training.png" />
-      <section className="content-section">
-        {news.length > 0 ? <div className="article-index">{news.map((item, index) => <Link href={`/news/${item.slug}`} key={item.slug} className={index === 0 ? "large" : ""}><ContentImage src={item.image} alt="" width={900} height={600} /><div><span>{item.category}</span><h2>{item.title}</h2><p>{item.summary}</p><time>{formatDate(item.publishedAt)}</time></div></Link>)}</div> : <div className="news-empty-layout"><Image src="/images/karate-training.png" alt="Trang phục và thảm tập Karate" width={1536} height={1024} /><EmptyState title="Tin tức đang được cập nhật" description="Các bài viết đã biên tập sẽ xuất hiện tại đây khi chuyên mục được kết nối dữ liệu." /></div>}
+      {/* Premium Sports Header - Synchronized with /events, /schedule, /ranking & /athletes */}
+      <section className="ks-events-hero-section">
+        <div className="ks-section-container">
+          <div className="ks-events-hero-content">
+            <span className="ks-eyebrow-tag">BẢN TIN CHUYÊN MÔN & HOẠT ĐỘNG KARATE K-SPORT</span>
+            <h1 className="ks-events-hero-title">
+              Tin Tức & Hoạt Động Karate
+            </h1>
+            <p className="ks-events-hero-sub">
+              Cập nhật nhanh diễn biến các giải đấu toàn quốc, đào tạo trọng tài WKF, số hóa công tác điều hành thảm đấu và lan tỏa tinh thần võ đạo Karate Việt Nam.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Main News Catalog Console */}
+      <section className="ks-news-catalog-section">
+        <div className="ks-section-container">
+          <NewsCatalogView initialNews={news} />
+        </div>
       </section>
     </InternalLayout>
   );

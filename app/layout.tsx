@@ -4,6 +4,8 @@ import "@fontsource/barlow/500.css";
 import "@fontsource/barlow/600.css";
 import "@fontsource/barlow-condensed/700.css";
 import "./globals.css";
+import { SplashScreen } from "@/components/splash-screen";
+import { CookieConsentBanner } from "@/components/cookie-consent";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://k-sport.net"),
@@ -27,7 +29,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="vi" data-scroll-behavior="smooth">
       <body id="top">
         <a className="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
+        <SplashScreen />
         {children}
+        <CookieConsentBanner />
       </body>
     </html>
   );

@@ -13,7 +13,11 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   return (
     <InternalLayout>
       <PageHero title="Kết quả thi đấu" description="Tra cứu kết quả đã được ban tổ chức xác nhận và công bố." image="/images/karate-hero.png" />
-      <section className="content-section schedule-section">
+      <section className="content-section schedule-section data-index-section">
+        <header className="data-page-heading">
+          <div><h2>Kết quả đã công bố</h2><p>Dữ liệu được sắp theo từng giải và nội dung thi đấu.</p></div>
+          <p><strong>{filteredMatches.length}</strong> trận đấu</p>
+        </header>
         <form className="filter-bar" method="get"><label>Giải đấu<select name="event" defaultValue={event}><option value="all">Tất cả giải đấu</option>{events.map((item) => <option value={item.slug} key={item.slug}>{item.name}</option>)}</select></label><label>Nội dung<select name="category" defaultValue={category}><option value="all">Tất cả nội dung</option><option>Kata</option><option>Kumite</option></select></label><button className="filter-submit" type="submit">Áp dụng</button></form>
         <MatchRows matches={filteredMatches} results />
       </section>
