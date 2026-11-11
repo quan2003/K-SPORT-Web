@@ -4,14 +4,20 @@ import Link from "next/link";
 import { InternalLayout } from "@/components/portal-ui";
 import { HomeCta } from "@/components/home/home-cta";
 import { TournamentScoreboard } from "@/components/scoreboard/tournament-scoreboard";
-import { SOFTWARE_RELEASE } from "@/lib/software-release";
+import { getSoftwareRelease } from "@/lib/software-release";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Phần Mềm Quản Lý & Bảng Điểm Điện Tử Giải Karate | K-SPORT",
   description: "Giải pháp công nghệ toàn diện cho giải đấu Karate: Đăng ký đoàn, bốc thăm phân nhánh tự động WKF, bảng điểm điện tử Tatami và tổng hợp kết quả thời gian thực.",
 };
 
-export default function SoftwarePage() {
+export default async function SoftwarePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const softwareRelease = await getSoftwareRelease();
+  const params = await searchParams;
+  const downloadUnavailable = params.download === "unavailable";
+  const requestedOs = typeof params.os === "string" ? params.os : "windows";
   return (
     <InternalLayout>
       {/* 1. Synchronized Sports Hero Banner */}
@@ -35,7 +41,7 @@ export default function SoftwarePage() {
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                <span>Tải Phần Mềm K-SPORT ({SOFTWARE_RELEASE.tag})</span>
+                <span>Tải Phần Mềm K-SPORT ({softwareRelease.tag})</span>
               </a>
               <Link href="/contact" className="ks-btn ks-btn-outline-white">
                 <span>Tư Vấn Triển Khai Giải</span>
@@ -354,13 +360,20 @@ export default function SoftwarePage() {
       <section id="download" className="ks-software-download-section">
         <div className="ks-section-container">
           <div className="ks-download-hub-card">
+            {downloadUnavailable && (
+              <div className="ks-download-alert" role="alert">
+                <strong>Chưa thể tải bản cài đặt {requestedOs === "mac" ? "macOS" : requestedOs === "linux" ? "Linux" : "Windows"}.</strong>
+                <span>Máy chủ phân phối đang không phản hồi. Vui lòng thử lại sau hoặc liên hệ K-SPORT để nhận bản cài đặt chính thức.</span>
+                <Link href="/contact">Liên hệ hỗ trợ <span aria-hidden="true">→</span></Link>
+              </div>
+            )}
             <div className="ks-download-hub-header">
               <span className="ks-eyebrow-tag">HỆ THỐNG PHÁT HÀNH CHÍNH THỨC K-SPORT</span>
               <h2 className="ks-download-hub-title">
                 Chọn Hệ Điều Hành Để Tải Phần Mềm K-SPORT
               </h2>
               <p className="ks-download-hub-sub">
-                Phiên bản {SOFTWARE_RELEASE.tag} (Mới nhất) — Tương thích đa nền tảng, thiết kế chuyên biệt cho công tác thư ký, bốc thăm và bảng điểm LED tại sàn đấu Karate.
+                Phiên bản {softwareRelease.tag} (Mới nhất) — Tương thích đa nền tảng, thiết kế chuyên biệt cho công tác thư ký, bốc thăm và bảng điểm LED tại sàn đấu Karate.
               </p>
             </div>
 
@@ -376,7 +389,7 @@ export default function SoftwarePage() {
                   </div>
                   <div>
                     <h3 className="ks-dl-platform-title">K-SPORT for Windows</h3>
-                    <span className="ks-dl-version">Phiên bản {SOFTWARE_RELEASE.tag} · Setup .exe (92 MB)</span>
+                    <span className="ks-dl-version">Phiên bản {softwareRelease.tag} · Setup .exe (92 MB)</span>
                   </div>
                 </div>
                 <p className="ks-dl-desc">
@@ -407,7 +420,7 @@ export default function SoftwarePage() {
                   </div>
                   <div>
                     <h3 className="ks-dl-platform-title">K-SPORT for Mac</h3>
-                    <span className="ks-dl-version">Phiên bản {SOFTWARE_RELEASE.tag} · File .dmg (122 MB)</span>
+                    <span className="ks-dl-version">Phiên bản {softwareRelease.tag} · File .dmg (122 MB)</span>
                   </div>
                 </div>
                 <p className="ks-dl-desc">
@@ -442,7 +455,7 @@ export default function SoftwarePage() {
                   </div>
                   <div>
                     <h3 className="ks-dl-platform-title">K-SPORT for Linux</h3>
-                    <span className="ks-dl-version">Phiên bản {SOFTWARE_RELEASE.tag} · .AppImage (131 MB)</span>
+                    <span className="ks-dl-version">Phiên bản {softwareRelease.tag} · .AppImage (131 MB)</span>
                   </div>
                 </div>
                 <p className="ks-dl-desc">

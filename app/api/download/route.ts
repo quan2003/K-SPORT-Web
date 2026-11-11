@@ -4,16 +4,17 @@ import { NextRequest, NextResponse } from "next/server";
 const GITHUB_REPO = process.env.GITHUB_RELEASE_REPO || "quan2003/Karate-Manager";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-// Static reliable fallbacks
-const FALLBACK_BINARIES: Record<string, string> = {
-  windows: `https://github.com/${GITHUB_REPO}/releases/download/v3.0.13/K-SPORT-Setup-3.0.13.exe`,
-  mac: `https://github.com/${GITHUB_REPO}/releases/download/v3.0.13/K-SPORT-3.0.13-arm64.dmg`,
-  linux: `https://github.com/${GITHUB_REPO}/releases/download/v3.0.13/K-SPORT-3.0.13.AppImage`,
-};
+function unavailable(request: NextRequest, os: string) {
+  const url = new URL("/software", request.url);
+  url.searchParams.set("download", "unavailable");
+  url.searchParams.set("os", os);
+  return NextResponse.redirect(url, 303);
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const os = (searchParams.get("os") || "windows").toLowerCase();
+  if (!["windows", "mac", "linux"].includes(os)) return unavailable(request, "windows");
 
   try {
     const headers: Record<string, string> = {
@@ -27,7 +28,8 @@ export async function GET(request: NextRequest) {
 
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
       headers,
-      next: { revalidate: 1800 },
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(8000),
     });
 
     if (res.ok) {
@@ -48,33 +50,43 @@ export async function GET(request: NextRequest) {
       }
 
       if (chosenAsset) {
-        // If GITHUB_TOKEN is configured (Private Repo mode), get the authenticated asset redirect
+        // Proxy the binary through our own endpoint. Do not redirect the browser
+        // to GitHub: redirects expose the repository/release URL to the user.
+        const assetHeaders: Record<string, string> = {
+          Accept: "application/octet-stream",
+          "User-Agent": "K-SPORT-Download-Gateway",
+        };
         if (GITHUB_TOKEN) {
-          const assetRes = await fetch(
-            `https://api.github.com/repos/${GITHUB_REPO}/releases/assets/${chosenAsset.id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${GITHUB_TOKEN}`,
-                Accept: "application/octet-stream",
-                "User-Agent": "K-SPORT-Download-Gateway",
-              },
-              redirect: "manual",
-            }
-          );
-          const location = assetRes.headers.get("location");
-          if (location) {
-            return NextResponse.redirect(location, 302);
-          }
+          assetHeaders.Authorization = `Bearer ${GITHUB_TOKEN}`;
         }
 
-        // Public repo redirect directly to asset
-        return NextResponse.redirect(chosenAsset.browser_download_url, 302);
+        const assetRes = await fetch(chosenAsset.url, {
+          headers: assetHeaders,
+          cache: "no-store",
+          signal: AbortSignal.timeout(120_000),
+        });
+
+        if (assetRes.ok && assetRes.body) {
+          const contentType = assetRes.headers.get("content-type") || "application/octet-stream";
+          const contentLength = assetRes.headers.get("content-length");
+          const responseHeaders = new Headers({
+            "Content-Type": contentType,
+            "Content-Disposition": `attachment; filename="${chosenAsset.name.replace(/["\\\r\n]/g, "_")}"`,
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+          });
+          if (contentLength) responseHeaders.set("Content-Length", contentLength);
+
+          return new Response(assetRes.body, {
+            status: 200,
+            headers: responseHeaders,
+          });
+        }
       }
     }
   } catch {
     // If GitHub API is unreachable, fall through to fallback
   }
 
-  const fallback = FALLBACK_BINARIES[os] || FALLBACK_BINARIES.windows;
-  return NextResponse.redirect(fallback, 302);
+  return unavailable(request, os);
 }

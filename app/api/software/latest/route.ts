@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { SOFTWARE_RELEASE } from "@/lib/software-release";
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 const GITHUB_REPO = process.env.GITHUB_RELEASE_REPO || "quan2003/Karate-Manager";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -19,7 +19,7 @@ export async function GET() {
 
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
       headers,
-      next: { revalidate: 3600 },
+      next: { revalidate: 300 },
     });
 
     if (!res.ok) {

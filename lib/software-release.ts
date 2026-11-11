@@ -4,9 +4,9 @@
  */
 
 export const SOFTWARE_RELEASE = {
-  version: "3.0.13",
-  tag: "v3.0.13",
-  releaseDate: "30/10/2026",
+  version: "3.0.14",
+  tag: "v3.0.14",
+  releaseDate: "09/11/2026",
   downloadWindows: "/api/download?os=windows",
   downloadMac: "/api/download?os=mac",
   downloadLinux: "/api/download?os=linux",
@@ -49,3 +49,35 @@ export const SOFTWARE_RELEASE = {
     },
   ],
 } as const;
+
+/** Resolve the latest public release on the server without exposing GitHub to the browser. */
+export async function getSoftwareRelease() {
+  const repo = process.env.GITHUB_RELEASE_REPO || "quan2003/Karate-Manager";
+  const token = process.env.GITHUB_TOKEN;
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github.v3+json",
+    "User-Agent": "K-SPORT-Web",
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  try {
+    const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+      headers,
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) return SOFTWARE_RELEASE;
+
+    const data = await response.json();
+    return {
+      ...SOFTWARE_RELEASE,
+      version: data.tag_name ? data.tag_name.replace(/^v/, "") : SOFTWARE_RELEASE.version,
+      tag: data.tag_name || SOFTWARE_RELEASE.tag,
+      releaseDate: data.published_at
+        ? new Date(data.published_at).toLocaleDateString("vi-VN")
+        : SOFTWARE_RELEASE.releaseDate,
+    };
+  } catch {
+    return SOFTWARE_RELEASE;
+  }
+}

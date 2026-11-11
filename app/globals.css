@@ -5292,6 +5292,11 @@ a:hover { opacity: .78; }
     flex-direction: column;
     align-items: flex-start;
   }
+  .ks-download-alert {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .ks-download-alert a { margin-top: 6px; }
 }
 
 
@@ -9765,6 +9770,21 @@ a:hover { opacity: .78; }
   padding: 48px 40px;
   box-shadow: 0 4px 20px rgba(6, 26, 52, 0.04);
 }
+
+.ks-download-alert {
+  margin: -8px 0 32px;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border-left: 4px solid #d50b27;
+  background: #fff4f4;
+  color: #475569;
+  font-size: 14px;
+}
+.ks-download-alert strong { color: #991b1b; }
+.ks-download-alert a { color: #b91c1c; font-weight: 700; white-space: nowrap; }
 
 .ks-download-hub-header {
   text-align: center;
