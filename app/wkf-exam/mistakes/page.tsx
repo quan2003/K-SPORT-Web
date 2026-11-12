@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { InternalLayout } from "@/components/portal-ui";
 import { MistakesReviewView } from "@/components/wkf-exam/mistakes-review-view";
 import { WkfSubnav } from "@/components/wkf-exam/wkf-subnav";
+import { WkfAuthGate } from "@/components/wkf-exam/wkf-auth-gate";
+import { getUserSession } from "@/lib/auth";
 import type { ExamCategory } from "@/lib/wkf-exam/types";
 
 export const metadata: Metadata = {
@@ -19,6 +21,7 @@ export default async function WkfExamMistakesPage({
   const catParam = params.category;
   const initialCategory: ExamCategory | "all" =
     catParam === "kumite" || catParam === "kata" ? catParam : "all";
+  const session = await getUserSession();
 
   return (
     <InternalLayout>
@@ -34,8 +37,15 @@ export default async function WkfExamMistakesPage({
 
       <WkfSubnav />
 
-      <MistakesReviewView initialCategory={initialCategory} />
+      {session ? (
+        <MistakesReviewView initialCategory={initialCategory} />
+      ) : (
+        <WkfAuthGate
+          title="Kho câu hỏi trả lời sai"
+          category="mistakes"
+          redirectPath="/wkf-exam/mistakes"
+        />
+      )}
     </InternalLayout>
   );
 }
-

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AdminRole } from "@/lib/auth";
 
-export function AdminNavigation({ role = "admin" }: { role?: AdminRole }) {
+export function AdminNavigation({ role = "admin" }: { role?: AdminRole | string }) {
   const pathname = usePathname();
 
   // If role is BTC, show tournament operations focus

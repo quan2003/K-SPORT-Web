@@ -38,13 +38,6 @@ function formatModeTitle(mode: ExamAttempt["mode"], lang: ExamLanguage) {
   return lang === "en" ? "Practice Mode (Luyện tập)" : "Chế độ Luyện tập";
 }
 
-function formatTimerClock(seconds: number) {
-  const safe = Math.max(0, Math.floor(seconds));
-  const mins = Math.floor(safe / 60);
-  const secs = safe % 60;
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-}
-
 function formatAnswerChoiceLabel(val: boolean) {
   return val ? "Đúng (True)" : "Sai (False)";
 }
@@ -110,9 +103,15 @@ export function PracticeSessionView({
   >({});
   const [confirmUnansweredOpen, setConfirmUnansweredOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  const [questionSecondsLeft, setQuestionSecondsLeft] = useState<number>(15);
 
   const autoSubmittedRef = useRef(false);
+  const autoAdvancedIndexRef = useRef<number>(-1);
+  const attemptRef = useRef(attempt);
+
+  useEffect(() => {
+    attemptRef.current = attempt;
+  }, [attempt]);
 
   // Hydrate attempt from localStorage or server API while strictly preserving shuffled order, language & answers
   useEffect(() => {
@@ -293,37 +292,62 @@ export function PracticeSessionView({
     [router, submittingExam]
   );
 
-  // Timer effect for Exam mode with optional timeLimitMinutes
+  const handleGoToQuestion = useCallback(
+    (index: number) => {
+      if (!attempt) return;
+      // In Exam mode: strictly one-way forward only (simulation of real WKF exam)
+      if (attempt.mode === "exam" && index < currentIndex) {
+        return;
+      }
+      const clamped = Math.min(Math.max(0, index), totalQuestions - 1);
+      setQuestionSecondsLeft(15);
+      updateAttemptState((prev) => ({
+        ...prev,
+        currentIndex: clamped,
+        updatedAt: new Date().toISOString(),
+      }));
+      setMobileDrawerOpen(false);
+    },
+    [attempt, currentIndex, totalQuestions, updateAttemptState]
+  );
+
+  // 15-second per-question countdown timer for Exam Mode (Simulation of real WKF electronic referee exam)
   useEffect(() => {
-    if (
-      !attempt ||
-      attempt.status !== "in_progress" ||
-      attempt.mode !== "exam" ||
-      !attempt.timeLimitMinutes
-    ) {
+    const cur = attemptRef.current;
+    if (!cur || cur.status !== "in_progress" || cur.mode !== "exam") {
       return;
     }
 
-    const limitMs = attempt.timeLimitMinutes * 60 * 1000;
-    const startMs = Date.parse(attempt.startedAt);
+    let timeLeft = 15;
 
-    const tick = () => {
-      const elapsedMs = Date.now() - startMs;
-      const leftSec = Math.max(0, Math.ceil((limitMs - elapsedMs) / 1000));
-      setRemainingSeconds(leftSec);
-      if (leftSec <= 0 && !autoSubmittedRef.current) {
-        autoSubmittedRef.current = true;
-        void executeSubmitAttempt(attempt);
+    const timer = window.setInterval(() => {
+      timeLeft -= 1;
+      if (timeLeft <= 0) {
+        window.clearInterval(timer);
+        setQuestionSecondsLeft(0);
+
+        // Ensure we advance exactly once per question (prevents double-skipping)
+        if (autoAdvancedIndexRef.current !== currentIndex) {
+          autoAdvancedIndexRef.current = currentIndex;
+          if (currentIndex < totalQuestions - 1) {
+            handleGoToQuestion(currentIndex + 1);
+          } else if (!autoSubmittedRef.current && attemptRef.current) {
+            autoSubmittedRef.current = true;
+            void executeSubmitAttempt(attemptRef.current);
+          }
+        }
+      } else {
+        setQuestionSecondsLeft(timeLeft);
       }
-    };
+    }, 1000);
 
-    const initialTimer = window.setTimeout(tick, 0);
-    const interval = window.setInterval(tick, 1000);
-    return () => {
-      window.clearTimeout(initialTimer);
-      window.clearInterval(interval);
-    };
-  }, [attempt, executeSubmitAttempt]);
+    return () => window.clearInterval(timer);
+  }, [
+    currentIndex,
+    executeSubmitAttempt,
+    handleGoToQuestion,
+    totalQuestions,
+  ]);
 
   // Keyboard navigation (ArrowLeft, ArrowRight, Escape for drawer/modal)
   useEffect(() => {
@@ -343,19 +367,13 @@ export function PracticeSessionView({
       if (!attempt || confirmUnansweredOpen || mobileDrawerOpen) return;
 
       if (e.key === "ArrowLeft" && currentIndex > 0) {
+        // In real exam mode, backward navigation is locked (15s per question rule)
+        if (attempt.mode === "exam") return;
         e.preventDefault();
-        updateAttemptState((prev) => ({
-          ...prev,
-          currentIndex: Math.max(0, prev.currentIndex - 1),
-          updatedAt: new Date().toISOString(),
-        }));
+        handleGoToQuestion(currentIndex - 1);
       } else if (e.key === "ArrowRight" && currentIndex < totalQuestions - 1) {
         e.preventDefault();
-        updateAttemptState((prev) => ({
-          ...prev,
-          currentIndex: Math.min(totalQuestions - 1, prev.currentIndex + 1),
-          updatedAt: new Date().toISOString(),
-        }));
+        handleGoToQuestion(currentIndex + 1);
       }
     };
 
@@ -365,21 +383,10 @@ export function PracticeSessionView({
     attempt,
     confirmUnansweredOpen,
     currentIndex,
+    handleGoToQuestion,
     mobileDrawerOpen,
     totalQuestions,
-    updateAttemptState,
   ]);
-
-  function handleGoToQuestion(index: number) {
-    if (!attempt) return;
-    const clamped = Math.min(Math.max(0, index), totalQuestions - 1);
-    updateAttemptState((prev) => ({
-      ...prev,
-      currentIndex: clamped,
-      updatedAt: new Date().toISOString(),
-    }));
-    setMobileDrawerOpen(false);
-  }
 
   function handleToggleFlag() {
     if (!attempt || !currentQuestion) return;
@@ -673,6 +680,65 @@ export function PracticeSessionView({
             className="wkf-question-panel"
             aria-labelledby="wkf-current-question-pos"
           >
+            {/* 15s Per-Question Countdown Bar (Simulation of real WKF exam) */}
+            {attempt.mode === "exam" && (
+              <div className="wkf-q-timer-header">
+                <div className="wkf-q-timer-title-wrap">
+                  <span className="wkf-real-exam-badge">Chuẩn thi thật WKF</span>
+                  <span className="wkf-q-timer-hint">
+                    15 giây suy nghĩ &amp; trả lời • Hết giờ tự động chuyển câu tiếp theo
+                  </span>
+                </div>
+                <div
+                  className={`wkf-q-timer-clock-badge ${
+                    questionSecondsLeft <= 5
+                      ? "is-urgent"
+                      : questionSecondsLeft <= 8
+                      ? "is-warning"
+                      : ""
+                  }`}
+                  aria-live="polite"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span className="wkf-q-timer-clock-num">{questionSecondsLeft}s</span>
+                </div>
+              </div>
+            )}
+            {attempt.mode === "exam" && (
+              <div
+                className="wkf-q-timer-track"
+                role="progressbar"
+                aria-valuenow={questionSecondsLeft}
+                aria-valuemin={0}
+                aria-valuemax={15}
+                aria-label="Thời gian còn lại cho câu này: 15 giây"
+              >
+                <div
+                  className={`wkf-q-timer-bar ${
+                    questionSecondsLeft <= 5
+                      ? "is-urgent"
+                      : questionSecondsLeft <= 8
+                      ? "is-warning"
+                      : ""
+                  }`}
+                  style={{ width: `${(questionSecondsLeft / 15) * 100}%` }}
+                />
+              </div>
+            )}
+
             <div className="wkf-question-header">
               <div className="wkf-question-pos-group">
                 <span id="wkf-current-question-pos" className="wkf-question-pos">
@@ -881,15 +947,21 @@ export function PracticeSessionView({
             )}
 
             {/* Prev / Next Navigation Bar */}
-            <div className="wkf-question-footer-nav">
-              <button
-                type="button"
-                className="wkf-btn wkf-btn-outline"
-                disabled={currentIndex === 0}
-                onClick={() => handleGoToQuestion(currentIndex - 1)}
-              >
-                ← Câu trước
-              </button>
+            <div
+              className={`wkf-question-footer-nav ${
+                attempt.mode === "exam" ? "is-exam-footer" : ""
+              }`}
+            >
+              {attempt.mode !== "exam" && (
+                <button
+                  type="button"
+                  className="wkf-btn wkf-btn-outline"
+                  disabled={currentIndex === 0}
+                  onClick={() => handleGoToQuestion(currentIndex - 1)}
+                >
+                  ← Câu trước
+                </button>
+              )}
 
               <button
                 type="button"
@@ -941,17 +1013,20 @@ export function PracticeSessionView({
               </button>
             </div>
 
-            {/* Optional Exam Timer */}
-            {attempt.mode === "exam" && remainingSeconds !== null && (
+            {/* Exam Mode 15s Timer Box in Side Panel */}
+            {attempt.mode === "exam" && (
               <div
                 className={`wkf-timer-box ${
-                  remainingSeconds <= 60 ? "is-urgent" : ""
+                  questionSecondsLeft <= 5 ? "is-urgent" : ""
                 }`}
                 aria-live="off"
               >
-                <span className="wkf-timer-label">Thời gian còn lại</span>
+                <div className="wkf-timer-box-meta">
+                  <span className="wkf-timer-sim-tag">Thi thử chuẩn WKF</span>
+                  <span className="wkf-timer-label">Câu {currentIndex + 1} / {totalQuestions}</span>
+                </div>
                 <strong className="wkf-timer-clock">
-                  {formatTimerClock(remainingSeconds)}
+                  {questionSecondsLeft}s
                 </strong>
               </div>
             )}
@@ -1030,14 +1105,25 @@ export function PracticeSessionView({
                   <button
                     key={q.id}
                     type="button"
-                    onClick={() => handleGoToQuestion(idx)}
+                    onClick={() => {
+                      if (attempt.mode === "exam") return;
+                      handleGoToQuestion(idx);
+                    }}
+                    disabled={attempt.mode === "exam"}
                     aria-current={isCurrent ? "step" : undefined}
                     aria-label={`Câu ${idx + 1}: ${statusText}${
                       isFlagged ? ", Đã đánh dấu xem lại" : ""
                     }`}
                     className={`wkf-nav-cell ${statusClass} ${
                       isCurrent ? "is-current" : ""
-                    } ${isFlagged ? "is-flagged" : ""}`}
+                    } ${isFlagged ? "is-flagged" : ""} ${
+                      attempt.mode === "exam" ? "is-exam-locked" : ""
+                    }`}
+                    title={
+                      attempt.mode === "exam"
+                        ? "Bảng tiến độ câu hỏi (Chế độ thi thật không cho phép bấm nhảy câu)"
+                        : undefined
+                    }
                   >
                     <span className="wkf-nav-num">{idx + 1}</span>
                     {statusSymbol && (
@@ -1054,6 +1140,18 @@ export function PracticeSessionView({
                 );
               })}
             </div>
+
+            {attempt.mode === "exam" && (
+              <div className="wkf-exam-rule-note">
+                <div className="wkf-exam-rule-head">
+                  <span className="wkf-exam-rule-dot" />
+                  <strong>Chuẩn thi thật WKF</strong>
+                </div>
+                <p>
+                  Mỗi câu có đúng 15 giây để suy nghĩ và chọn đáp án. Hết giờ hệ thống tự động chuyển sang câu tiếp theo.
+                </p>
+              </div>
+            )}
 
             {/* Primary Submit & Retake Actions */}
             <div className="wkf-side-actions">

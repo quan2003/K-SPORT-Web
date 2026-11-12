@@ -90,11 +90,16 @@ export async function POST(request: Request) {
     }
 
     const session = await getPublicSession();
-    const clientOwnerId =
-      typeof body.ownerId === "string" && body.ownerId.trim()
-        ? body.ownerId.trim().slice(0, 80)
-        : "anon-default";
-    const ownerId = session?.userId || clientOwnerId;
+    if (!session) {
+      return NextResponse.json(
+        {
+          error: "Vui lòng đăng nhập tài khoản để bắt đầu học và thi bộ đề WKF.",
+          requireAuth: true,
+        },
+        { status: 401 }
+      );
+    }
+    const ownerId = session.userId;
 
     const previousOrderIds = Array.isArray(body.previousOrderIds)
       ? body.previousOrderIds.filter((id): id is string => typeof id === "string")

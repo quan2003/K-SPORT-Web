@@ -62,18 +62,6 @@ const COUNT_OPTIONS: Array<{
   },
 ];
 
-const TIMER_OPTIONS: Array<{
-  value: number | null;
-  labelVi: string;
-  labelEn: string;
-}> = [
-  { value: null, labelVi: "Không giới hạn thời gian", labelEn: "No time limit" },
-  { value: 15, labelVi: "15 phút", labelEn: "15 minutes" },
-  { value: 30, labelVi: "30 phút", labelEn: "30 minutes" },
-  { value: 45, labelVi: "45 phút", labelEn: "45 minutes" },
-  { value: 60, labelVi: "60 phút", labelEn: "60 minutes" },
-];
-
 export function QuizConfigView({
   categoryMeta,
   initialMode = "practice",
@@ -84,7 +72,6 @@ export function QuizConfigView({
   const [mode, setMode] = useState<ExamMode>(initialMode);
   const [language, setLanguage] = useState<ExamLanguage>(initialLanguage);
   const [requestedCount, setRequestedCount] = useState<QuestionCountOption>(20);
-  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -122,7 +109,7 @@ export function QuizConfigView({
           mode,
           language,
           requestedCount,
-          timeLimitMinutes: mode === "exam" ? timeLimitMinutes : null,
+          timeLimitMinutes: null,
           previousAttemptId: lastAttempt?.attemptId ?? null,
           previousOrderIds: lastAttempt?.questionIds ?? undefined,
         }),
@@ -206,11 +193,11 @@ export function QuizConfigView({
                     onChange={() => setMode("exam")}
                   />
                   <div className="wkf-mode-option-head">
-                    <strong>Chế độ Thi thử</strong>
-                    <span className="wkf-mode-tag">Thi thử</span>
+                    <strong>Chế độ Thi thử (Giống thi thật)</strong>
+                    <span className="wkf-mode-tag wkf-mode-tag-exam">Chuẩn WKF</span>
                   </div>
                   <p>
-                    Không hiển thị đáp án đúng trong lúc làm bài. Cho phép chuyển câu, đổi lựa chọn và đánh dấu câu cần xem lại trước khi nộp bài.
+                    Mô phỏng kỳ thi lý thuyết chuẩn WKF quốc tế: Mỗi câu có đúng 15 giây để suy nghĩ và trả lời. Hết 15 giây hệ thống tự động chuyển sang câu tiếp theo.
                   </p>
                 </label>
               </div>
@@ -328,39 +315,42 @@ export function QuizConfigView({
             </div>
 
             {mode === "exam" && (
-              <div className="wkf-config-step">
+              <div className="wkf-config-step wkf-config-step-real-exam">
                 <div className="wkf-step-header">
                   <span className="wkf-step-num">04</span>
                   <div>
-                    <h2>Giới hạn thời gian (Tùy chọn)</h2>
+                    <span className="wkf-real-exam-badge">MÔ PHỎNG THI THẬT WKF</span>
+                    <h2>Quy chế thi thử: 15 giây suy nghĩ &amp; trả lời mỗi câu</h2>
                     <p>
-                      Tùy chọn đồng hồ đếm ngược để rèn tốc độ làm bài. Khi hết giờ, hệ thống sẽ tự động nộp bài.
+                      Chế độ thi thử được thiết lập mô phỏng 100% giống thi thật trên hệ thống màn hình điện tử WKF quốc tế:
                     </p>
                   </div>
                 </div>
 
-                <div className="wkf-timer-field">
-                  <label htmlFor="wkf-time-limit-select">
-                    Thời gian làm bài thi thử
-                  </label>
-                  <select
-                    id="wkf-time-limit-select"
-                    name="timeLimitMinutes"
-                    value={timeLimitMinutes === null ? "none" : String(timeLimitMinutes)}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setTimeLimitMinutes(val === "none" ? null : Number(val));
-                    }}
-                  >
-                    {TIMER_OPTIONS.map((opt) => (
-                      <option
-                        key={opt.value === null ? "none" : opt.value}
-                        value={opt.value === null ? "none" : String(opt.value)}
-                      >
-                        {language === "en" ? opt.labelEn : opt.labelVi}
-                      </option>
-                    ))}
-                  </select>
+                <div className="wkf-real-exam-card">
+                  <div className="wkf-real-exam-item">
+                    <span className="wkf-real-exam-icon" aria-hidden="true">⏱️</span>
+                    <div>
+                      <strong>15 giây cho mỗi câu hỏi</strong>
+                      <p>Mỗi câu có đồng hồ đếm ngược 15 giây để đọc đề, suy nghĩ và chọn Đúng (True) hoặc Sai (False).</p>
+                    </div>
+                  </div>
+
+                  <div className="wkf-real-exam-item">
+                    <span className="wkf-real-exam-icon" aria-hidden="true">⚡</span>
+                    <div>
+                      <strong>Tự động chuyển câu khi hết giờ</strong>
+                      <p>Nếu chưa kịp chọn đáp án trong 15 giây, hệ thống sẽ tự động chuyển sang câu tiếp theo và tính là chưa trả lời.</p>
+                    </div>
+                  </div>
+
+                  <div className="wkf-real-exam-item">
+                    <span className="wkf-real-exam-icon" aria-hidden="true">🔒</span>
+                    <div>
+                      <strong>Không quay lại câu trước (Chuẩn thi thật)</strong>
+                      <p>Mô phỏng chính xác phòng thi WKF, một khi câu hỏi đã hết thời gian và trôi qua thì không thể quay lại sửa đổi.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

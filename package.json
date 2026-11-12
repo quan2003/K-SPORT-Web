@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "node --test tests/wkf-exam/wkf-exam.test.mjs tests/auth/auth.test.mjs",
     "test:wkf": "node --test tests/wkf-exam/wkf-exam.test.mjs",
+    "test:auth": "node --test tests/auth/auth.test.mjs",
     "wkf:import": "python scripts/wkf-exam/import-wkf-data.py"
   },
   "dependencies": {

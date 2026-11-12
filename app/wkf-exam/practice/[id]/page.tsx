@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { InternalLayout } from "@/components/portal-ui";
 import { PracticeSessionView } from "@/components/wkf-exam/practice-session-view";
 import { WkfSubnav } from "@/components/wkf-exam/wkf-subnav";
-import { getPublicSession } from "@/lib/auth";
+import { WkfAuthGate } from "@/components/wkf-exam/wkf-auth-gate";
+import { getUserSession } from "@/lib/auth";
 import { getAttemptForOwner } from "@/lib/wkf-exam/attempt-service";
 
 export const metadata: Metadata = {
@@ -17,8 +18,29 @@ export default async function WkfPracticeSessionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await getPublicSession();
-  const initialServerAttempt = getAttemptForOwner(id, session?.userId);
+  const session = await getUserSession();
+
+  if (!session) {
+    return (
+      <InternalLayout>
+        <section className="wkf-hero wkf-hero-session">
+          <div className="wkf-hero-inner">
+            <p className="wkf-hero-eyebrow">WKF REFEREE ACADEMY · PHÒNG LÀM BÀI</p>
+            <h1>Phiên làm bài Luật Trọng tài Karate WKF</h1>
+          </div>
+        </section>
+
+        <WkfSubnav />
+
+        <WkfAuthGate
+          title="Phiên làm bài thi Luật WKF"
+          redirectPath={`/wkf-exam/practice/${id}`}
+        />
+      </InternalLayout>
+    );
+  }
+
+  const initialServerAttempt = getAttemptForOwner(id, session.userId);
 
   return (
     <InternalLayout>
@@ -38,4 +60,3 @@ export default async function WkfPracticeSessionPage({
     </InternalLayout>
   );
 }
-

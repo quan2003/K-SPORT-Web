@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { InternalLayout } from "@/components/portal-ui";
 import { QuizConfigView } from "@/components/wkf-exam/quiz-config-view";
 import { WkfSubnav } from "@/components/wkf-exam/wkf-subnav";
+import { WkfAuthGate } from "@/components/wkf-exam/wkf-auth-gate";
+import { getUserSession } from "@/lib/auth";
 import { getQuestionBank } from "@/lib/wkf-exam/question-bank";
 
 export const metadata: Metadata = {
@@ -18,6 +20,7 @@ export default async function WkfKumiteConfigPage({
   const params = await searchParams;
   const initialMode = params.mode === "exam" ? "exam" : "practice";
   const bank = getQuestionBank();
+  const session = await getUserSession();
 
   return (
     <InternalLayout>
@@ -33,11 +36,18 @@ export default async function WkfKumiteConfigPage({
 
       <WkfSubnav />
 
-      <QuizConfigView
-        categoryMeta={bank.categories.kumite}
-        initialMode={initialMode}
-      />
+      {session ? (
+        <QuizConfigView
+          categoryMeta={bank.categories.kumite}
+          initialMode={initialMode}
+        />
+      ) : (
+        <WkfAuthGate
+          title="Bộ đề Luật thi đấu Kumite (246 câu)"
+          category="kumite"
+          redirectPath="/wkf-exam/kumite"
+        />
+      )}
     </InternalLayout>
   );
 }
-
