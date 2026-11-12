@@ -13,6 +13,7 @@ const navLinks = [
   { label: "Lịch thi đấu", href: "/schedule" },
   { label: "Xếp hạng", href: "/ranking" },
   { label: "Vận động viên", href: "/athletes" },
+  { label: "Thi Trọng tài WKF", href: "/wkf-exam" },
   { label: "Tin tức", href: "/news" },
   { label: "Phần mềm", href: "/software" },
   { label: "Liên hệ", href: "/contact" },

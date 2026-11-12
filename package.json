@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:wkf": "node --test tests/wkf-exam/wkf-exam.test.mjs",
+    "wkf:import": "python scripts/wkf-exam/import-wkf-data.py"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",

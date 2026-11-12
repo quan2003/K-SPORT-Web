@@ -21,6 +21,7 @@ export function AdminNavigation({ role = "admin" }: { role?: AdminRole }) {
           { label: "Banner trang chủ", href: "/admin/banners", icon: "🖼️" },
           { label: "Tin tức & Bài viết", href: "/admin/news", icon: "📰" },
           { label: "Giải đấu", href: "/admin/events", icon: "🥋" },
+          { label: "Ngân hàng đề WKF Exam", href: "/admin/wkf-exam", icon: "📘", badge: "378 câu" },
           { label: "Người dùng & Phân quyền", href: "/admin/users", icon: "👥" },
         ];
 

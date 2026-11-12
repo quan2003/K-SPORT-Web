@@ -100,6 +100,7 @@ export function SiteFooter() {
                 <li><Link href="/results">Kết quả thi đấu chi tiết</Link></li>
                 <li><Link href="/ranking">Bảng xếp hạng vận động viên</Link></li>
                 <li><Link href="/athletes">Hồ sơ võ sĩ & Thẻ VĐV QR</Link></li>
+                <li><Link href="/wkf-exam">Học viện Trọng tài WKF (Ôn thi Luật)</Link></li>
               </ul>
             </div>
 
