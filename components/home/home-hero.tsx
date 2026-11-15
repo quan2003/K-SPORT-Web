@@ -15,43 +15,32 @@ export function HomeHero({ events, banners }: HomeHeroProps) {
   const [activeSlide, setActiveSlide] = useState(0);
   const activeEvent = events.find((e) => e.status === "Đang diễn ra") || events[0];
 
-  // Combine banners and featured events
-  const slides = [
+  // Banners configured in admin (/admin/banners) directly drive the homepage hero slider
+  const bannerList = banners.length > 0 ? banners : [
     {
-      id: "slide-main",
-      eyebrow: "CỔNG THÔNG TIN & PHẦN MỀM QUẢN LÝ GIẢI ĐẤU KARATE",
-      title: "KARATE VIỆT NAM,",
-      highlight: "TRONG MỘT NHỊP ĐẤU",
-      desc: "Nền tảng số hóa quản lý giải đấu toàn diện — Bốc thăm phân nhánh tự động, bảng điểm điện tử Tatami và cập nhật kết quả trực tiếp chuẩn WKF.",
+      id: "banner-01",
+      eyebrow: "CỔNG THÔNG TIN VÀ PHẦN MỀM QUẢN LÝ GIẢI ĐẤU KARATE",
+      title: "Karate Việt Nam, trong một nhịp đấu.",
+      description: "Kết nối giải đấu – vận hành chuyên nghiệp – lan tỏa tinh thần Karate vì một cộng đồng mạnh mẽ hơn.",
       image: "/images/karate-hero.png",
-      primaryCta: { label: "Xem Lịch Thi Đấu", href: "/schedule" },
-      secondaryCta: { label: "Khám Phá Phần Mềm", href: "/software" },
+      primaryLabel: "Xem lịch thi đấu",
+      primaryHref: "/schedule",
+      secondaryLabel: "Khám phá giải đấu",
+      secondaryHref: "/events",
+      position: 1,
     },
-    ...(activeEvent
-      ? [
-          {
-            id: `slide-event-${activeEvent.slug}`,
-            eyebrow: activeEvent.status === "Đang diễn ra" ? "GIẢI ĐẤU ĐANG DIỄN RA" : "SỰ KIỆN NỔI BẬT",
-            title: activeEvent.name,
-            highlight: "",
-            desc: activeEvent.description || `${activeEvent.location} · Tranh tài nội dung ${activeEvent.discipline}. Cập nhật trực tiếp trên K-SPORT.`,
-            image: activeEvent.image || "/images/karate-venue.png",
-            primaryCta: { label: "Xem Sơ Đồ & Lịch Đấu", href: `/events/${activeEvent.slug}` },
-            secondaryCta: { label: "Bảng Xếp Hạng", href: "/ranking" },
-          },
-        ]
-      : []),
-    ...banners.map((b) => ({
-      id: `slide-banner-${b.id}`,
-      eyebrow: b.eyebrow || "THÔNG BÁO TỪ K-SPORT",
-      title: b.title,
-      highlight: "",
-      desc: b.description,
-      image: b.image || "/images/karate-venue.png",
-      primaryCta: { label: b.primaryLabel || "Khám phá", href: b.primaryHref || "/events" },
-      secondaryCta: { label: b.secondaryLabel || "Chi tiết", href: b.secondaryHref || "/software" },
-    })),
-  ].slice(0, 4);
+  ];
+
+  const slides = bannerList.map((b) => ({
+    id: `slide-banner-${b.id}`,
+    eyebrow: b.eyebrow || "CỔNG THÔNG TIN K-SPORT",
+    title: b.title,
+    highlight: "",
+    desc: b.description,
+    image: b.image || "/images/karate-hero.png",
+    primaryCta: { label: b.primaryLabel || "Xem chi tiết", href: b.primaryHref || "/events" },
+    secondaryCta: { label: b.secondaryLabel || "Khám phá", href: b.secondaryHref || "/schedule" },
+  }));
 
   useEffect(() => {
     if (slides.length <= 1) return;

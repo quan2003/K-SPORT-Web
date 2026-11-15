@@ -491,13 +491,35 @@ export const getRanking = async () => {
 
 export const getNews = async () => {
   const list = (await getCollection<NewsItem>("/news", 300)).map(normalizeNewsItem);
-  return list.length > 0 ? list : mockNews.map(normalizeNewsItem);
+  if (list.length > 0) return list;
+  if (typeof globalThis !== "undefined") {
+    try {
+      const { getNewsStore } = await import("./admin-store");
+      const store = getNewsStore();
+      if (store && store.length > 0) return store.map(normalizeNewsItem);
+    } catch {
+      // ignore
+    }
+  }
+  return mockNews.map(normalizeNewsItem);
 };
 
 // Banner content was added after the initial public API rollout.
 export const getBanners = async () => {
   const list = await getCollection<PublicBanner>("/banners", 60, true);
-  return list.length > 0 ? list : mockBanners;
+  if (list.length > 0) return list;
+  if (typeof globalThis !== "undefined") {
+    try {
+      const { getBannersStore } = await import("./admin-store");
+      const store = getBannersStore();
+      if (store && store.length > 0) {
+        return store.filter((b) => (b as { isPublished?: boolean }).isPublished !== false);
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return mockBanners;
 };
 
 export const getNewsItem = async (slug: string) => {

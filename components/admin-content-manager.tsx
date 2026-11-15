@@ -130,7 +130,22 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget));
-    const data = { ...values, isPublished: values.isPublished === "on", ...(isNews ? { imageUrl: String(values.imageUrl || form.imageUrl || form.image || ""), publishedAt: toApiPublishedAt(values.publishedAt), body: String(values.body || "").split(/\r?\n/).filter(Boolean) } : { position: Number(values.position || 0) }) };
+    const bannerImageUrl = String(values.imageUrl || form.imageUrl || form.image || "");
+    const data = {
+      ...values,
+      isPublished: values.isPublished === "on",
+      ...(isNews
+        ? {
+            imageUrl: String(values.imageUrl || form.imageUrl || form.image || ""),
+            publishedAt: toApiPublishedAt(values.publishedAt),
+            body: String(values.body || "").split(/\r?\n/).filter(Boolean),
+          }
+        : {
+            imageUrl: bannerImageUrl,
+            image: bannerImageUrl,
+            position: Number(values.position || 0),
+          }),
+    };
     setIsSaving(true);
     try {
       const response = await fetch(editing ? `/api/admin/content/${kind}/${editing.id}` : `/api/admin/content/${kind}`, { method: editing ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });

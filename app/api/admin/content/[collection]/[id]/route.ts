@@ -56,13 +56,23 @@ async function forward(request: Request, params: Promise<{ collection: string; i
         const store = getBannersStore();
         const index = store.findIndex((b) => b.id === id);
         if (index !== -1) {
-          store[index] = { ...store[index], ...parsed };
+          const updatedImage = parsed.imageUrl || parsed.image || store[index].image;
+          store[index] = {
+            ...store[index],
+            ...parsed,
+            image: updatedImage,
+          };
         }
       } else {
         const store = getNewsStore();
         const index = store.findIndex((n) => n.slug === id);
         if (index !== -1) {
-          store[index] = { ...store[index], ...parsed };
+          const updatedImage = parsed.imageUrl || parsed.image || store[index].image;
+          store[index] = {
+            ...store[index],
+            ...parsed,
+            image: updatedImage,
+          };
         }
       }
       revalidatePath("/");

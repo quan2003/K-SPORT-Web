@@ -10,14 +10,14 @@ function getLocalItems(collection: string) {
   if (collection === "banners") {
     return getBannersStore().map((b) => ({
       ...b,
-      isPublished: true,
+      isPublished: (b as { isPublished?: boolean }).isPublished ?? true,
       imageUrl: b.image,
     }));
   }
   return getNewsStore().map((n) => ({
     ...n,
     id: n.slug,
-    isPublished: true,
+    isPublished: (n as { isPublished?: boolean }).isPublished ?? true,
     imageUrl: n.image,
   }));
 }
