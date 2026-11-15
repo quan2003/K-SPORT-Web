@@ -4692,16 +4692,16 @@ a:hover { opacity: .78; }
 .ks-desktop-nav {
   display: flex;
   align-items: center;
-  gap: clamp(8px, 1.05vw, 18px);
+  gap: clamp(8px, 1.1vw, 20px);
   margin-right: auto;
 }
 
 .ks-nav-item {
   position: relative;
-  padding: 8px 4px;
+  padding: 8px 5px;
   font-family: "Barlow Condensed", Arial, sans-serif;
-  font-size: clamp(16.5px, 1.18vw, 20px);
-  font-weight: 750;
+  font-size: clamp(18px, 1.3vw, 22px);
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: #061a34;
@@ -5279,11 +5279,11 @@ a:hover { opacity: .78; }
 /* Header & Footer Responsive */
 @media (max-width: 1440px) {
   .ks-desktop-nav {
-    gap: clamp(6px, 0.8vw, 12px);
+    gap: clamp(6px, 0.85vw, 14px);
   }
   .ks-nav-item {
-    font-size: clamp(15px, 1.05vw, 17px);
-    padding: 6px 2px;
+    font-size: clamp(16.5px, 1.15vw, 18.5px);
+    padding: 6px 3px;
   }
   .ks-header-cta-btn {
     padding: 0 12px;
