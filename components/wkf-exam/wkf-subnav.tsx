@@ -112,10 +112,6 @@ export function WkfSubnav() {
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
-
-        <div className="wkf-subnav-meta">
-          <span>Ngân hàng đề gốc WKF: <strong>378 câu</strong> (True / False)</span>
-        </div>
       </div>
     </nav>
   );
