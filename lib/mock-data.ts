@@ -13,6 +13,7 @@ export const mockAthletes: Athlete[] = [
     wins: 11,
     winRate: 79,
     publicResult: "Thẻ VĐV K-SPORT Phú Thọ 2026 · Hạt giống số 1",
+    image: "/images/athlete-portrait.png",
   },
   {
     id: "athlete-vie-0002",
@@ -25,6 +26,7 @@ export const mockAthletes: Athlete[] = [
     wins: 8,
     winRate: 67,
     publicResult: "Á quân Cúp CLB Karate miền Bắc",
+    image: "/images/karate-kumite-action.jpg",
   },
   {
     id: "athlete-vie-0003",
@@ -73,6 +75,7 @@ export const mockAthletes: Athlete[] = [
     wins: 9,
     winRate: 90,
     publicResult: "Hồ sơ dữ liệu minh họa",
+    image: "/images/karate-kata.jpg",
   },
   {
     id: "athlete-demo-004",
@@ -85,6 +88,7 @@ export const mockAthletes: Athlete[] = [
     wins: 7,
     winRate: 88,
     publicResult: "Hồ sơ dữ liệu minh họa",
+    image: "/images/karate-kata.jpg",
   },
   {
     id: "athlete-demo-005",
@@ -121,6 +125,7 @@ export const mockAthletes: Athlete[] = [
     wins: 8,
     winRate: 80,
     publicResult: "Hồ sơ dữ liệu minh họa",
+    image: "/images/karate-youth.jpg",
   },
   {
     id: "athlete-demo-008",
@@ -169,6 +174,7 @@ export const mockAthletes: Athlete[] = [
     wins: 11,
     winRate: 79,
     publicResult: "HCV giải trẻ miền Trung 2025 · Dữ liệu minh họa",
+    image: "/images/karate-kumite-action.jpg",
   },
   {
     id: "athlete-demo-012",
@@ -229,6 +235,7 @@ export const mockAthletes: Athlete[] = [
     wins: 9,
     winRate: 82,
     publicResult: "Hạt giống số 2 nội dung Kata · Dữ liệu minh họa",
+    image: "/images/karate-kata.jpg",
   },
   {
     id: "athlete-demo-017",
@@ -253,6 +260,7 @@ export const mockAthletes: Athlete[] = [
     wins: 8,
     winRate: 80,
     publicResult: "HCV Hội khỏe Phù Đổng toàn quốc · Dữ liệu minh họa",
+    image: "/images/karate-youth.jpg",
   },
   {
     id: "athlete-demo-019",
@@ -303,7 +311,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Sắp diễn ra",
     categories: ["Kumite nam -60kg, -67kg, -75kg, -84kg, +84kg", "Kumite nữ -50kg, -55kg, -61kg, -68kg, +68kg", "Kata cá nhân & đồng đội"],
     description: "Giải đấu cấp cao nhất trong hệ thống thi đấu quốc gia quy tụ các tuyển thủ hàng đầu từ các tỉnh thành và lực lượng vũ trang tranh tài.",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-kumite-action.jpg",
   },
   {
     slug: "cup-karate-clb-manh-toan-quoc-2026",
@@ -327,7 +335,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Sắp diễn ra",
     categories: ["Kumite các hạng cân", "Kata cá nhân nam/nữ"],
     description: "Sân chơi võ thuật lớn nhất khu vực Miền Trung và Tây Nguyên, thúc đẩy phong trào thể thao và phát hiện các tài năng trẻ.",
-    image: "/images/karate-training.png",
+    image: "/images/karate-kata.jpg",
   },
   {
     slug: "giai-karate-tre-thieu-nien-thu-do-2026",
@@ -339,7 +347,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Sắp diễn ra",
     categories: ["U12 Kumite", "U14 Kumite", "U16 Kumite", "Kata lứa tuổi học đường"],
     description: "Giải đấu phát triển phong trào học đường quy mô hơn 50 CLB với hệ thống thẻ VĐV số hóa chống gian lận tuổi thi đấu.",
-    image: "/images/karate-hero.png",
+    image: "/images/karate-youth.jpg",
   },
   {
     slug: "giai-karate-dong-bang-song-cuu-long-2026",
@@ -351,7 +359,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Sắp diễn ra",
     categories: ["Kumite vô địch nam nữ", "Kata đồng đội"],
     description: "Giải đấu truyền thống gắn kết 13 tỉnh thành miền Tây Nam Bộ, ứng dụng hệ thống bảng điểm điện tử K-SPORT.",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-podium.jpg",
   },
   {
     slug: "giai-vo-dich-karate-tre-quoc-gia-2026",
@@ -363,7 +371,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Đã kết thúc",
     categories: ["Lứa tuổi 12-14", "Lứa tuổi 15-17", "Lứa tuổi 18-20"],
     description: "Giải đấu tìm kiếm và bồi dưỡng các gương mặt trẻ triển vọng cho đội tuyển Karate Việt Nam.",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-youth.jpg",
   },
   {
     slug: "giai-karate-cup-hoang-de-quang-trung-2025",
@@ -375,7 +383,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Đã kết thúc",
     categories: ["Kumite nam mở rộng", "Kata truyền thống & WKF"],
     description: "Giải đấu võ thuật uy tín đất võ Bình Định thu hút đông đảo võ sĩ tên tuổi toàn quốc (Dữ liệu minh họa).",
-    image: "/images/karate-training.png",
+    image: "/images/karate-kata.jpg",
   },
   {
     slug: "giai-karate-vo-dich-quoc-gia-2025",
@@ -387,7 +395,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Đã kết thúc",
     categories: ["Kumite nam -60kg", "Kumite nam -67kg", "Kumite nam -75kg", "Kumite nữ -50kg", "Kumite nữ -55kg", "Kata nam", "Kata nữ"],
     description: "Giải đấu chính thức đỉnh cao quốc gia mùa giải 2025 quy tụ các đoàn thể thao và đơn vị mạnh trên toàn quốc (Dữ liệu minh họa).",
-    image: "/images/karate-hero.png",
+    image: "/images/karate-kumite-action.jpg",
   },
   {
     slug: "giai-karate-bai-bien-nha-trang-2025",
@@ -411,7 +419,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Đã kết thúc",
     categories: ["Hạng cân thanh thiếu niên", "Kata nhóm tuổi"],
     description: "Sân chơi giao lưu võ thuật và phát triển phong trào Karate toàn quốc năm 2025 (Dữ liệu minh họa).",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-training.png",
   },
   {
     slug: "giai-karate-cup-cac-clb-manh-2024",
@@ -423,7 +431,7 @@ export const mockEvents: TournamentEvent[] = [
     status: "Đã kết thúc",
     categories: ["Kumite nam", "Kumite nữ", "Kata đồng đội"],
     description: "Giải đấu tranh cúp đỉnh cao mùa giải 2024 khép lại với nhiều kỷ lục thành tích mới (Dữ liệu minh họa).",
-    image: "/images/karate-training.png",
+    image: "/images/karate-podium.jpg",
   },
 ];
 
@@ -723,7 +731,7 @@ export const mockNews: NewsItem[] = [
     category: "Công nghệ thể thao",
     publishedAt: "2026-11-05T14:30:00+07:00",
     summary: "Việc chuẩn hóa mã định danh trên thẻ vận động viên K-SPORT giúp ban tổ chức, huấn luyện viên và trọng tài tra cứu chính xác lịch đấu, thảm đấu và màu đai trực tiếp trên máy tính laptop.",
-    image: "/images/karate-hero.png",
+    image: "/images/karate-var-tech.jpg",
     body: [
       "Trong các giải đấu quy mô lớn, việc nhầm lẫn thảm đấu hoặc màu đai Aka / Ao từng gây nhiều khó khăn cho ban điều hành.",
       "Với thẻ số hóa K-SPORT, mỗi VĐV được cấp một mã duy nhất (như VIE0001). Khi tra cứu trên hệ thống laptop, giao diện lập tức hiển thị thông tin trận tiếp theo, thảm đấu, góc đai và điểm số trực tiếp.",
@@ -735,7 +743,7 @@ export const mockNews: NewsItem[] = [
     category: "Chuyên môn",
     publishedAt: "2026-10-28T09:15:00+07:00",
     summary: "Liên đoàn Karate tổ chức khóa tập huấn nâng cao chất lượng điều hành trận đấu, áp dụng video review và hệ thống chấm điểm điện tử K-SPORT.",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-referee.jpg",
     body: [
       "Khóa tập huấn quy tụ hơn 80 trọng tài quốc gia nhằm cập nhật những điểm mới nhất trong luật thi đấu Kata và Kumite quốc tế.",
       "Điểm nhấn của đợt tập huấn lần này là việc ứng dụng hệ thống bảng điểm điện tử và công nghệ video quay chậm xem lại tình huống tranh chấp (Video Assistant Referee - VAR Karate).",
@@ -748,7 +756,7 @@ export const mockNews: NewsItem[] = [
     category: "Công nghệ thể thao",
     publishedAt: "2026-10-25T11:00:00+07:00",
     summary: "Phiên bản mới nhất của phần mềm quản lý giải đấu K-SPORT mang đến cơ chế đồng bộ không dây giữa laptop bàn thư ký và các bảng LED hiển thị sàn đấu.",
-    image: "/images/karate-hero.png",
+    image: "/images/karate-var-tech.jpg",
     body: [
       "Bản cập nhật v3.0.14 tập trung tối ưu hóa kiến trúc truyền tin mạng nội bộ không dây (Local Mesh Sync), cho phép kết nối cùng lúc 8 thảm đấu độc lập mà không lo rớt mạng.",
       "Giao diện điều khiển mới hỗ trợ phím tắt nhạy bén cho trọng tài bấm điểm, tích hợp sẵn chuông báo hết hiệp thi đấu và tự động sao lưu dữ liệu điểm số từng giây.",
@@ -773,7 +781,7 @@ export const mockNews: NewsItem[] = [
     category: "Đào tạo & Luật thi đấu",
     publishedAt: "2026-10-18T15:30:00+07:00",
     summary: "Phân hệ thi trắc nghiệm WKF Referee Academy trên K-SPORT bổ sung chế độ thi thử với giới hạn 15 giây phản xạ cho mỗi câu hỏi tình huống luật Kumite & Kata.",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-referee.jpg",
     body: [
       "Trong các kỳ sát hạch chứng chỉ trọng tài quốc tế WKF, áp lực thời gian phản xạ là yếu tố then chốt quyết định năng lực điều hành thực tế trên thảm đấu.",
       "Tính năng Thi thử mới mô phỏng chính xác áp lực này: mỗi câu hỏi hiển thị thanh đếm ngược 15 giây. Khi hết giờ, hệ thống tự động chốt kết quả và chuyển ngay sang tình huống tiếp theo.",
@@ -786,7 +794,7 @@ export const mockNews: NewsItem[] = [
     category: "Chuyên môn",
     publishedAt: "2026-10-15T09:00:00+07:00",
     summary: "Phân tích vai trò của hệ thống Video Review (VAR) tại các giải đấu đỉnh cao, giúp hội đồng trọng tài giám sát chính xác đòn Ippon và lỗi va chạm ngoài thảm.",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-var-tech.jpg",
     body: [
       "Tốc độ ra đòn của các võ sĩ Kumite đỉnh cao có thể đạt tới mili-giây, khiến mắt thường của tổ trọng tài thảm đôi khi khó xác định điểm tiếp xúc hợp lệ.",
       "Thẻ khiếu nại (Coach Video Card) kết hợp phần mềm quay chậm đa góc máy K-SPORT cho phép ban giám sát xem lại từng khung hình với độ phân giải cao.",
@@ -811,7 +819,7 @@ export const mockNews: NewsItem[] = [
     category: "Chuyên môn",
     publishedAt: "2026-10-08T14:15:00+07:00",
     summary: "Hướng dẫn chi tiết thang điểm 70% kỹ thuật và 30% thể lực, cách thức tính điểm loại trừ điểm cao nhất - thấp nhất trên hệ thống K-SPORT.",
-    image: "/images/karate-training.png",
+    image: "/images/karate-kata.jpg",
     body: [
       "Luật Kata WKF hiện đại đòi hỏi sự chuẩn xác tuyệt đối trong việc định lượng phong độ biểu diễn của võ sinh thay vì cảm tính thông thường.",
       "Hệ thống chấm điểm điện tử K-SPORT tự động tổng hợp điểm từ 7 giám khảo, tự động gạch bỏ 2 điểm cao nhất và 2 điểm thấp nhất, tính trung bình có trọng số.",
@@ -824,7 +832,7 @@ export const mockNews: NewsItem[] = [
     category: "Công nghệ thể thao",
     publishedAt: "2026-10-02T08:30:00+07:00",
     summary: "Giải pháp công nghệ điều hành thảm đấu thời gian thực giúp ban thư ký kết nối trực tiếp bảng LED sàn đấu với cổng thông tin người xem.",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-var-tech.jpg",
     body: [
       "Bảng điểm điện tử K-SPORT hỗ trợ hiển thị song song hai màu đai Aka và Ao, bộ đếm giờ thi đấu chuẩn xác đến phần mười giây và hệ thống cảnh báo Warning tự động.",
       "Dữ liệu kết quả sau mỗi trận thắng thua được đồng bộ tức thì lên bảng xếp hạng và lịch thi đấu công khai, mang lại trải nghiệm chuyên nghiệp cho người hâm mộ.",
@@ -836,7 +844,7 @@ export const mockNews: NewsItem[] = [
     category: "Hệ thống điều hành",
     publishedAt: "2026-09-28T10:45:00+07:00",
     summary: "K-SPORT triển khai giải pháp quét mã căn cước công dân và xác thực hồ sơ số, giải quyết triệt để vấn đề gian lận tuổi ở các giải phong trào trẻ.",
-    image: "/images/karate-hero.png",
+    image: "/images/karate-youth.jpg",
     body: [
       "Tình trạng sai lệch năm sinh trong các giải lứa tuổi 10-12 và 12-14 là trăn trở kéo dài của nhiều huấn luyện viên tâm huyết.",
       "Với thẻ số hóa K-SPORT kết hợp đối soát mã định danh ban đầu, mọi thông tin về ngày tháng năm sinh, đơn vị chủ quản và lịch sử thi đấu đều được lưu vết minh bạch.",
@@ -875,7 +883,7 @@ export const mockNews: NewsItem[] = [
     category: "Kiến thức thi đấu",
     publishedAt: "2026-09-12T14:00:00+07:00",
     summary: "Mổ xẻ góc mở hông, nhịp đánh lừa thị giác và thời điểm vung gót chân để tung đòn móc vòng cầu trúng đích vùng đầu đối phương trong luật WKF.",
-    image: "/images/karate-hero.png",
+    image: "/images/karate-kumite-action.jpg",
     body: [
       "Uramawashi Geri là một trong những đòn đá đẹp mắt và có giá trị điểm số cao nhất (Ippon - 3 điểm) trong môn thi đấu đối kháng Kumite.",
       "Để đòn đánh được trọng tài công nhận hợp lệ theo luật WKF mới, võ sĩ phải kiểm soát tuyệt đối lực tiếp xúc (Skin Touch), thu chân về nhanh và giữ vững tư thế Zanshin.",
@@ -888,7 +896,7 @@ export const mockNews: NewsItem[] = [
     category: "Cộng đồng",
     publishedAt: "2026-09-05T08:00:00+07:00",
     summary: "Các câu lạc bộ Karate tại trường học đang trở thành môi trường rèn luyện kỷ luật, lòng kiên trì và tinh thần tôn trọng kỷ cương cho thế hệ trẻ.",
-    image: "/images/karate-training.png",
+    image: "/images/karate-youth.jpg",
     body: [
       "Không đơn thuần là môn võ tự vệ, Karate mang trong mình triết lý giáo dục sâu sắc với 5 điều võ sĩ đạo: tôn trọng, chân thành, nỗ lực, kiềm chế và dũng cảm.",
       "Việc các trường đưa câu lạc bộ Karate vào hoạt động ngoại khóa giúp các em học sinh giải tỏa áp lực học tập, nâng cao sức đề kháng và hình thành lối sống lành mạnh.",
@@ -900,7 +908,7 @@ export const mockNews: NewsItem[] = [
     category: "Tin tức",
     publishedAt: "2026-08-30T17:00:00+07:00",
     summary: "Nhìn lại một năm thành công với hàng loạt kỷ lục mới về số lượng giải đấu, chất lượng vận động viên và bước đột phá ứng dụng công nghệ điều hành K-SPORT.",
-    image: "/images/karate-venue.png",
+    image: "/images/karate-podium.jpg",
     body: [
       "Năm 2025 ghi nhận sự bùng nổ của các giải đấu Karate từ cấp cơ sở đến vô địch quốc gia với chất lượng chuyên môn ngày càng tiệm cận tiêu chuẩn quốc tế WKF.",
       "Sự đồng hành của nền tảng số hóa K-SPORT đã giúp rút ngắn 60% thời gian bốc thăm xếp lịch, giảm thiểu sai sót tổng hợp kết quả và mang đến sự tin cậy tuyệt đối cho các đoàn tham dự.",
@@ -939,7 +947,7 @@ export const mockBanners: PublicBanner[] = [
     eyebrow: "HỌC VIỆN TRỌNG TÀI WKF & PHẦN MỀM THI ĐẤU",
     title: "Luyện thi Trọng tài WKF & Phần mềm K-SPORT v3.0.14",
     description: "Rèn luyện bộ đề trắc nghiệm chuẩn WKF có giới hạn 15 giây mỗi câu và trải nghiệm hệ thống điều hành Tatami chuyên nghiệp.",
-    image: "/images/karate-training.png",
+    image: "/images/karate-referee.jpg",
     primaryLabel: "Thi thử trọng tài WKF",
     primaryHref: "/wkf-exam",
     secondaryLabel: "Tải phần mềm K-SPORT",
