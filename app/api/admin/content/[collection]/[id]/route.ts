@@ -13,20 +13,23 @@ async function forward(request: Request, params: Promise<{ collection: string; i
     return NextResponse.json({ message: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." }, { status: 401 });
   }
 
-  // 1. Try remote API first
+  const bodyText = method === "PUT" ? await request.text() : "";
+
+  // 1. Try remote API first if configured
   try {
     const response = await adminApiFetch(`/api/admin/content/${collection}/${encodeURIComponent(id)}`, {
       method,
-      body: method === "PUT" ? await request.text() : undefined,
+      body: method === "PUT" ? bodyText : undefined,
       signal: AbortSignal.timeout(1500),
     });
+    if (!response.ok) {
+      throw new Error(`Remote API returned status ${response.status}`);
+    }
     const payload = await response.json().catch(() => ({}));
-    if (response.ok) {
-      revalidatePath("/");
-      if (collection === "news") {
-        revalidatePath("/news");
-        if (payload?.item?.slug) revalidatePath(`/news/${payload.item.slug}`);
-      }
+    revalidatePath("/");
+    if (collection === "news") {
+      revalidatePath("/news");
+      if (payload?.item?.slug) revalidatePath(`/news/${payload.item.slug}`);
     }
     const result = NextResponse.json(payload, { status: response.status });
     if (response.status === 401 || response.status === 403) result.cookies.delete(ADMIN_TOKEN_COOKIE);
@@ -50,8 +53,7 @@ async function forward(request: Request, params: Promise<{ collection: string; i
 
     // PUT update fallback
     try {
-      const text = await request.text();
-      const parsed = JSON.parse(text);
+      const parsed = JSON.parse(bodyText || "{}");
       if (collection === "banners") {
         const store = getBannersStore();
         const index = store.findIndex((b) => b.id === id);

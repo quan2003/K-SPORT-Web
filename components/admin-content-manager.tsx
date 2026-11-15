@@ -191,7 +191,7 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
     {toast ? <div className={`admin-toast ${toast.tone}`} role="status" aria-live="polite"><p>{toast.text}</p><button type="button" onClick={() => setToast(null)} aria-label="Đóng thông báo">×</button></div> : null}
     {isEditorOpen ? <section className="admin-editor-view" aria-labelledby="admin-editor-title">
       <div className="admin-editor-view-header"><div><h2 id="admin-editor-title" ref={editorTitleRef} tabIndex={-1}>{editing ? `Chỉnh sửa ${contentName}` : `Tạo ${contentName} mới`}</h2></div><button type="button" className="admin-text-button" onClick={closeEditor}>← Quay lại danh sách</button></div>
-      <form key={editing?.id ?? `new-${kind}`} className="admin-editor" onSubmit={submit}>
+      <form key={editing?.id ?? `new-${kind}`} className="admin-editor" onSubmit={submit} noValidate>
         <div className="admin-editor-fields">
           {isNews ? (
             <>

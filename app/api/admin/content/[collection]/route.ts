@@ -29,15 +29,20 @@ async function forward(request: Request, params: Promise<{ collection: string }>
     return NextResponse.json({ message: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." }, { status: 401 });
   }
 
-  // 1. Try remote API first with a fast timeout
+  const bodyText = method === "POST" ? await request.text() : "";
+
+  // 1. Try remote API first with a fast timeout if configured
   try {
     const response = await adminApiFetch(`/api/admin/content/${collection}`, {
       method,
-      body: method === "POST" ? await request.text() : undefined,
+      body: method === "POST" ? bodyText : undefined,
       signal: AbortSignal.timeout(1500),
     });
+    if (!response.ok) {
+      throw new Error(`Remote API returned status ${response.status}`);
+    }
     const payload = await response.json().catch(() => ({}));
-    if (response.ok && method === "POST") {
+    if (method === "POST") {
       revalidatePath("/");
       if (collection === "news") {
         revalidatePath("/news");
@@ -55,8 +60,7 @@ async function forward(request: Request, params: Promise<{ collection: string }>
     }
     // POST creation fallback
     try {
-      const text = await request.text();
-      const parsed = JSON.parse(text);
+      const parsed = JSON.parse(bodyText || "{}");
       const newItem = {
         ...parsed,
         id: parsed.id || `${collection}-${Date.now().toString(36)}`,
