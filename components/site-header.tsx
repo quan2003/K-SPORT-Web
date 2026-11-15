@@ -206,7 +206,7 @@ export function SiteHeader() {
                 </svg>
                 <span className="ks-header-cta-title">
                   <span className="ks-cta-title-full">Phần Mềm K-SPORT</span>
-                  <span className="ks-cta-title-short">K-SPORT</span>
+                  <span className="ks-cta-title-short">Phần Mềm</span>
                 </span>
                 <span className="ks-cta-badge">{SOFTWARE_RELEASE.tag}</span>
               </button>

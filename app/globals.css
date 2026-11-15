@@ -4692,18 +4692,20 @@ a:hover { opacity: .78; }
 .ks-desktop-nav {
   display: flex;
   align-items: center;
-  gap: clamp(8px, 1.1vw, 20px);
+  gap: clamp(8px, 1vw, 16px);
   margin-right: auto;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .ks-nav-item {
   position: relative;
-  padding: 8px 5px;
+  padding: 8px 4px;
   font-family: "Barlow Condensed", Arial, sans-serif;
-  font-size: clamp(18px, 1.3vw, 22px);
-  font-weight: 800;
+  font-size: clamp(16px, 1.1vw, 18.5px);
+  font-weight: 750;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.015em;
   color: #061a34;
   white-space: nowrap;
   transition: color 0.15s ease;
@@ -5278,16 +5280,30 @@ a:hover { opacity: .78; }
 
 /* Header & Footer Responsive */
 @media (max-width: 1440px) {
+  .ks-brand-img {
+    height: 42px;
+  }
   .ks-desktop-nav {
-    gap: clamp(6px, 0.85vw, 14px);
+    gap: 7px;
   }
   .ks-nav-item {
-    font-size: clamp(16.5px, 1.15vw, 18.5px);
-    padding: 6px 3px;
+    font-size: 15.5px;
+    padding: 6px 2px;
+    letter-spacing: 0.01em;
+  }
+  .ks-cta-title-full {
+    display: none;
+  }
+  .ks-cta-title-short {
+    display: inline;
   }
   .ks-header-cta-btn {
-    padding: 0 12px;
+    padding: 0 11px;
+    gap: 6px;
     font-size: 13px;
+  }
+  .ks-header-actions {
+    gap: 8px;
   }
 }
 
