@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { SOFTWARE_RELEASE } from "@/lib/software-release";
 import { DownloadModal } from "@/components/download-modal";
+import { UserNav } from "@/components/auth/user-nav";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 const navLinks = [
   { label: "Trang chủ", href: "/" },
@@ -13,6 +15,7 @@ const navLinks = [
   { label: "Lịch thi đấu", href: "/schedule" },
   { label: "Xếp hạng", href: "/ranking" },
   { label: "Vận động viên", href: "/athletes" },
+  { label: "Thi Trọng tài WKF", href: "/wkf-exam" },
   { label: "Tin tức", href: "/news" },
   { label: "Phần mềm", href: "/software" },
   { label: "Liên hệ", href: "/contact" },
@@ -25,6 +28,8 @@ export function SiteHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
   const [query, setQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
 
@@ -69,6 +74,11 @@ export function SiteHeader() {
     router.push(`/events?query=${encodeURIComponent(query.trim())}`);
     setSearchOpen(false);
     setOpen(false);
+  };
+
+  const handleOpenAuth = (tab: "login" | "register" = "login") => {
+    setAuthModalTab(tab);
+    setAuthModalOpen(true);
   };
 
   return (
@@ -174,6 +184,9 @@ export function SiteHeader() {
               )}
             </div>
 
+            {/* User Login/Profile Action */}
+            <UserNav onOpenAuthModal={handleOpenAuth} />
+
             {/* CTA Button: Software Download */}
             <div
               className="ks-header-cta-wrapper"
@@ -191,7 +204,10 @@ export function SiteHeader() {
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                <span>Phần Mềm K-SPORT</span>
+                <span className="ks-header-cta-title">
+                  <span className="ks-cta-title-full">Phần Mềm K-SPORT</span>
+                  <span className="ks-cta-title-short">Phần Mềm</span>
+                </span>
                 <span className="ks-cta-badge">{SOFTWARE_RELEASE.tag}</span>
               </button>
 
@@ -356,6 +372,17 @@ export function SiteHeader() {
                 </button>
               </div>
 
+              {/* Mobile Drawer User Card / Login buttons */}
+              <div className="ks-drawer-auth-section">
+                <UserNav
+                  isMobileDrawer
+                  onOpenAuthModal={(tab) => {
+                    setOpen(false);
+                    handleOpenAuth(tab);
+                  }}
+                />
+              </div>
+
               {/* Mobile Search */}
               <form className="ks-drawer-search" onSubmit={handleSearchSubmit}>
                 <input
@@ -424,6 +451,13 @@ export function SiteHeader() {
 
         {/* OS Selection Download Modal */}
         <DownloadModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+
+        {/* Auth Modal (Login / Register / Google) */}
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialTab={authModalTab}
+        />
       </header>
     </>
   );

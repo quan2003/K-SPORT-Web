@@ -1,0 +1,48 @@
+{
+  "generatedAt": "2026-11-12T09:35:15.626490+00:00",
+  "bankVersion": "wkf-2026.07-key2027.v1",
+  "summary": {
+    "totalQuestions": 378,
+    "kumiteCount": 246,
+    "kataCount": 132,
+    "verifiedAnswersCount": 378,
+    "needsReviewCount": 0,
+    "duplicateIdsCount": 0,
+    "missingQuestionsCount": 0,
+    "languageLeakCount": 0,
+    "ambiguousColorCellsCount": 0
+  },
+  "kumiteAudit": {
+    "questionSourceFile": "WKF_Kumite_Examination_Questions2.pdf",
+    "pdfVersion": "07/2026.1",
+    "pageCount": 33,
+    "expectedQuestions": 246,
+    "extractedQuestions": 246,
+    "missingNumbers": [],
+    "duplicateNumbers": [],
+    "emptyQuestions": [],
+    "languageLeakWarnings": [],
+    "answerKeyTitle": "Kumite 2027",
+    "trueCount": 123,
+    "falseCount": 123,
+    "ambiguousCells": [],
+    "minOpticalConfidence": 1.0
+  },
+  "kataAudit": {
+    "questionSourceFile": "Kata_ParaKarate questions_EnglishDec2025.pdf",
+    "pdfVersion": "07/2026",
+    "pageCount": 19,
+    "expectedQuestions": 132,
+    "extractedQuestions": 132,
+    "missingNumbers": [],
+    "duplicateNumbers": [],
+    "emptyQuestions": [],
+    "languageLeakWarnings": [],
+    "answerKeyTitle": "Kata 2027",
+    "trueCount": 73,
+    "falseCount": 59,
+    "ambiguousCells": [],
+    "minOpticalConfidence": 1.0
+  },
+  "versionCompatibilityNotice": "Toàn bộ 378 câu hỏi (246 Kumite và 132 Kata & Para Karate) cùng 378 đáp án từ bảng Kumite 2027 và Kata 2027 đã được xác nhận chính thức (verified) và bỏ gắn cờ rà soát."
+}

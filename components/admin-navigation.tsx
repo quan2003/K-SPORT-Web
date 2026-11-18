@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AdminRole } from "@/lib/auth";
 
-export function AdminNavigation({ role = "admin" }: { role?: AdminRole }) {
+export function AdminNavigation({ role = "admin" }: { role?: AdminRole | string }) {
   const pathname = usePathname();
 
   // If role is BTC, show tournament operations focus
@@ -21,7 +21,6 @@ export function AdminNavigation({ role = "admin" }: { role?: AdminRole }) {
           { label: "Banner trang chủ", href: "/admin/banners", icon: "🖼️" },
           { label: "Tin tức & Bài viết", href: "/admin/news", icon: "📰" },
           { label: "Giải đấu", href: "/admin/events", icon: "🥋" },
-          { label: "Quản lý license", href: "/admin/licenses", icon: "🔑" },
           { label: "Người dùng & Phân quyền", href: "/admin/users", icon: "👥" },
         ];
 

@@ -748,10 +748,10 @@ export function AdminSponsorsManager() {
                 <label>
                   Website liên kết chính thức
                   <input
-                    type="url"
+                    type="text"
                     value={website}
                     onChange={(e) => setWebsite(e.target.value)}
-                    placeholder="https://arawaza.com"
+                    placeholder="https://arawaza.com hoặc /contact"
                   />
                 </label>
               </div>

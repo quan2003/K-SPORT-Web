@@ -1,54 +1,129 @@
 import { cookies } from "next/headers";
+import type { UserRole } from "./user-store";
 
 export type AdminRole = "admin" | "btc" | "editor" | "viewer";
 
-export type PublicSession = {
+export interface UserSession {
   userId: string;
   name: string;
   email: string;
-  role: AdminRole;
+  role: UserRole;
+  avatar?: string;
+  authProvider?: "email" | "google" | "admin";
+  clubOrUnit?: string;
   tournamentId?: string;
   assignedTournament?: string;
-};
+}
 
-export async function getPublicSession(): Promise<PublicSession | null> {
-  const token = (await cookies()).get("ksport_admin_token")?.value;
+export type PublicSession = UserSession;
+
+export const USER_SESSION_COOKIE = "ksport_user_session";
+export const ADMIN_TOKEN_COOKIE = "ksport_admin_token";
+
+export function createUserSessionToken(user: UserSession): string {
+  const payload = {
+    userId: user.userId,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar,
+    authProvider: user.authProvider || "email",
+    clubOrUnit: user.clubOrUnit,
+    tournamentId: user.tournamentId,
+    assignedTournament: user.assignedTournament,
+    iat: Date.now(),
+  };
+  return Buffer.from(JSON.stringify(payload)).toString("base64url");
+}
+
+export function parseUserSessionToken(token: string): UserSession | null {
   if (!token) return null;
-
   try {
     let payloadRaw = "";
     if (token.includes(".")) {
       payloadRaw = Buffer.from(token.split(".")[1], "base64url").toString("utf8");
     } else {
-      payloadRaw = Buffer.from(token, "base64").toString("utf8");
+      try {
+        payloadRaw = Buffer.from(token, "base64url").toString("utf8");
+      } catch {
+        payloadRaw = Buffer.from(token, "base64").toString("utf8");
+      }
     }
+
     const payload = JSON.parse(payloadRaw) as {
+      userId?: string;
       u?: string;
       username?: string;
       name?: string;
-      role?: AdminRole;
       email?: string;
+      role?: UserRole;
+      avatar?: string;
+      authProvider?: "email" | "google" | "admin";
+      clubOrUnit?: string;
       tournamentId?: string;
       assignedTournament?: string;
     };
 
-    const username = payload.username || payload.u;
-    if (!username) return null;
+    const userId = payload.userId || payload.username || payload.u;
+    if (!userId) return null;
 
-    const role: AdminRole = payload.role || (username.startsWith("btc") ? "btc" : "admin");
-    const name = payload.name || (role === "btc" ? "Ban Tổ Chức Phú Thọ 2026" : "Quản trị viên Hệ thống");
+    const email = payload.email || `${userId}@k-sport.net`;
+    const role: UserRole =
+      payload.role ||
+      (userId.startsWith("btc")
+        ? "btc"
+        : userId.startsWith("admin")
+        ? "admin"
+        : "learner");
+
+    const defaultName =
+      role === "btc"
+        ? "Ban Tổ Chức Phú Thọ 2026"
+        : role === "admin"
+        ? "Quản trị viên Hệ thống"
+        : role === "referee"
+        ? "Trọng tài WKF"
+        : "Học viên Karate";
 
     return {
-      userId: username,
-      name,
-      email: payload.email || `${username}@k-sport.net`,
+      userId,
+      name: payload.name || defaultName,
+      email,
       role,
-      tournamentId: payload.tournamentId || "giai-vo-dich-clb-karate-phu-tho-2026",
-      assignedTournament: payload.assignedTournament || "Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026",
+      avatar: payload.avatar,
+      authProvider: payload.authProvider || "email",
+      clubOrUnit: payload.clubOrUnit,
+      tournamentId: payload.tournamentId || (role === "btc" ? "giai-vo-dich-clb-karate-phu-tho-2026" : undefined),
+      assignedTournament: payload.assignedTournament || (role === "btc" ? "Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026" : undefined),
     };
   } catch {
     return null;
   }
+}
+
+export async function getUserSession(): Promise<UserSession | null> {
+  const cookieStore = await cookies();
+
+  // 1. Check user session cookie first
+  const userToken = cookieStore.get(USER_SESSION_COOKIE)?.value;
+  if (userToken) {
+    const session = parseUserSessionToken(userToken);
+    if (session) return session;
+  }
+
+  // 2. Fall back to admin token cookie
+  const adminToken = cookieStore.get(ADMIN_TOKEN_COOKIE)?.value;
+  if (adminToken) {
+    const session = parseUserSessionToken(adminToken);
+    if (session) return session;
+  }
+
+  return null;
+}
+
+// Backward-compatible alias
+export async function getPublicSession(): Promise<PublicSession | null> {
+  return getUserSession();
 }
 
 export function isAuthConfigured() {

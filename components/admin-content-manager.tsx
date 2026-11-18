@@ -57,6 +57,7 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const [imageUrlValue, setImageUrlValue] = useState("");
   const imageUrlRef = useRef<HTMLInputElement>(null);
   const editorTitleRef = useRef<HTMLHeadingElement>(null);
   const isNews = kind === "news";
@@ -98,15 +99,26 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
   }, [kind, requireLogin, showToast]);
 
   const form = (editing ?? (isNews ? emptyNews : emptyBanner)) as Record<string, unknown>;
-  const shownImageUrl = uploadedImageUrl || String(form.image ?? form.imageUrl ?? "");
+  const shownImageUrl = uploadedImageUrl || imageUrlValue || String(form.image ?? form.imageUrl ?? "");
   const value = (name: string) => String(form[name] ?? "");
   const filteredItems = items.filter((item) => {
     const matchesFilter = filter === "all" || (filter === "published" ? item.isPublished : !item.isPublished);
     return matchesFilter && item.title.toLocaleLowerCase("vi").includes(query.toLocaleLowerCase("vi").trim());
   });
 
-  function openEditor(item?: ContentItem) { setEditing(item ?? null); setUploadedImageUrl(""); setIsEditorOpen(true); window.setTimeout(() => editorTitleRef.current?.focus(), 0); }
-  function closeEditor() { setUploadedImageUrl(""); setEditing(null); setIsEditorOpen(false); }
+  function openEditor(item?: ContentItem) {
+    setEditing(item ?? null);
+    setUploadedImageUrl("");
+    setImageUrlValue(String(item?.image ?? item?.imageUrl ?? ""));
+    setIsEditorOpen(true);
+    window.setTimeout(() => editorTitleRef.current?.focus(), 0);
+  }
+  function closeEditor() {
+    setUploadedImageUrl("");
+    setImageUrlValue("");
+    setEditing(null);
+    setIsEditorOpen(false);
+  }
 
   async function uploadImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -122,6 +134,7 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
       if (!uploadResponse.ok) throw new Error("Không thể tải ảnh lên kho lưu trữ");
       if (imageUrlRef.current) imageUrlRef.current.value = signature.fileUrl;
       setUploadedImageUrl(signature.fileUrl);
+      setImageUrlValue(signature.fileUrl);
       showToast("success", "Đã tải ảnh lên. Nhấn Lưu nội dung để áp dụng.");
     } catch (error) { showToast("error", error instanceof Error ? error.message : "Không thể tải ảnh lên"); }
     finally { setIsUploading(false); event.target.value = ""; }
@@ -130,7 +143,22 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget));
-    const data = { ...values, isPublished: values.isPublished === "on", ...(isNews ? { imageUrl: String(values.imageUrl || form.imageUrl || form.image || ""), publishedAt: toApiPublishedAt(values.publishedAt), body: String(values.body || "").split(/\r?\n/).filter(Boolean) } : { position: Number(values.position || 0) }) };
+    const bannerImageUrl = String(values.imageUrl || form.imageUrl || form.image || "");
+    const data = {
+      ...values,
+      isPublished: values.isPublished === "on",
+      ...(isNews
+        ? {
+            imageUrl: String(values.imageUrl || form.imageUrl || form.image || ""),
+            publishedAt: toApiPublishedAt(values.publishedAt),
+            body: String(values.body || "").split(/\r?\n/).filter(Boolean),
+          }
+        : {
+            imageUrl: bannerImageUrl,
+            image: bannerImageUrl,
+            position: Number(values.position || 0),
+          }),
+    };
     setIsSaving(true);
     try {
       const response = await fetch(editing ? `/api/admin/content/${kind}/${editing.id}` : `/api/admin/content/${kind}`, { method: editing ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
@@ -163,9 +191,31 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
     {toast ? <div className={`admin-toast ${toast.tone}`} role="status" aria-live="polite"><p>{toast.text}</p><button type="button" onClick={() => setToast(null)} aria-label="Đóng thông báo">×</button></div> : null}
     {isEditorOpen ? <section className="admin-editor-view" aria-labelledby="admin-editor-title">
       <div className="admin-editor-view-header"><div><h2 id="admin-editor-title" ref={editorTitleRef} tabIndex={-1}>{editing ? `Chỉnh sửa ${contentName}` : `Tạo ${contentName} mới`}</h2></div><button type="button" className="admin-text-button" onClick={closeEditor}>← Quay lại danh sách</button></div>
-      <form key={editing?.id ?? `new-${kind}`} className="admin-editor" onSubmit={submit}>
+      <form key={editing?.id ?? `new-${kind}`} className="admin-editor" onSubmit={submit} noValidate>
         <div className="admin-editor-fields">
-          {isNews ? <><label>Tiêu đề<input name="title" required autoComplete="off" defaultValue={value("title")} /></label><label>Đường dẫn bài viết<input name="slug" autoComplete="off" defaultValue={value("slug")} placeholder="tu-dong-tu-tieu-de" /></label><label>Chuyên mục<input name="category" autoComplete="off" defaultValue={value("category")} /></label><label>Tóm tắt<textarea name="summary" autoComplete="off" defaultValue={value("summary")} /></label><label className="admin-field-wide">Nội dung <small>Mỗi đoạn một dòng.</small><textarea name="body" autoComplete="off" defaultValue={Array.isArray(form.body) ? (form.body as string[]).join("\n") : value("body")} /></label><label className="admin-field-wide">URL ảnh bìa<input ref={imageUrlRef} name="imageUrl" type="url" autoComplete="off" defaultValue={value("imageUrl") || value("image")} placeholder="https://…" /></label><label>Ngày đăng<input name="publishedAt" type="date" lang="vi-VN" defaultValue={dateInputValue(form.publishedAt)} /></label></> : <><label>Nhãn nhỏ<input name="eyebrow" autoComplete="off" defaultValue={value("eyebrow")} /></label><label>Tiêu đề<input name="title" required autoComplete="off" defaultValue={value("title")} /></label><label className="admin-field-wide">Mô tả<textarea name="description" autoComplete="off" defaultValue={value("description")} /></label><label>URL ảnh banner<input ref={imageUrlRef} name="imageUrl" type="url" autoComplete="off" defaultValue={value("imageUrl")} placeholder="https://…" /></label><label>Nút chính<input name="primaryLabel" autoComplete="off" defaultValue={value("primaryLabel")} /></label><label>Liên kết nút chính<input name="primaryHref" autoComplete="off" defaultValue={value("primaryHref")} placeholder="https://… hoặc /events" /></label><label>Nút phụ<input name="secondaryLabel" autoComplete="off" defaultValue={value("secondaryLabel")} /></label><label>Liên kết nút phụ<input name="secondaryHref" autoComplete="off" defaultValue={value("secondaryHref")} placeholder="https://… hoặc /software" /></label><label>Thứ tự<input name="position" type="number" min="0" defaultValue={value("position")} /></label></>}
+          {isNews ? (
+            <>
+              <label>Tiêu đề<input name="title" required autoComplete="off" defaultValue={value("title")} /></label>
+              <label>Đường dẫn bài viết<input name="slug" autoComplete="off" defaultValue={value("slug")} placeholder="tu-dong-tu-tieu-de" /></label>
+              <label>Chuyên mục<input name="category" autoComplete="off" defaultValue={value("category")} /></label>
+              <label>Tóm tắt<textarea name="summary" autoComplete="off" defaultValue={value("summary")} /></label>
+              <label className="admin-field-wide">Nội dung <small>Mỗi đoạn một dòng.</small><textarea name="body" autoComplete="off" defaultValue={Array.isArray(form.body) ? (form.body as string[]).join("\n") : value("body")} /></label>
+              <label className="admin-field-wide">Đường dẫn ảnh bìa<input ref={imageUrlRef} name="imageUrl" type="text" autoComplete="off" value={imageUrlValue} onChange={(e) => { setImageUrlValue(e.target.value); setUploadedImageUrl(""); }} placeholder="/images/... hoặc https://…" /></label>
+              <label>Ngày đăng<input name="publishedAt" type="date" lang="vi-VN" defaultValue={dateInputValue(form.publishedAt)} /></label>
+            </>
+          ) : (
+            <>
+              <label>Nhãn nhỏ<input name="eyebrow" autoComplete="off" defaultValue={value("eyebrow")} /></label>
+              <label>Tiêu đề<input name="title" required autoComplete="off" defaultValue={value("title")} /></label>
+              <label className="admin-field-wide">Mô tả<textarea name="description" autoComplete="off" defaultValue={value("description")} /></label>
+              <label>Đường dẫn ảnh banner<input ref={imageUrlRef} name="imageUrl" type="text" autoComplete="off" value={imageUrlValue} onChange={(e) => { setImageUrlValue(e.target.value); setUploadedImageUrl(""); }} placeholder="/images/... hoặc https://…" /></label>
+              <label>Nút chính<input name="primaryLabel" autoComplete="off" defaultValue={value("primaryLabel")} /></label>
+              <label>Liên kết nút chính<input name="primaryHref" autoComplete="off" defaultValue={value("primaryHref")} placeholder="https://… hoặc /events" /></label>
+              <label>Nút phụ<input name="secondaryLabel" autoComplete="off" defaultValue={value("secondaryLabel")} /></label>
+              <label>Liên kết nút phụ<input name="secondaryHref" autoComplete="off" defaultValue={value("secondaryHref")} placeholder="https://… hoặc /software" /></label>
+              <label>Thứ tự<input name="position" type="number" min="0" defaultValue={value("position")} /></label>
+            </>
+          )}
         </div>
         <aside className="admin-editor-aside"><label className="admin-image-upload">Ảnh đại diện<input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={isUploading} /><small>{isUploading ? "Đang tải ảnh lên…" : "JPG, PNG hoặc WebP · tối đa 8 MB"}</small></label>{shownImageUrl ? <div className="admin-image-preview"><ContentImage src={shownImageUrl} alt="Xem trước ảnh bìa" width={640} height={360} /></div> : <div className="admin-image-placeholder">Chưa có ảnh. Dán URL hoặc chọn ảnh từ máy.</div>}<label className="admin-check"><input name="isPublished" type="checkbox" defaultChecked={Boolean(form.isPublished)} /> Công khai ngay sau khi lưu</label></aside>
         <div className="admin-editor-actions"><button type="button" className="admin-text-button" onClick={closeEditor}>Hủy</button><button className="button red" type="submit" disabled={isSaving}>{isSaving ? "Đang lưu…" : editing ? "Lưu thay đổi" : `Tạo ${contentName}`}</button></div>
