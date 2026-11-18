@@ -11154,6 +11154,50 @@ a:hover { opacity: .78; }
   flex: 1;
 }
 
+/* License management: a restrained, high-risk admin workspace. */
+.license-gate, .license-manager { max-width: 1180px; }
+.license-gate { max-width: 680px; padding: 44px 0; }
+.license-gate-kicker { margin: 0 0 10px; color: #64748b; font: 700 11px/1 "Barlow", sans-serif; letter-spacing: .08em; }
+.license-gate h1, .license-manager h1 { margin: 0; color: #0f172a; font: 700 32px/1 "Barlow Condensed", sans-serif; letter-spacing: -.025em; }
+.license-gate > p:not(.license-gate-kicker), .license-manager-header p:last-child { max-width: 570px; margin: 12px 0 0; color: #536071; font-size: 15px; line-height: 1.5; }
+.license-gate-form { display: grid; gap: 10px; width: min(100%, 420px); margin-top: 32px; }
+.license-gate-form label, .license-create-form label, .license-toolbar label { color: #334155; font-size: 13px; font-weight: 700; }
+.license-code-fieldset { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; }
+.license-code-fieldset legend { color: #334155; font-size: 13px; font-weight: 700; padding: 0; }
+.license-code-boxes { display: grid; grid-template-columns: repeat(6, 52px); gap: 8px; }
+.license-code-box { width: 52px; height: 58px; border: 1px solid #94a3b8; border-radius: 6px; background: #fff; color: #0f172a; font: 700 28px/1 "Barlow", sans-serif; text-align: center; }
+.license-code-box:focus-visible { outline: 3px solid rgba(7, 59, 122, .2); outline-offset: 2px; border-color: #073b7a; }
+.license-gate-form small { color: #64748b; font-size: 12px; }
+.license-gate-form .button { width: fit-content; min-height: 44px; margin-top: 10px; }
+.license-gate-error, .license-manager-message { margin: 0; color: #b42318; font-size: 13px; font-weight: 600; }
+.license-manager-header { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 28px; }
+.license-manager-header .button { min-height: 44px; white-space: nowrap; }
+.license-manager-message { padding: 12px 0; border-top: 1px solid #d5dce5; border-bottom: 1px solid #d5dce5; }
+.license-create-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 24px 0; padding: 24px 0; border-top: 1px solid #d5dce5; border-bottom: 1px solid #d5dce5; }
+.license-create-form label { display: grid; gap: 7px; }
+.license-create-form input, .license-create-form select, .license-create-form textarea, .license-toolbar input { width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #0f172a; font: inherit; }
+.license-create-form textarea { min-height: 80px; resize: vertical; }
+.license-form-wide, .license-form-actions { grid-column: 1 / -1; }
+.license-form-actions { display: flex; justify-content: flex-end; }
+.license-toolbar { display: flex; align-items: center; gap: 12px; margin: 26px 0 12px; }
+.license-toolbar input { width: min(100%, 360px); }
+.license-table-wrap { overflow-x: auto; border-top: 1px solid #d5dce5; }
+.license-table { width: 100%; min-width: 900px; border-collapse: collapse; }
+.license-table th { padding: 12px 10px; color: #64748b; font-size: 11px; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+.license-table td { padding: 15px 10px; border-top: 1px solid #e2e8f0; color: #334155; font-size: 13px; vertical-align: middle; }
+.license-table td strong, .license-table td small { display: block; }
+.license-table td small { margin-top: 3px; color: #64748b; }
+.license-table code { color: #334155; font-size: 11px; }
+.license-status { display: inline-block; color: #64748b; font-size: 12px; font-weight: 700; }
+.license-status.active { color: #047857; }
+.license-actions { display: flex; gap: 12px; white-space: nowrap; }
+.license-actions button { min-height: 32px; padding: 0; border: 0; background: transparent; color: #0759a4; font: 700 12px/1 "Barlow", sans-serif; cursor: pointer; }
+.license-actions button:hover { text-decoration: underline; text-underline-offset: 3px; }
+.license-actions .is-danger { color: #b42318; }
+.license-create-form input:focus-visible, .license-create-form select:focus-visible, .license-create-form textarea:focus-visible, .license-toolbar input:focus-visible { outline: 3px solid rgba(7, 59, 122, .2); outline-offset: 2px; border-color: #073b7a; }
+@media (max-width: 760px) { .license-gate { padding: 24px 0; } .license-gate h1, .license-manager h1 { font-size: 28px; } .license-manager-header { align-items: start; flex-direction: column; } .license-create-form { grid-template-columns: 1fr; } .license-form-wide, .license-form-actions { grid-column: auto; } .license-toolbar { align-items: stretch; flex-direction: column; } .license-toolbar input { width: 100%; } }
+@media (max-width: 420px) { .license-code-boxes { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; } .license-code-box { width: 100%; height: 52px; } }
+
 /* Dashboard V2 */
 .admin-dashboard-v2 {
   max-width: 1280px;

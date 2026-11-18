@@ -83,7 +83,7 @@ function checkLocalCredentials(usernameInput: string, passwordInput: string): Lo
   return { valid: false, role: "admin", name: "" };
 }
 
-function createSessionResponse(username: string, role: AdminRole, name: string, tournamentId?: string) {
+function createSessionResponse(username: string, role: AdminRole, name: string, tournamentId?: string, apiToken?: string) {
   const sessionData = {
     u: username,
     role,
@@ -92,7 +92,7 @@ function createSessionResponse(username: string, role: AdminRole, name: string, 
     t: Date.now(),
   };
 
-  const sessionToken = Buffer.from(JSON.stringify(sessionData)).toString("base64");
+  const sessionToken = apiToken || Buffer.from(JSON.stringify(sessionData)).toString("base64");
   const redirectUrl = role === "btc" ? "/admin/btc" : "/admin";
 
   const result = NextResponse.json({
@@ -118,7 +118,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Vui lòng nhập tên đăng nhập và mật khẩu" }, { status: 400 });
   }
 
-  // 1. Check local credentials (Admin and BTC)
+  // Prefer the production identity service when explicitly configured. Its JWT is
+  // kept in the same httpOnly cookie and is required by the license API proxy.
+  if (process.env.KSPORT_ADMIN_API_URL) {
+    try {
+      const response = await fetch(`${getAdminApiBase()}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password }),
+        signal: AbortSignal.timeout(5_000),
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        success?: boolean;
+        token?: string;
+        user?: { username?: string; role?: AdminRole; name?: string };
+        message?: string;
+      };
+      if (response.ok && payload.success && payload.token) {
+        const user = payload.user;
+        return createSessionResponse(user?.username || username.trim(), user?.role || "admin", user?.name || "Quản trị viên", undefined, payload.token);
+      }
+      return NextResponse.json({ message: payload.message || "Tên đăng nhập hoặc mật khẩu không chính xác." }, { status: 401 });
+    } catch {
+      return NextResponse.json({ message: "Không thể kết nối dịch vụ đăng nhập quản trị." }, { status: 503 });
+    }
+  }
+
+  // Local credentials remain available only for development without a configured API.
   const localAuth = checkLocalCredentials(username, password);
   if (localAuth.valid) {
     return createSessionResponse(username.trim(), localAuth.role, localAuth.name, localAuth.tournamentId);
@@ -137,13 +163,15 @@ export async function POST(request: Request) {
 
       if (response.ok) {
         const payload = (await response.json().catch(() => ({}))) as {
+          success?: boolean;
           token?: string;
           user?: { username?: string; role?: AdminRole; name?: string };
         };
+        if (!payload.success || !payload.token) throw new Error("Remote authentication failed");
         const u = payload.user?.username || username.trim();
         const role = payload.user?.role || "admin";
         const name = payload.user?.name || "Quản trị viên";
-        return createSessionResponse(u, role, name);
+        return createSessionResponse(u, role, name, undefined, payload.token);
       }
     } catch {
       // remote failed/offline
