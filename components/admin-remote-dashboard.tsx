@@ -38,6 +38,10 @@ export function AdminRemoteDashboard() {
   const data = state.data || {};
   const stats = (data.stats && typeof data.stats === "object" ? data.stats : data) as Record<string, unknown>;
   const payments = (stats.payments && typeof stats.payments === "object" ? stats.payments : {}) as Record<string, unknown>;
+  const dailyRevenue = Array.isArray(stats.dailyRevenue) ? stats.dailyRevenue as Record<string, unknown>[] : [];
+  const licensesByType = Array.isArray(stats.licensesByType) ? stats.licensesByType as Record<string, unknown>[] : [];
+  const maxRevenue = Math.max(...dailyRevenue.map((item) => Number(item.revenue_vnd || 0)), 1);
+  const maxLicenseType = Math.max(...licensesByType.map((item) => Number(item.count || 0)), 1);
   return (
     <section className="admin-dashboard-v3" aria-labelledby="admin-overview-heading">
       <div className="admin-page-heading">
@@ -56,6 +60,14 @@ export function AdminRemoteDashboard() {
         <section className="admin-panel"><div className="admin-panel-heading"><h2>Giải đấu đồng bộ gần đây</h2><Link href="/admin/events">Xem tất cả</Link></div>
           {tournaments.length === 0 ? <p>Máy chủ chưa trả về danh sách giải đấu.</p> : <div className="admin-data-list">{tournaments.slice(0, 6).map((row, index) => <div className="admin-data-row" key={String(row.id || row._id || index)}><strong>{String(row.name || row.title || row.tournamentName || "Giải đấu")}</strong><span>{String(row.status || row.syncStatus || "Cloud Synced")}</span></div>)}</div>}
         </section>
+        <div className="admin-chart-grid">
+          <section className="admin-panel admin-chart-panel"><div className="admin-panel-heading"><h2>Doanh thu 14 ngày gần nhất</h2><span>VNĐ</span></div>
+            {dailyRevenue.length === 0 ? <p>Chưa có dữ liệu doanh thu.</p> : <div className="admin-bar-chart" aria-label="Biểu đồ doanh thu 14 ngày">{dailyRevenue.map((item, index) => <div className="admin-bar-column" key={String(item.day || index)}><div className="admin-bar-value" style={{ height: `${Math.max(4, (Number(item.revenue_vnd || 0) / maxRevenue) * 100)}%` }} title={`${String(item.day || "")} — ${String(item.revenue_vnd || 0)} VNĐ`} /><span>{String(item.day || "")}</span></div>)}</div>}
+          </section>
+          <section className="admin-panel admin-chart-panel"><div className="admin-panel-heading"><h2>License theo loại</h2><span>Số lượng</span></div>
+            {licensesByType.length === 0 ? <p>Chưa có dữ liệu phân loại license.</p> : <div className="admin-horizontal-chart">{licensesByType.map((item, index) => <div className="admin-horizontal-row" key={String(item.name || index)}><span>{String(item.name || "Không rõ")}</span><div><i style={{ width: `${Math.max(4, (Number(item.count || 0) / maxLicenseType) * 100)}%` }} /><strong>{String(item.count || 0)}</strong></div></div>)}</div>}
+          </section>
+        </div>
       </>}
     </section>
   );
