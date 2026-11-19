@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminNavigation } from "@/components/admin-navigation";
+import { LicenseAdminNavigation } from "@/components/license-admin-navigation";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import type { PublicSession } from "@/lib/auth";
 
@@ -18,6 +19,7 @@ export function AdminShellClient({
   const pathname = usePathname();
   const [prevPathname, setPrevPathname] = useState(pathname);
   const isBtc = session?.role === "btc";
+  const isLicensePortal = ["/admin/licenses", "/admin/tournaments", "/admin/payment-orders", "/admin/payment-config", "/admin/requests"].some((path) => pathname.startsWith(path));
 
   // Close mobile drawer on route navigation during render
   if (prevPathname !== pathname) {
@@ -98,7 +100,7 @@ export function AdminShellClient({
         </div>
 
         <div className="admin-sidebar-nav-wrap">
-          <AdminNavigation role={session?.role} />
+            {isLicensePortal ? <LicenseAdminNavigation /> : <AdminNavigation role={session?.role} />}
         </div>
 
         <div className="admin-sidebar-user-card">
