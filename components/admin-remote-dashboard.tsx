@@ -44,7 +44,7 @@ export function AdminRemoteDashboard() {
         <div><p className="admin-eyebrow">Tổng quan máy chủ</p><h1 id="admin-overview-heading">Tổng quan hệ thống</h1><p>Dữ liệu đồng bộ trực tiếp từ máy chủ quản trị.</p></div>
         <Link className="btn-pro-primary" href="/admin/events">Quản lý giải đấu</Link>
       </div>
-      {state.loading && <p role="status">Đang tải dữ liệu thật…</p>}
+      {state.loading && <div className="admin-loading" role="status"><span className="admin-loading-spinner" aria-hidden="true" />Đang tải dữ liệu thật từ máy chủ…</div>}
       {state.error && <p className="admin-error" role="alert">{state.error}</p>}
       {!state.loading && !state.error && <>
         <div className="admin-stat-grid">

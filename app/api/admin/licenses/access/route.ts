@@ -38,6 +38,9 @@ export async function POST(request: Request) {
   const value = await createLicenseAccessCookie();
   if (!value) return NextResponse.json({ message: "Phiên đăng nhập không hợp lệ." }, { status: 401 });
   const response = NextResponse.json({ success: true });
-  response.cookies.set(LICENSE_ACCESS_COOKIE, value, { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/admin/licenses", maxAge: 60 * 15 });
+  // The protected portal spans several /admin/* routes. The normal /admin
+  // dashboard remains public to the signed-in admin because its layout does
+  // not check this cookie.
+  response.cookies.set(LICENSE_ACCESS_COOKIE, value, { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/admin", maxAge: 60 * 15 });
   return response;
 }
