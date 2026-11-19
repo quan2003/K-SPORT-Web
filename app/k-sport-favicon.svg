@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="K-SPORT favicon">
+  <title>K-SPORT</title>
+  <!-- Transparent beyond the rounded white tile; no colored border -->
+  <rect x="2" y="2" width="60" height="60" rx="10" fill="#FFFFFF"/>
+  <!-- Red vertical stroke of the K -->
+  <path d="M14 12.5H26.3V50H14Z" fill="#E60012"/>
+  <!-- Navy diagonal strokes of the K -->
+  <path d="M26.3 30.9L37.7 12.5H51L37.2 30.9L52 50H37.7Z" fill="#0C3079"/>
+</svg>

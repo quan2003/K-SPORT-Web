@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://k-sport.net"),
   title: { default: "K-SPORT | Cổng thông tin Karate Việt Nam", template: "%s | K-SPORT" },
   description: "Cổng thông tin giải đấu Karate và phần mềm quản lý, điều hành giải K-SPORT.",
-  icons: { icon: "/icon.svg" },
+  icons: { icon: "/k-sport-favicon.svg" },
   openGraph: {
     type: "website",
     locale: "vi_VN",
