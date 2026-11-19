@@ -37,7 +37,7 @@ export function AdminRemoteDashboard() {
   return (
     <section className="admin-dashboard-v3" aria-labelledby="admin-overview-heading">
       <div className="admin-page-heading">
-        <div><p className="admin-eyebrow">Karate Admin</p><h1 id="admin-overview-heading">Tổng quan hệ thống</h1><p>Dữ liệu đồng bộ trực tiếp từ máy chủ quản trị.</p></div>
+        <div><p className="admin-eyebrow">Tổng quan máy chủ</p><h1 id="admin-overview-heading">Tổng quan hệ thống</h1><p>Dữ liệu đồng bộ trực tiếp từ máy chủ quản trị.</p></div>
         <Link className="btn-pro-primary" href="/admin/events">Quản lý giải đấu</Link>
       </div>
       {state.loading && <p role="status">Đang tải dữ liệu thật…</p>}
