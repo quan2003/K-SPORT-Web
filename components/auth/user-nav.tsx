@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { UserSession } from "@/lib/auth";
+import { ProfileEditDialog } from "@/components/auth/profile-edit-dialog";
 
 interface Props {
   initialSession?: UserSession | null;
@@ -20,6 +21,7 @@ export function UserNav({
   const [session, setSession] = useState<UserSession | null>(initialSession ?? null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -98,6 +100,7 @@ export function UserNav({
             <Link href="/wkf-exam/history" className="ks-drawer-user-action-btn">
               Tiến độ học & Lịch sử thi
             </Link>
+            <button type="button" className="ks-drawer-user-action-btn" onClick={() => setEditingProfile(true)}>Chỉnh sửa thông tin</button>
             {session.role === "admin" && (
               <Link href="/admin" className="ks-drawer-user-action-btn">
                 Trang Quản trị Admin
@@ -117,11 +120,13 @@ export function UserNav({
               {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
             </button>
           </div>
+          {editingProfile && <ProfileEditDialog session={session} onClose={() => setEditingProfile(false)} onSaved={setSession} />}
         </div>
       );
     }
 
-    return (
+      return (
+        <>
       <div className="ks-drawer-auth-buttons">
         <button
           type="button"
@@ -143,8 +148,8 @@ export function UserNav({
         >
           <span>Đăng ký</span>
         </button>
-      </div>
-    );
+        </div></>
+      );
   }
 
   // Desktop header variant
@@ -197,6 +202,9 @@ export function UserNav({
                 </svg>
                 <span>Tiến độ & Lịch sử thi</span>
               </Link>
+              <button type="button" className="ks-user-dropdown-item" role="menuitem" onClick={() => { setDropdownOpen(false); setEditingProfile(true); }}>
+                <span aria-hidden="true">✎</span><span>Chỉnh sửa thông tin</span>
+              </button>
               <Link
                 href="/wkf-exam/mistakes"
                 className="ks-user-dropdown-item"
@@ -260,6 +268,7 @@ export function UserNav({
             </div>
           </div>
         )}
+        {editingProfile && <ProfileEditDialog session={session} onClose={() => setEditingProfile(false)} onSaved={setSession} />}
       </div>
     );
   }

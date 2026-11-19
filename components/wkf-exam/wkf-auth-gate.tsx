@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 interface Props {
   title?: string;
@@ -145,6 +146,7 @@ export function WkfAuthGate({
 
         {/* Google One-Click Login */}
         <div className="wkf-google-login-section">
+          <GoogleSignInButton className="wkf-google-btn-real" redirectUrl={redirectPath} />
           <button
             type="button"
             className="wkf-google-btn"

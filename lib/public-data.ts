@@ -1,12 +1,3 @@
-import {
-  mockAthletes,
-  mockBanners,
-  mockClubs,
-  mockEvents,
-  mockMatches,
-  mockNews,
-  mockRanking,
-} from "./mock-data";
 
 type NextFetchRequestConfig = { revalidate?: number | false; tags?: string[]; internal?: boolean };
 
@@ -421,7 +412,7 @@ async function getRecord<T>(apiPath: string): Promise<T | null> {
 
 export const getEvents = async () => {
   const list = (await getCollection<TournamentEvent>("/events")).map((event) => normalizeEvent(event));
-  return list.length > 0 ? list : mockEvents.map((event) => normalizeEvent(event));
+  return list;
 };
 
 export const getEvent = async (slug: string) => {
@@ -430,23 +421,22 @@ export const getEvent = async (slug: string) => {
   if (matched) return matched;
   const event = await getRecord<TournamentEvent>(`/events/${encodeURIComponent(slug)}`);
   if (event) return normalizeEvent(event);
-  const fallback = mockEvents.find((entry) => entry.slug === slug);
-  return fallback ? normalizeEvent(fallback) : null;
+  return null;
 };
 
 export const getSchedule = async () => {
   const list = await getCollection<Match>("/schedule", 15);
-  return list.length > 0 ? list : mockMatches;
+  return list;
 };
 
 export const getResults = async () => {
   const list = await getCollection<Match>("/results", 15);
-  return list.length > 0 ? list : mockMatches.filter((match) => match.state === "Đã kết thúc");
+  return list;
 };
 
 export const getAthletes = async () => {
   const list = (await getCollection<Athlete>("/athletes", 15)).map(normalizeAthlete);
-  return list.length > 0 ? list : mockAthletes.map(normalizeAthlete);
+  return list;
 };
 
 export const getAthlete = async (idOrCode: string) => {
@@ -463,17 +453,12 @@ export const getAthlete = async (idOrCode: string) => {
   const athlete = await getRecord<Athlete>(`/athletes/${encodeURIComponent(query)}`);
   if (athlete) return normalizeAthlete(athlete);
 
-  const fallback = mockAthletes.find(
-    (entry) =>
-      entry.id.toLocaleLowerCase("vi") === query.toLocaleLowerCase("vi") ||
-      (entry.athleteCode && entry.athleteCode.localeCompare(query, undefined, { sensitivity: "accent" }) === 0)
-  );
-  return fallback ? normalizeAthlete(fallback) : null;
+  return null;
 };
 
 export const getClubs = async () => {
   const list = await getCollection<Club>("/clubs");
-  return list.length > 0 ? list : mockClubs;
+  return list;
 };
 
 export const getClub = async (id: string) => {
@@ -481,45 +466,25 @@ export const getClub = async (id: string) => {
   const matched = clubs.find((club) => club.id === id);
   if (matched) return matched;
   const remote = await getRecord<Club>(`/clubs/${encodeURIComponent(id)}`);
-  return remote || mockClubs.find((club) => club.id === id) || null;
+  return remote;
 };
 
 export const getRanking = async () => {
   const list = await getCollection<RankingEntry>("/ranking", 15);
-  return list.length > 0 ? list : mockRanking;
+  return list;
 };
 
 export const getNews = async () => {
   const list = (await getCollection<NewsItem>("/news", 300)).map(normalizeNewsItem);
   if (list.length > 0) return list;
-  if (typeof globalThis !== "undefined") {
-    try {
-      const { getNewsStore } = await import("./admin-store");
-      const store = getNewsStore();
-      if (store && store.length > 0) return store.map(normalizeNewsItem);
-    } catch {
-      // ignore
-    }
-  }
-  return mockNews.map(normalizeNewsItem);
+  return [];
 };
 
 // Banner content was added after the initial public API rollout.
 export const getBanners = async () => {
   const list = await getCollection<PublicBanner>("/banners", 60, true);
   if (list.length > 0) return list;
-  if (typeof globalThis !== "undefined") {
-    try {
-      const { getBannersStore } = await import("./admin-store");
-      const store = getBannersStore();
-      if (store && store.length > 0) {
-        return store.filter((b) => (b as { isPublished?: boolean }).isPublished !== false);
-      }
-    } catch {
-      // ignore
-    }
-  }
-  return mockBanners;
+  return [];
 };
 
 export const getNewsItem = async (slug: string) => {

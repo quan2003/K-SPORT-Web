@@ -16,20 +16,7 @@ export function HomeHero({ events, banners }: HomeHeroProps) {
   const activeEvent = events.find((e) => e.status === "Đang diễn ra") || events[0];
 
   // Banners configured in admin (/admin/banners) directly drive the homepage hero slider
-  const bannerList = banners.length > 0 ? banners : [
-    {
-      id: "banner-01",
-      eyebrow: "CỔNG THÔNG TIN VÀ PHẦN MỀM QUẢN LÝ GIẢI ĐẤU KARATE",
-      title: "Karate Việt Nam, trong một nhịp đấu.",
-      description: "Kết nối giải đấu – vận hành chuyên nghiệp – lan tỏa tinh thần Karate vì một cộng đồng mạnh mẽ hơn.",
-      image: "/images/karate-hero.png",
-      primaryLabel: "Xem lịch thi đấu",
-      primaryHref: "/schedule",
-      secondaryLabel: "Khám phá giải đấu",
-      secondaryHref: "/events",
-      position: 1,
-    },
-  ];
+  const bannerList = banners;
 
   const slides = bannerList.map((b) => ({
     id: `slide-banner-${b.id}`,
@@ -50,6 +37,7 @@ export function HomeHero({ events, banners }: HomeHeroProps) {
     return () => clearInterval(interval);
   }, [slides.length]);
 
+  if (slides.length === 0) return null;
   const current = slides[activeSlide];
 
   return (

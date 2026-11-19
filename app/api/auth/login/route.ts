@@ -84,6 +84,9 @@ export async function POST(request: Request) {
       avatar: user.avatarUrl,
       authProvider: user.authProvider,
       clubOrUnit: user.clubOrUnit,
+      phone: user.phone,
+      gender: user.gender,
+      dateOfBirth: user.dateOfBirth,
       tournamentId: user.role === "btc" ? "giai-vo-dich-clb-karate-phu-tho-2026" : undefined,
     });
 

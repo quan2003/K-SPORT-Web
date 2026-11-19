@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 const items = [
   ["Tổng quan license", "/admin/licenses", "📊"],
   ["Licenses", "/admin/licenses#licenses", "🔑"],
-  ["Giải đấu & Storage", "/admin/tournaments", "🏆"],
+  ["Giải đấu & dữ liệu", "/admin/tournaments", "🏆"],
   ["Đơn hàng", "/admin/payment-orders", "🧾"],
   ["VietQR & Gói", "/admin/payment-config", "💳"],
   ["Yêu cầu hỗ trợ", "/admin/requests", "💬"],

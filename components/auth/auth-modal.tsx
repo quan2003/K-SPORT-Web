@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 interface Props {
   isOpen: boolean;
@@ -147,6 +148,7 @@ function AuthModalInner({
 
         {/* Google Login Button */}
         <div className="ks-auth-google-wrap">
+          <GoogleSignInButton className="ks-auth-google-btn-real" redirectUrl={redirectUrl} />
           <button
             type="button"
             className="ks-auth-google-btn"

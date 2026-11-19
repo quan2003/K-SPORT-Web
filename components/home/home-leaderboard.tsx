@@ -12,6 +12,8 @@ interface HomeLeaderboardProps {
 }
 
 export function HomeLeaderboard({ ranking, athletes = [], featuredAthlete }: HomeLeaderboardProps) {
+  // Production pages must wait for real ranking and athlete records.
+  if (ranking.length === 0 || athletes.length === 0) return null;
   const topRankings = ranking.slice(0, 5);
 
   // Default to featuredAthlete or the #1 ranked athlete or first athlete from directory

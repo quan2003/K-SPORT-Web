@@ -11,6 +11,9 @@ export interface UserSession {
   avatar?: string;
   authProvider?: "email" | "google" | "admin";
   clubOrUnit?: string;
+  phone?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   tournamentId?: string;
   assignedTournament?: string;
 }
@@ -29,6 +32,9 @@ export function createUserSessionToken(user: UserSession): string {
     avatar: user.avatar,
     authProvider: user.authProvider || "email",
     clubOrUnit: user.clubOrUnit,
+    phone: user.phone,
+    gender: user.gender,
+    dateOfBirth: user.dateOfBirth,
     tournamentId: user.tournamentId,
     assignedTournament: user.assignedTournament,
     iat: Date.now(),
@@ -60,6 +66,9 @@ export function parseUserSessionToken(token: string): UserSession | null {
       avatar?: string;
       authProvider?: "email" | "google" | "admin";
       clubOrUnit?: string;
+      phone?: string;
+      gender?: "male" | "female" | "other";
+      dateOfBirth?: string;
       tournamentId?: string;
       assignedTournament?: string;
     };
@@ -93,6 +102,9 @@ export function parseUserSessionToken(token: string): UserSession | null {
       avatar: payload.avatar,
       authProvider: payload.authProvider || "email",
       clubOrUnit: payload.clubOrUnit,
+      phone: payload.phone,
+      gender: payload.gender,
+      dateOfBirth: payload.dateOfBirth,
       tournamentId: payload.tournamentId || (role === "btc" ? "giai-vo-dich-clb-karate-phu-tho-2026" : undefined),
       assignedTournament: payload.assignedTournament || (role === "btc" ? "Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026" : undefined),
     };

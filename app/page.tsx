@@ -77,7 +77,7 @@ export default async function Home() {
         {/* 6. Karate News & Professional Media: Editorial lead story + side articles */}
         <HomeNews news={news} />
 
-        {/* 7. Official Partners & Equipment Sponsors */}
+        {/* 7. Chỉ hiển thị khi đã có nhà tài trợ thật */}
         <SponsorsSection />
 
         {/* 8. Tournament Organizer Call To Action: Partnering with federations & clubs */}

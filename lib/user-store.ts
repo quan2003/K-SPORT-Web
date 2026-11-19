@@ -13,6 +13,9 @@ export interface UserRecord {
   passwordHash?: string;
   passwordSalt?: string;
   avatarUrl?: string;
+  phone?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   clubOrUnit?: string;
   createdAt: string;
   lastLoginAt?: string;
@@ -36,6 +39,9 @@ function stripSensitive(user: UserRecord): SafeUser {
     role: user.role,
     authProvider: user.authProvider,
     avatarUrl: user.avatarUrl,
+    phone: user.phone,
+    gender: user.gender,
+    dateOfBirth: user.dateOfBirth,
     clubOrUnit: user.clubOrUnit,
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
@@ -184,6 +190,7 @@ export function registerUser(params: {
   email: string;
   password: string;
   clubOrUnit?: string;
+  phone?: string;
   role?: UserRole;
 }): SafeUser {
   const email = params.email.trim().toLowerCase();
@@ -215,6 +222,7 @@ export function registerUser(params: {
     passwordSalt: salt,
     passwordHash,
     clubOrUnit: params.clubOrUnit?.trim() || undefined,
+    phone: params.phone?.trim() || undefined,
     createdAt: new Date().toISOString(),
     lastLoginAt: new Date().toISOString(),
   };
@@ -224,6 +232,25 @@ export function registerUser(params: {
   persistUsers();
 
   return stripSensitive(newUser);
+}
+
+export function updateUserProfile(
+  userId: string,
+  params: { name?: string; phone?: string; gender?: "male" | "female" | "other"; dateOfBirth?: string; clubOrUnit?: string },
+): SafeUser | null {
+  const user = getUserById(userId);
+  if (!user) return null;
+  const name = params.name?.trim();
+  if (name !== undefined && name.length < 2) {
+    throw new Error("Họ và tên cần có ít nhất 2 ký tự.");
+  }
+  if (name !== undefined) user.name = name;
+  if (params.phone !== undefined) user.phone = params.phone.trim() || undefined;
+  if (params.gender !== undefined) user.gender = params.gender;
+  if (params.dateOfBirth !== undefined) user.dateOfBirth = params.dateOfBirth.trim() || undefined;
+  if (params.clubOrUnit !== undefined) user.clubOrUnit = params.clubOrUnit.trim() || undefined;
+  persistUsers();
+  return stripSensitive(user);
 }
 
 export function authenticateWithPassword(

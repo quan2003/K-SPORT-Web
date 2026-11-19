@@ -4,6 +4,7 @@ import { WkfHomeClient } from "@/components/wkf-exam/wkf-home-client";
 import { WkfSubnav } from "@/components/wkf-exam/wkf-subnav";
 import { getPublicSession } from "@/lib/auth";
 import { getQuestionBank } from "@/lib/wkf-exam/question-bank";
+import { ProfileSetupGate } from "@/components/profile-setup-gate";
 
 export const metadata: Metadata = {
   title: "WKF Referee Academy — Ôn thi luật trọng tài Karate WKF",
@@ -14,6 +15,10 @@ export const metadata: Metadata = {
 export default async function WkfExamHomePage() {
   const bank = getQuestionBank();
   const session = await getPublicSession();
+
+  if (session && (!session.phone || !session.gender || !session.dateOfBirth) && session.role !== "admin" && session.role !== "btc") {
+    return <ProfileSetupGate initialName={session.name} initialClub={session.clubOrUnit} initialGender={session.gender} initialDateOfBirth={session.dateOfBirth} />;
+  }
 
   return (
     <InternalLayout>

@@ -28,23 +28,31 @@ function decodeGoogleCredential(credentialToken: string): {
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    let email = body.email as string | undefined;
-    let name = body.name as string | undefined;
-    let picture = body.picture as string | undefined;
-    let googleId = body.googleId as string | undefined;
+    let email: string | undefined;
+    let name: string | undefined;
+    let picture: string | undefined;
+    let googleId: string | undefined;
 
     // 1. If Google GIS credential token is provided
     if (typeof body.credential === "string" && body.credential.trim()) {
-      const decoded = decodeGoogleCredential(body.credential);
-      if (decoded && decoded.email) {
-        email = decoded.email;
-        name = decoded.name || email.split("@")[0];
-        picture = decoded.picture;
-        googleId = decoded.sub;
+      const tokenInfoResponse = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(body.credential)}`,
+        { signal: AbortSignal.timeout(5_000) },
+      );
+      const verified = tokenInfoResponse.ok
+        ? ((await tokenInfoResponse.json()) as { email?: string; name?: string; picture?: string; sub?: string; aud?: string })
+        : null;
+      const expectedClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (!verified?.email || (expectedClientId && verified.aud !== expectedClientId)) {
+        return NextResponse.json({ success: false, error: "Thông tin Google không hợp lệ." }, { status: 401 });
       }
+      email = verified.email;
+      name = verified.name || email.split("@")[0];
+      picture = verified.picture;
+      googleId = verified.sub;
     }
 
-    if (!email || !email.includes("@")) {
+    if (!body.credential || !email || !email.includes("@")) {
       return NextResponse.json(
         { success: false, error: "Không tìm thấy thông tin email từ Google." },
         { status: 400 }
@@ -66,6 +74,9 @@ export async function POST(request: Request) {
       avatar: safeUser.avatarUrl,
       authProvider: "google",
       clubOrUnit: safeUser.clubOrUnit,
+      phone: safeUser.phone,
+      gender: safeUser.gender,
+      dateOfBirth: safeUser.dateOfBirth,
     });
 
     const response = NextResponse.json({

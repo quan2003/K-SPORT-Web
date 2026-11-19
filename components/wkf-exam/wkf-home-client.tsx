@@ -12,6 +12,7 @@ import {
   useIsClientHydrated,
 } from "@/lib/wkf-exam/client-storage";
 import type { CategoryMetadata, ExamAttempt, ExamCategory } from "@/lib/wkf-exam/types";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 type Props = {
   categories: Record<ExamCategory, CategoryMetadata>;
@@ -154,6 +155,7 @@ export function WkfHomeClient({
                 </span>
               </div>
               <div className="wkf-auth-guest-actions">
+                <GoogleSignInButton className="wkf-auth-google-quick-btn-real" />
                 <button
                   type="button"
                   className="wkf-auth-google-quick-btn"

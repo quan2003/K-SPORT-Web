@@ -5,13 +5,14 @@ import { registerUser } from "@/lib/user-store";
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { name, email, password, clubOrUnit } = body;
+    const { name, email, password, clubOrUnit, phone } = body;
 
     const safeUser = registerUser({
       name,
       email,
       password,
       clubOrUnit,
+      phone,
       role: "learner",
     });
 
@@ -23,6 +24,9 @@ export async function POST(request: Request) {
       avatar: safeUser.avatarUrl,
       authProvider: safeUser.authProvider,
       clubOrUnit: safeUser.clubOrUnit,
+      phone: safeUser.phone,
+      gender: safeUser.gender,
+      dateOfBirth: safeUser.dateOfBirth,
     });
 
     const response = NextResponse.json(

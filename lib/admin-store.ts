@@ -1,5 +1,4 @@
 import { mockBanners, mockNews } from "@/lib/mock-data";
-import { SPONSOR_LOGOS } from "@/lib/sponsor-logos";
 
 export type SponsorTier = "diamond" | "gold" | "silver" | "equipment" | "beverage" | "media";
 
@@ -43,7 +42,9 @@ export type AdminUserItem = {
   status: "Hoạt động" | "Tạm khóa";
 };
 
-// Initial realistic Karate sponsors
+/* Sponsor records are intentionally empty until real partners are confirmed.
+// The previous sample records are kept out of the public site and should not be
+// presented as real sponsors.
 const defaultSponsors: SponsorItem[] = [
   {
     id: "sp-arawaza",
@@ -144,6 +145,9 @@ const defaultSponsors: SponsorItem[] = [
     contractDate: "2026-07-01",
   },
 ];
+*/
+
+const defaultSponsors: SponsorItem[] = [];
 
 // Initial realistic users (Only 3 roles: admin, btc, editor/truyenthong)
 const defaultUsers: AdminUserItem[] = [
@@ -226,6 +230,10 @@ declare global {
 export function getSponsorsStore(): SponsorItem[] {
   if (!global.__ksport_sponsors) {
     global.__ksport_sponsors = [...defaultSponsors];
+  } else {
+    // Remove records that belonged to the old demo sponsor list.
+    const demoIds = new Set(["sp-arawaza", "sp-tokaido", "sp-tanviet", "sp-dongluc", "sp-lavie", "sp-shureido", "sp-adidas"]);
+    global.__ksport_sponsors = global.__ksport_sponsors.filter((item) => !demoIds.has(item.id));
   }
   return global.__ksport_sponsors;
 }
@@ -343,4 +351,3 @@ export function getNewsStore() {
   }
   return global.__ksport_news;
 }
-

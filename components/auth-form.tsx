@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 function AuthFormContent() {
   const searchParams = useSearchParams();
@@ -95,17 +96,11 @@ function AuthFormContent() {
     }
   }
 
-  function handleQuickFillDemo() {
-    setEmailOrUsername("user.karate@k-sport.net");
-    setPassword("Ksport!2026");
-    setMode("login");
-    setMessage("");
-  }
-
   return (
     <div className="auth-card-body">
       {/* Google Login Section */}
       <div className="auth-google-wrapper">
+        <GoogleSignInButton className="auth-google-btn-real" />
         <button
           type="button"
           className="auth-google-btn"
@@ -271,7 +266,7 @@ function AuthFormContent() {
         <button
           type="button"
           className="auth-sample-link"
-          onClick={handleQuickFillDemo}
+          onClick={() => undefined}
         >
           Điền nhanh tài khoản mẫu thử nghiệm
         </button>

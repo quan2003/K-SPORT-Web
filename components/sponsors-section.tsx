@@ -28,7 +28,8 @@ export function SponsorsSection() {
     };
   }, []);
 
-  if (!loading && sponsors.length === 0) return null;
+  // Keep the public page clean until a real sponsor has been added.
+  if (loading || sponsors.length === 0) return null;
 
   const equipmentBrands = sponsors.filter((s) => s.tier === "equipment" || s.category.includes("Võ phục"));
   const officialPartners = sponsors.filter((s) => s.tier !== "equipment" && !s.category.includes("Võ phục"));
@@ -130,7 +131,7 @@ export function SponsorsSection() {
         <div className="sponsors-cta-banner">
           <div className="cta-banner-text">
             <strong>Bạn muốn quảng bá thương hiệu võ phục hoặc tài trợ giải đấu Karate?</strong>
-            <p>Đồng hành cùng nền tảng số hóa giải đấu K-SPORT tiếp cận hơn 50,000 võ sinh, huấn luyện viên và khán giả toàn quốc.</p>
+            <p>Đồng hành cùng nền tảng số hóa giải đấu K-SPORT và cộng đồng Karate.</p>
           </div>
           <Link href="/contact" className="btn-sponsor-contact">
             Liên Hệ Ban Tài Trợ K-SPORT →
