@@ -9,6 +9,8 @@ const ALLOWED_PREFIXES = [
   "stats/dashboard",
   "cloud-sync/tournaments",
   "cloud-sync/tournament/",
+  "cloud-sync/download-kbackup/",
+  "cloud-sync/tournaments/all",
   "cloud-sync/purge/",
   "cloud-sync/trigger-auto-purge",
   "admin/payment-orders",
