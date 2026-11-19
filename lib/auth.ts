@@ -115,7 +115,15 @@ export async function getUserSession(): Promise<UserSession | null> {
   const adminToken = cookieStore.get(ADMIN_TOKEN_COOKIE)?.value;
   if (adminToken) {
     const session = parseUserSessionToken(adminToken);
-    if (session) return session;
+    if (session) {
+      // The license server JWT identifies an admin by its signed cookie but
+      // does not always include a `role` claim. The admin layout already
+      // requires this cookie, so preserve the admin context for API guards.
+      if (session.role !== "admin" && session.role !== "btc") {
+        return { ...session, role: "admin" };
+      }
+      return session;
+    }
   }
 
   return null;
