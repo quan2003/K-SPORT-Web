@@ -24,49 +24,135 @@ declare global {
 export function GoogleSignInButton({ className, label = "Tiếp tục với Google", redirectUrl = "/wkf-exam" }: GoogleButtonProps) {
   const target = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const [sdkState, setSdkState] = useState<"idle" | "ready" | "error">("idle");
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim();
 
   useEffect(() => {
     if (!clientId || !target.current) return;
+    let cancelled = false;
+
     const setup = () => {
-      if (!window.google || !target.current) return;
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async ({ credential }) => {
-          try {
-            const response = await fetch("/api/auth/google", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ credential }),
-            });
-            const payload = await response.json().catch(() => ({}));
-            if (!response.ok || !payload.success) throw new Error(payload.error || "Đăng nhập Google không thành công.");
-            window.location.assign(redirectUrl);
-          } catch (reason) {
-            setError(reason instanceof Error ? reason.message : "Đăng nhập Google không thành công.");
-          }
-        },
-      });
-      target.current.replaceChildren();
-      const width = Math.min(360, Math.max(220, target.current.clientWidth || 360));
-      window.google.accounts.id.renderButton(target.current, { theme: "outline", size: "large", width, text: "continue_with" });
+      if (cancelled || !window.google?.accounts?.id || !target.current) return;
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async ({ credential }) => {
+            try {
+              setError("");
+              const response = await fetch("/api/auth/google", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ credential }),
+              });
+              const payload = await response.json().catch(() => ({}));
+              if (!response.ok || !payload.success) {
+                throw new Error(payload.error || "Đăng nhập Google không thành công.");
+              }
+              window.location.assign(redirectUrl);
+            } catch (reason) {
+              setError(reason instanceof Error ? reason.message : "Đăng nhập Google không thành công.");
+            }
+          },
+        });
+        target.current.replaceChildren();
+        const containerWidth = target.current.parentElement?.clientWidth || target.current.clientWidth || 360;
+        const width = Math.min(400, Math.max(220, containerWidth));
+        window.google.accounts.id.renderButton(target.current, {
+          theme: "outline",
+          size: "large",
+          width,
+          text: "continue_with",
+        });
+        setSdkState("ready");
+      } catch {
+        setSdkState("error");
+      }
     };
+
+    const onError = () => {
+      if (!cancelled) setSdkState("error");
+    };
+
+    if (window.google?.accounts?.id) {
+      Promise.resolve().then(setup);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const existing = document.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]');
-    if (existing) { existing.addEventListener("load", setup); setup(); return () => existing.removeEventListener("load", setup); }
+    if (existing) {
+      existing.addEventListener("load", setup);
+      existing.addEventListener("error", onError);
+      return () => {
+        cancelled = true;
+        existing.removeEventListener("load", setup);
+        existing.removeEventListener("error", onError);
+      };
+    }
+
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
     script.onload = setup;
+    script.onerror = onError;
     document.head.appendChild(script);
-    return () => { script.onload = null; };
+    return () => {
+      cancelled = true;
+      script.onload = null;
+      script.onerror = null;
+    };
   }, [clientId, redirectUrl]);
 
-  if (!clientId) {
-    return <button type="button" className={className} onClick={() => setError("Chưa cấu hình đăng nhập Google cho website.")}><GoogleMark /><span>{label}</span></button>;
+  if (!clientId || sdkState === "error") {
+    const fallbackMessage = !clientId
+      ? "Chưa cấu hình biến NEXT_PUBLIC_GOOGLE_CLIENT_ID trên máy chủ để bật đăng nhập Google."
+      : "Không thể tải dịch vụ đăng nhập Google. Vui lòng kiểm tra kết nối mạng hoặc tắt trình chặn quảng cáo.";
+
+    return (
+      <div className="google-sign-in-control">
+        <button
+          type="button"
+          className={className}
+          onClick={() => setError(fallbackMessage)}
+        >
+          <GoogleMark />
+          <span>{label}</span>
+        </button>
+        {error && (
+          <p className="auth-message auth-message-error" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+    );
   }
 
-  return <div className="google-sign-in-control"><div ref={target} className={className} />{error && <p className="auth-message auth-message-error" role="alert">{error}</p>}</div>;
+  return (
+    <div className="google-sign-in-control">
+      {sdkState === "idle" && (
+        <button
+          type="button"
+          className={className}
+          onClick={() => setError("Đang tải nút đăng nhập Google, vui lòng thử lại sau giây lát.")}
+        >
+          <GoogleMark />
+          <span>{label}</span>
+        </button>
+      )}
+      <div
+        ref={target}
+        className={sdkState === "ready" ? className : undefined}
+        style={sdkState === "ready" ? undefined : { display: "none" }}
+      />
+      {error && (
+        <p className="auth-message auth-message-error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
 }
 
 function GoogleMark() {

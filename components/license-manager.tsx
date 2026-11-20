@@ -31,14 +31,28 @@ const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
   year: "numeric",
 });
 
-function getDaysRemaining(expiryDate: string): number {
-  const diffMs = new Date(expiryDate).getTime() - Date.now();
+function parseValidDate(value?: string): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatExpiryDate(value?: string): string {
+  const date = parseValidDate(value);
+  return date ? dateFormatter.format(date) : "—";
+}
+
+function getDaysRemaining(expiryDate?: string): number | null {
+  const date = parseValidDate(expiryDate);
+  if (!date) return null;
+  const diffMs = date.getTime() - Date.now();
   return Math.ceil(diffMs / 86_400_000);
 }
 
 function getStatusInfo(license: License): { label: string; tone: "active" | "revoked" | "expired" } {
   if (license.status === "revoked") return { label: "Đã khóa", tone: "revoked" };
-  if (license.status === "active" && new Date(license.expiry_date) >= new Date()) {
+  const expiry = parseValidDate(license.expiry_date);
+  if (license.status === "active" && (!expiry || expiry >= new Date())) {
     return { label: "Hoạt động", tone: "active" };
   }
   return { label: "Hết hạn", tone: "expired" };
@@ -231,7 +245,7 @@ export function LicenseManager() {
       `Khach hang: ${license.client_name || "Khach le"}`,
       `Email/SDT: ${license.client_email || license.client_phone || "-"}`,
       `Loai: ${getTypeInfo(license.type).label}`,
-      `Het han: ${dateFormatter.format(new Date(license.expiry_date))}`,
+      `Het han: ${formatExpiryDate(license.expiry_date)}`,
       `Key: ${raw}`,
     ].join("\n");
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -400,10 +414,12 @@ export function LicenseManager() {
                     </td>
 
                     <td data-label="Hết hạn">
-                      <strong>{dateFormatter.format(new Date(license.expiry_date))}</strong>
-                      <small className={`license-expiry-sub ${daysLeft <= 7 ? "is-urgent" : ""}`}>
-                        {daysLeft > 0 ? `Còn ${daysLeft} ngày` : daysLeft === 0 ? "Hết hạn hôm nay" : `Quá hạn ${Math.abs(daysLeft)} ngày`}
-                      </small>
+                      <strong>{formatExpiryDate(license.expiry_date)}</strong>
+                      {daysLeft !== null && (
+                        <small className={`license-expiry-sub ${daysLeft <= 7 ? "is-urgent" : ""}`}>
+                          {daysLeft > 0 ? `Còn ${daysLeft} ngày` : daysLeft === 0 ? "Hết hạn hôm nay" : `Quá hạn ${Math.abs(daysLeft)} ngày`}
+                        </small>
+                      )}
                     </td>
 
                     <td data-label="Thao tác">
@@ -591,7 +607,7 @@ export function LicenseManager() {
             <form className="license-modal-form" onSubmit={handleExtend}>
               <p className="license-modal-sub">
                 Khách hàng: <strong>{extendingLicense.client_name || "Khách lẻ"}</strong> · Hạn hiện tại:{" "}
-                <strong>{dateFormatter.format(new Date(extendingLicense.expiry_date))}</strong>
+                <strong>{formatExpiryDate(extendingLicense.expiry_date)}</strong>
               </p>
               <div className="license-quick-days" role="group" aria-label="Chọn nhanh số ngày">
                 {["7", "30", "90", "365"].map((preset) => (
