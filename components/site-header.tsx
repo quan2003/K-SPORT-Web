@@ -12,7 +12,6 @@ import { AuthModal } from "@/components/auth/auth-modal";
 const navLinks = [
   { label: "Trang chủ", href: "/" },
   { label: "Giải đấu", href: "/events" },
-  { label: "Đăng ký VĐV", href: "/dang-ky" },
   { label: "Lịch thi đấu", href: "/schedule" },
   { label: "Xếp hạng", href: "/ranking" },
   { label: "Vận động viên", href: "/athletes" },

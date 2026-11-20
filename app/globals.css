@@ -5356,10 +5356,10 @@ a:hover { opacity: .78; }
     height: 42px;
   }
   .ks-desktop-nav {
-    gap: 7px;
+    gap: 6px; overflow: hidden;
   }
   .ks-nav-item {
-    font-size: 15.5px;
+    font-size: 14.5px;
     padding: 6px 2px;
     letter-spacing: 0.01em;
   }

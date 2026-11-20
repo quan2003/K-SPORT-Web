@@ -52,6 +52,7 @@ export async function GET() {
               : []
       ) as Record<string, unknown>[];
       for (const row of list) {
+        if (Boolean(row.is_purged) || String(row.status || "").toUpperCase() === "PURGED") continue;
         const id = String(row.id || row.slug || row._id || "");
         const name = String(row.name || row.title || row.tournamentName || "");
         if (!name) continue;
@@ -61,7 +62,7 @@ export async function GET() {
             name,
             location: String(row.location || "Đồng bộ Cloud Sync"),
             date: String(row.date || row.startDate || "Chưa rõ"),
-            registrations: Number(row.athleteCount || row.registrations || 0),
+            registrations: Number(row.athleteCount || row.athlete_count || row.registrations || 0),
             status: "Đang diễn ra",
             organizer: "K-SPORT Cloud Sync",
           });
