@@ -1920,7 +1920,7 @@ a:hover { opacity: .78; }
 .admin-editor .admin-check { min-height: 40px; color: #536071; font-weight: 500; }
 .admin-editor .admin-check input { width: 18px; min-height: 18px; }
 .admin-editor-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 20px; padding-top: 8px; border-top: 1px solid #e8ebef; /* taste-skill-ignore: form action separation */ }
-.admin-toast { position: fixed; z-index: 100; top: 20px; right: 20px; width: min(420px, calc(100% - 32px)); padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-radius: 6px; color: #fff; animation: admin-toast-in 180ms ease-out; }
+.admin-toast { position: fixed; z-index: 2000; top: 20px; right: 20px; width: min(420px, calc(100% - 32px)); padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-radius: 6px; color: #fff; animation: admin-toast-in 180ms ease-out; }
 .admin-toast.success { background: #047857; }
 .admin-toast.error { background: #c81e1e; }
 .admin-toast p { flex: 1; margin: 0; font-weight: 600; }

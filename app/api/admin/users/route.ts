@@ -64,9 +64,32 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as Partial<AdminUserItem>;
+    const body = (await request.json()) as Partial<AdminUserItem> & { password?: string };
     if (!body.username || !body.name) {
       return NextResponse.json({ message: "Vui lòng nhập tên đăng nhập và họ tên" }, { status: 400 });
+    }
+
+    try {
+      const remoteRes = await adminApiFetch("/api/admin/users", {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(4_000),
+      });
+      const remotePayload = await remoteRes.json().catch(() => ({}));
+      if (remoteRes.ok) {
+        return NextResponse.json(
+          { item: remotePayload.user || remotePayload.item || body, message: remotePayload.message || "Thêm người dùng thành công" },
+          { status: 201 },
+        );
+      }
+      if (remoteRes.status !== 404) {
+        return NextResponse.json(
+          { message: remotePayload.message || `Không thể tạo tài khoản trên máy chủ (${remoteRes.status})` },
+          { status: remoteRes.status },
+        );
+      }
+    } catch {
+      // VPS unreachable, fall back to local store
     }
 
     const newItem = addUserItem({

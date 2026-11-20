@@ -202,7 +202,8 @@ export function AdminUsersManager() {
         }),
       });
 
-      if (!res.ok) throw new Error("Cập nhật thất bại");
+      const payload = (await res.json().catch(() => ({}))) as { message?: string };
+      if (!res.ok) throw new Error(payload.message || "Cập nhật thất bại");
       notify("success", `Cập nhật tài khoản "${editName}" thành công`);
       setEditingUser(null);
       fetchUsers();
