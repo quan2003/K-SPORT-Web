@@ -12859,8 +12859,9 @@ a:hover { opacity: .78; }
 .wkf-google-login-section > .wkf-google-btn,
 .wkf-auth-guest-actions > .wkf-auth-google-quick-btn { display: none !important; }
 
-.google-sign-in-control { display: grid; gap: 8px; justify-items: start; }
-.google-sign-in-control > div { min-height: 44px; }
+.google-sign-in-control { display: grid; gap: 8px; width: 100%; }
+.google-sign-in-control > div { width: 100%; max-width: 360px; min-height: 48px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 8px; }
+.google-sign-in-control iframe { display: block; max-width: 100%; }
 .auth-google-btn-real,
 .ks-auth-google-btn-real,
 .wkf-google-btn-real,

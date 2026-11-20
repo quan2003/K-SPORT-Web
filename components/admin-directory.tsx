@@ -32,7 +32,7 @@ export function AdminDirectory({ kind }: { kind: DirectoryKind }) {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState<AdminUserItem["role"]>("btc");
-  const [assignedTournament, setAssignedTournament] = useState("Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026");
+  const [assignedTournament, setAssignedTournament] = useState("");
 
   const fetchData = useCallback(async () => {
     try {
@@ -198,6 +198,7 @@ export function AdminDirectory({ kind }: { kind: DirectoryKind }) {
               setUserName("");
               setUserEmail("");
               setUserRole("btc");
+              setAssignedTournament("");
             }
             setIsModalOpen(true);
           }}
@@ -220,6 +221,12 @@ export function AdminDirectory({ kind }: { kind: DirectoryKind }) {
             <tbody>
               {loading ? (
                 <tr><td colSpan={4} style={{ textAlign: "center", padding: "24px" }}>Đang tải danh sách giải đấu...</td></tr>
+              ) : events.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center", padding: "32px" }}>
+                    Chưa có giải đấu thật trong hệ thống.
+                  </td>
+                </tr>
               ) : events.map((row) => (
                 <tr key={row.id}>
                   <td>
@@ -423,17 +430,12 @@ export function AdminDirectory({ kind }: { kind: DirectoryKind }) {
                 {userRole === "btc" && (
                   <label>
                     Giải đấu được phân quyền phụ trách
-                    <select
+                    <input
+                      type="text"
                       value={assignedTournament}
                       onChange={(e) => setAssignedTournament(e.target.value)}
-                    >
-                      <option value="Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026">
-                        Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026
-                      </option>
-                      <option value="Cúp các CLB Karate mạnh toàn quốc 2026">
-                        Cúp các CLB Karate mạnh toàn quốc 2026
-                      </option>
-                    </select>
+                      placeholder="Nhập tên giải đấu thật (nếu có)"
+                    />
                   </label>
                 )}
 

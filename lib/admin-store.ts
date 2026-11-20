@@ -268,10 +268,23 @@ export function deleteSponsorItem(id: string): boolean {
   return true;
 }
 
+// Legacy seed arrays remain in the source for migration reference only; never load them.
+void defaultUsers;
+void defaultEvents;
+
 // Events store
 export function getEventsStore(): EventItem[] {
   if (!global.__ksport_events) {
-    global.__ksport_events = [...defaultEvents];
+    // Không nạp các giải đấu mẫu vào production. Chỉ dùng dữ liệu do quản trị viên tạo.
+    global.__ksport_events = [];
+  } else {
+    // Dọn các bản ghi demo cũ còn nằm trong bộ nhớ sau khi cập nhật.
+    const demoIds = new Set([
+      "giai-vo-dich-clb-karate-phu-tho-2026",
+      "cup-clb-manh-da-nang-2026",
+      "giai-vo-dich-tre-quoc-gia-2026",
+    ]);
+    global.__ksport_events = global.__ksport_events.filter((item) => !demoIds.has(item.id));
   }
   return global.__ksport_events;
 }
@@ -297,11 +310,13 @@ export function updateEventItem(id: string, updates: Partial<EventItem>): EventI
 // Users store
 export function getUsersStore(): AdminUserItem[] {
   if (!global.__ksport_users) {
-    global.__ksport_users = [...defaultUsers];
+    // Không nạp tài khoản mẫu. Chỉ hiển thị tài khoản thật được tạo trong hệ thống.
+    global.__ksport_users = [];
   }
-  // Strictly filter out any legacy referee accounts from in-memory cache
+  // Dọn các tài khoản demo cũ còn trong bộ nhớ sau khi cập nhật.
   global.__ksport_users = global.__ksport_users.filter(
     (u) =>
+      !["user-admin-01", "user-btc-phutho", "user-editor-01"].includes(u.id) &&
       u.username !== "trongtai-tham1" &&
       u.id !== "user-referee-01" &&
       !u.name.toLowerCase().includes("trọng tài") &&

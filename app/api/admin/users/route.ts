@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       name: body.name.trim(),
       email: body.email?.trim() || `${body.username}@k-sport.net`,
       role: body.role || "btc",
-      assignedTournament: body.assignedTournament || "Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026",
+      assignedTournament: body.assignedTournament?.trim() || undefined,
       status: body.status || "Hoạt động",
     });
 
@@ -45,4 +45,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: error instanceof Error ? error.message : "Lỗi xử lý" }, { status: 500 });
   }
 }
-
