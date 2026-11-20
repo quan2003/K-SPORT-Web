@@ -106,7 +106,7 @@ export function parseUserSessionToken(token: string): UserSession | null {
       gender: payload.gender,
       dateOfBirth: payload.dateOfBirth,
       tournamentId: payload.tournamentId || (role === "btc" ? "giai-vo-dich-clb-karate-phu-tho-2026" : undefined),
-      assignedTournament: payload.assignedTournament || (role === "btc" ? "Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026" : undefined),
+      assignedTournament: payload.assignedTournament || undefined,
     };
   } catch {
     return null;

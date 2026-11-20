@@ -45,8 +45,8 @@ export function AdminRemoteDashboard() {
   return (
     <section className="admin-dashboard-v3" aria-labelledby="admin-overview-heading">
       <div className="admin-page-heading">
-        <div><p className="admin-eyebrow">Tổng quan máy chủ</p><h1 id="admin-overview-heading">Tổng quan hệ thống</h1><p>Dữ liệu đồng bộ trực tiếp từ máy chủ quản trị.</p></div>
-        <Link className="btn-pro-primary" href="/admin/events">Quản lý giải đấu</Link>
+        <div><h1 id="admin-overview-heading">Tổng quan license</h1><p>Theo dõi license, đơn hàng và dữ liệu giải đấu từ máy chủ quản trị.</p></div>
+        <Link className="btn-pro-primary" href="/admin/tournaments">Quản lý giải đấu</Link>
       </div>
       {state.loading && <div className="admin-loading" role="status"><span className="admin-loading-spinner" aria-hidden="true" />Đang tải dữ liệu thật từ máy chủ…</div>}
       {state.error && <p className="admin-error" role="alert">{state.error}</p>}
@@ -57,7 +57,7 @@ export function AdminRemoteDashboard() {
           <article className="admin-stat-card"><span>Yêu cầu đang chờ</span><strong>{numberFrom(stats, ["requestsPending"])}</strong></article>
           <article className="admin-stat-card"><span>Đơn hàng đã thanh toán</span><strong>{numberFrom(payments, ["paid_orders"])}</strong></article>
         </div>
-        <section className="admin-panel"><div className="admin-panel-heading"><h2>Giải đấu đồng bộ gần đây</h2><Link href="/admin/events">Xem tất cả</Link></div>
+        <section className="admin-panel"><div className="admin-panel-heading"><h2>Giải đấu đồng bộ gần đây</h2><Link href="/admin/tournaments">Xem tất cả</Link></div>
           {tournaments.length === 0 ? <p>Máy chủ chưa trả về danh sách giải đấu.</p> : <div className="admin-data-list">{tournaments.slice(0, 6).map((row, index) => <div className="admin-data-row" key={String(row.id || row._id || index)}><strong>{String(row.name || row.title || row.tournamentName || "Giải đấu")}</strong><span>{String(row.status || row.syncStatus || "Cloud Synced")}</span></div>)}</div>}
         </section>
         <div className="admin-chart-grid">

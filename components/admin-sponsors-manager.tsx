@@ -562,7 +562,7 @@ export function AdminSponsorsManager() {
       ) : (
         /* TABLE VIEW OPTION */
         <div className="admin-table-wrap">
-          <table className="admin-content-table">
+          <table className="admin-content-table admin-responsive-table">
             <thead>
               <tr>
                 <th style={{ width: "120px" }}>Logo Thương Hiệu</th>
@@ -577,7 +577,7 @@ export function AdminSponsorsManager() {
             <tbody>
               {filteredSponsors.map((item) => (
                 <tr key={item.id}>
-                  <td>
+                  <td data-label="Logo">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={item.logo}
@@ -593,25 +593,25 @@ export function AdminSponsorsManager() {
                       }}
                     />
                   </td>
-                  <td>
+                  <td data-label="Thương hiệu">
                     <strong>{item.name}</strong>
                     <small style={{ display: "block", color: "#64748b" }}>{item.category}</small>
                   </td>
-                  <td>
+                  <td data-label="Phân cấp">
                     <span className={`sp-tier-badge ${item.tier}`}>{item.tier.toUpperCase()}</span>
                   </td>
-                  <td>
+                  <td data-label="Vị trí">
                     <div className="sp-card-placements">
                       {item.placements?.includes("home") && <span className="placement-tag red">Trang chủ</span>}
                       {item.placements?.includes("tatami") && <span className="placement-tag amber">Thảm đấu</span>}
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Website">
                     <a href={item.website} target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7" }}>
                       {item.website.replace(/^https?:\/\//, "")} ↗
                     </a>
                   </td>
-                  <td style={{ textAlign: "center" }}>
+                  <td data-label="Trạng thái" style={{ textAlign: "center" }}>
                     <button
                       type="button"
                       className={`sp-toggle-pill ${item.isActive ? "on" : "off"}`}
@@ -620,7 +620,7 @@ export function AdminSponsorsManager() {
                       {item.isActive ? "● Bật" : "○ Ẩn"}
                     </button>
                   </td>
-                  <td style={{ textAlign: "right" }}>
+                  <td data-label="Thao tác" style={{ textAlign: "right" }}>
                     <div className="admin-content-card-actions">
                       <button type="button" onClick={() => openEditModal(item)}>Sửa</button>
                       <button type="button" onClick={() => confirmDelete(item)}>Xóa</button>

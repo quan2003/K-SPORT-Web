@@ -17,15 +17,8 @@ export function AdminShellClient({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const [prevPathname, setPrevPathname] = useState(pathname);
   const isBtc = session?.role === "btc";
   const isLicensePortal = ["/admin/licenses", "/admin/tournaments", "/admin/payment-orders", "/admin/payment-config", "/admin/requests"].some((path) => pathname.startsWith(path));
-
-  // Close mobile drawer on route navigation during render
-  if (prevPathname !== pathname) {
-    setPrevPathname(pathname);
-    setMobileMenuOpen(false);
-  }
 
   // Prevent background body scroll when mobile drawer is open
   useEffect(() => {
@@ -39,6 +32,15 @@ export function AdminShellClient({
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mobileMenuOpen]);
+
   return (
     <div className="admin-shell-v2">
       {/* 1. MOBILE TOP HEADER (VISIBLE ONLY ON MOBILE) */}
@@ -49,40 +51,58 @@ export function AdminShellClient({
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label={mobileMenuOpen ? "Đóng menu quản trị" : "Mở menu quản trị"}
           aria-expanded={mobileMenuOpen}
+          aria-controls="admin-mobile-drawer"
         >
-          {mobileMenuOpen ? "✕" : "☰"}
+          {mobileMenuOpen ? (
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
+              <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
+              <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          )}
         </button>
 
         <Link className="admin-mobile-brand" href="/admin" translate="no">
-          <span className="brand-dot">🔴</span>
+          <span className="brand-dot" aria-hidden="true" />
           <span className="brand-red">K-</span>SPORT
         </Link>
 
         <div className="admin-mobile-right">
           <span className="admin-mobile-role">
-            {isBtc ? "🏆 BTC" : "👑 ADMIN"}
+            {isBtc ? "BTC" : "ADMIN"}
           </span>
-          <Link className="admin-mobile-web-link" href="/" target="_blank" title="Xem website">
-            ↗
+          <Link className="admin-mobile-web-link" href="/" target="_blank" rel="noreferrer" aria-label="Xem website chính trong thẻ mới">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
+              <path d="M8 16 16 8M9 8h7v7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </Link>
         </div>
       </header>
 
       {/* 2. MOBILE BACKDROP OVERLAY */}
       {mobileMenuOpen && (
-        <div
+        <button
+          type="button"
           className="admin-drawer-backdrop"
           onClick={() => setMobileMenuOpen(false)}
-          aria-hidden="true"
+          aria-label="Đóng menu quản trị"
         />
       )}
 
       {/* 3. SIDEBAR (PERMANENT ON DESKTOP, OFF-CANVAS DRAWER ON MOBILE) */}
-      <aside className={`admin-sidebar-v2 ${mobileMenuOpen ? "is-drawer-open" : ""}`}>
+      <aside
+        id="admin-mobile-drawer"
+        className={`admin-sidebar-v2 ${mobileMenuOpen ? "is-drawer-open" : ""}`}
+        onClick={(event) => {
+          if ((event.target as HTMLElement).closest("a")) setMobileMenuOpen(false);
+        }}
+      >
         <div className="admin-sidebar-brand-box">
           <div className="sidebar-brand-row">
             <Link className="admin-brand-v2" href="/" translate="no">
-              <span className="brand-dot">🔴</span>
+              <span className="brand-dot" aria-hidden="true" />
               <span className="brand-red">K-</span>SPORT
             </Link>
             <button
@@ -91,7 +111,9 @@ export function AdminShellClient({
               onClick={() => setMobileMenuOpen(false)}
               aria-label="Đóng menu"
             >
-              ✕
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
             </button>
           </div>
           <span className="admin-badge-v2">
@@ -105,7 +127,7 @@ export function AdminShellClient({
 
         <div className="admin-sidebar-user-card">
           <div className="admin-avatar-box">
-            {isBtc ? "🏆" : "🥋"}
+            <span aria-hidden="true">{isBtc ? "BTC" : "K"}</span>
           </div>
           <div className="admin-user-info">
             <strong>{session?.name || "Quản trị viên"}</strong>
@@ -130,7 +152,7 @@ export function AdminShellClient({
               <span className="role-indicator-dot" />
               <span>Vai trò: <strong>{isBtc ? "Ban Tổ Chức (BTC)" : "Admin Toàn Quyền"}</strong></span>
             </div>
-            <Link className="topbar-web-link" href="/" target="_blank">
+            <Link className="topbar-web-link" href="/" target="_blank" rel="noreferrer">
               Xem website chính ↗
             </Link>
           </div>

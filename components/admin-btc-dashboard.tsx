@@ -377,7 +377,7 @@ export function AdminBtcDashboard({ session }: { session: PublicSession | null }
             </div>
 
             <div className="admin-table-wrap">
-              <table className="admin-content-table">
+              <table className="admin-content-table admin-responsive-table">
                 <thead>
                   <tr>
                     <th>Mã VĐV</th>
@@ -391,49 +391,49 @@ export function AdminBtcDashboard({ session }: { session: PublicSession | null }
                 </thead>
                 <tbody>
                   <tr>
-                    <td><code>VIE0001</code></td>
-                    <td><strong>Nguyễn Văn A</strong></td>
-                    <td>CLB Karate Phú Thọ</td>
-                    <td>Kumite nam -67kg</td>
-                    <td><strong>66.4 kg</strong></td>
-                    <td>Võ phục Arawaza WKF ✓</td>
-                    <td><span className="admin-status is-live">Hợp lệ</span></td>
+                    <td data-label="Mã VĐV"><code>VIE0001</code></td>
+                    <td data-label="Họ và tên"><strong>Nguyễn Văn A</strong></td>
+                    <td data-label="Đoàn / Đơn vị">CLB Karate Phú Thọ</td>
+                    <td data-label="Hạng cân thi đấu">Kumite nam -67kg</td>
+                    <td data-label="Cân nặng thực"><strong>66.4 kg</strong></td>
+                    <td data-label="Kiểm tra võ phục">Võ phục Arawaza WKF ✓</td>
+                    <td data-label="Trạng thái"><span className="admin-status is-live">Hợp lệ</span></td>
                   </tr>
                   <tr>
-                    <td><code>VIE0002</code></td>
-                    <td><strong>Trần Văn Bình</strong></td>
-                    <td>CLB Karate Quân Đội</td>
-                    <td>Kumite nam -67kg</td>
-                    <td><strong>66.8 kg</strong></td>
-                    <td>Võ phục Shureido WKF ✓</td>
-                    <td><span className="admin-status is-live">Hợp lệ</span></td>
+                    <td data-label="Mã VĐV"><code>VIE0002</code></td>
+                    <td data-label="Họ và tên"><strong>Trần Văn Bình</strong></td>
+                    <td data-label="Đoàn / Đơn vị">CLB Karate Quân Đội</td>
+                    <td data-label="Hạng cân thi đấu">Kumite nam -67kg</td>
+                    <td data-label="Cân nặng thực"><strong>66.8 kg</strong></td>
+                    <td data-label="Kiểm tra võ phục">Võ phục Shureido WKF ✓</td>
+                    <td data-label="Trạng thái"><span className="admin-status is-live">Hợp lệ</span></td>
                   </tr>
                   <tr>
-                    <td><code>VIE0003</code></td>
-                    <td><strong>Lê Hoàng Long</strong></td>
-                    <td>CLB Karate Hà Nội</td>
-                    <td>Kumite nam -67kg</td>
-                    <td><strong>66.1 kg</strong></td>
-                    <td>Võ phục Tân Việt WKF ✓</td>
-                    <td><span className="admin-status is-live">Hợp lệ</span></td>
+                    <td data-label="Mã VĐV"><code>VIE0003</code></td>
+                    <td data-label="Họ và tên"><strong>Lê Hoàng Long</strong></td>
+                    <td data-label="Đoàn / Đơn vị">CLB Karate Hà Nội</td>
+                    <td data-label="Hạng cân thi đấu">Kumite nam -67kg</td>
+                    <td data-label="Cân nặng thực"><strong>66.1 kg</strong></td>
+                    <td data-label="Kiểm tra võ phục">Võ phục Tân Việt WKF ✓</td>
+                    <td data-label="Trạng thái"><span className="admin-status is-live">Hợp lệ</span></td>
                   </tr>
                   <tr>
-                    <td><code>VIE0004</code></td>
-                    <td><strong>Ngọc Hân</strong></td>
-                    <td>CLB Karate Lâm Thao</td>
-                    <td>Kumite nữ -55kg</td>
-                    <td><strong>54.2 kg</strong></td>
-                    <td>Võ phục Tokaido WKF ✓</td>
-                    <td><span className="admin-status is-live">Hợp lệ</span></td>
+                    <td data-label="Mã VĐV"><code>VIE0004</code></td>
+                    <td data-label="Họ và tên"><strong>Ngọc Hân</strong></td>
+                    <td data-label="Đoàn / Đơn vị">CLB Karate Lâm Thao</td>
+                    <td data-label="Hạng cân thi đấu">Kumite nữ -55kg</td>
+                    <td data-label="Cân nặng thực"><strong>54.2 kg</strong></td>
+                    <td data-label="Kiểm tra võ phục">Võ phục Tokaido WKF ✓</td>
+                    <td data-label="Trạng thái"><span className="admin-status is-live">Hợp lệ</span></td>
                   </tr>
                   <tr>
-                    <td><code>VIE0005</code></td>
-                    <td><strong>Khánh Linh</strong></td>
-                    <td>CLB Karate TP. Việt Trì</td>
-                    <td>Kumite nữ -55kg</td>
-                    <td><strong>54.5 kg</strong></td>
-                    <td>Võ phục Arawaza WKF ✓</td>
-                    <td><span className="admin-status is-live">Hợp lệ</span></td>
+                    <td data-label="Mã VĐV"><code>VIE0005</code></td>
+                    <td data-label="Họ và tên"><strong>Khánh Linh</strong></td>
+                    <td data-label="Đoàn / Đơn vị">CLB Karate TP. Việt Trì</td>
+                    <td data-label="Hạng cân thi đấu">Kumite nữ -55kg</td>
+                    <td data-label="Cân nặng thực"><strong>54.5 kg</strong></td>
+                    <td data-label="Kiểm tra võ phục">Võ phục Arawaza WKF ✓</td>
+                    <td data-label="Trạng thái"><span className="admin-status is-live">Hợp lệ</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -461,7 +461,7 @@ export function AdminBtcDashboard({ session }: { session: PublicSession | null }
             </div>
 
             <div className="admin-table-wrap">
-              <table className="admin-content-table">
+              <table className="admin-content-table admin-responsive-table">
                 <thead>
                   <tr>
                     <th style={{ width: "60px" }}>Hạng</th>
@@ -475,49 +475,49 @@ export function AdminBtcDashboard({ session }: { session: PublicSession | null }
                 </thead>
                 <tbody>
                   <tr>
-                    <td><strong className="rank-badge gold">1</strong></td>
-                    <td><strong>CLB Karate TP. Việt Trì</strong></td>
-                    <td style={{ textAlign: "center", color: "#d97706", fontWeight: "bold" }}>6</td>
-                    <td style={{ textAlign: "center", color: "#64748b", fontWeight: "bold" }}>4</td>
-                    <td style={{ textAlign: "center", color: "#b45309", fontWeight: "bold" }}>5</td>
-                    <td style={{ textAlign: "center", fontWeight: "bold" }}>15</td>
-                    <td style={{ textAlign: "right", fontWeight: "bold" }}>142</td>
+                    <td data-label="Hạng"><strong className="rank-badge gold">1</strong></td>
+                    <td data-label="Đoàn / CLB"><strong>CLB Karate TP. Việt Trì</strong></td>
+                    <td data-label="Vàng" style={{ textAlign: "center", color: "#d97706", fontWeight: "bold" }}>6</td>
+                    <td data-label="Bạc" style={{ textAlign: "center", color: "#64748b", fontWeight: "bold" }}>4</td>
+                    <td data-label="Đồng" style={{ textAlign: "center", color: "#b45309", fontWeight: "bold" }}>5</td>
+                    <td data-label="Tổng HC" style={{ textAlign: "center", fontWeight: "bold" }}>15</td>
+                    <td data-label="Điểm toàn đoàn" style={{ textAlign: "right", fontWeight: "bold" }}>142</td>
                   </tr>
                   <tr>
-                    <td><strong className="rank-badge silver">2</strong></td>
-                    <td><strong>CLB Karate Lâm Thao</strong></td>
-                    <td style={{ textAlign: "center", color: "#d97706", fontWeight: "bold" }}>4</td>
-                    <td style={{ textAlign: "center", color: "#64748b", fontWeight: "bold" }}>3</td>
-                    <td style={{ textAlign: "center", color: "#b45309", fontWeight: "bold" }}>6</td>
-                    <td style={{ textAlign: "center", fontWeight: "bold" }}>13</td>
-                    <td style={{ textAlign: "right", fontWeight: "bold" }}>118</td>
+                    <td data-label="Hạng"><strong className="rank-badge silver">2</strong></td>
+                    <td data-label="Đoàn / CLB"><strong>CLB Karate Lâm Thao</strong></td>
+                    <td data-label="Vàng" style={{ textAlign: "center", color: "#d97706", fontWeight: "bold" }}>4</td>
+                    <td data-label="Bạc" style={{ textAlign: "center", color: "#64748b", fontWeight: "bold" }}>3</td>
+                    <td data-label="Đồng" style={{ textAlign: "center", color: "#b45309", fontWeight: "bold" }}>6</td>
+                    <td data-label="Tổng HC" style={{ textAlign: "center", fontWeight: "bold" }}>13</td>
+                    <td data-label="Điểm toàn đoàn" style={{ textAlign: "right", fontWeight: "bold" }}>118</td>
                   </tr>
                   <tr>
-                    <td><strong className="rank-badge bronze">3</strong></td>
-                    <td><strong>CLB Karate Phù Ninh</strong></td>
-                    <td style={{ textAlign: "center", color: "#d97706", fontWeight: "bold" }}>3</td>
-                    <td style={{ textAlign: "center", color: "#64748b", fontWeight: "bold" }}>5</td>
-                    <td style={{ textAlign: "center", color: "#b45309", fontWeight: "bold" }}>2</td>
-                    <td style={{ textAlign: "center", fontWeight: "bold" }}>10</td>
-                    <td style={{ textAlign: "right", fontWeight: "bold" }}>96</td>
+                    <td data-label="Hạng"><strong className="rank-badge bronze">3</strong></td>
+                    <td data-label="Đoàn / CLB"><strong>CLB Karate Phù Ninh</strong></td>
+                    <td data-label="Vàng" style={{ textAlign: "center", color: "#d97706", fontWeight: "bold" }}>3</td>
+                    <td data-label="Bạc" style={{ textAlign: "center", color: "#64748b", fontWeight: "bold" }}>5</td>
+                    <td data-label="Đồng" style={{ textAlign: "center", color: "#b45309", fontWeight: "bold" }}>2</td>
+                    <td data-label="Tổng HC" style={{ textAlign: "center", fontWeight: "bold" }}>10</td>
+                    <td data-label="Điểm toàn đoàn" style={{ textAlign: "right", fontWeight: "bold" }}>96</td>
                   </tr>
                   <tr>
-                    <td><strong>4</strong></td>
-                    <td><strong>CLB Karate Quân Đội (Phú Thọ)</strong></td>
-                    <td style={{ textAlign: "center" }}>3</td>
-                    <td style={{ textAlign: "center" }}>2</td>
-                    <td style={{ textAlign: "center" }}>4</td>
-                    <td style={{ textAlign: "center" }}>9</td>
-                    <td style={{ textAlign: "right" }}>88</td>
+                    <td data-label="Hạng"><strong>4</strong></td>
+                    <td data-label="Đoàn / CLB"><strong>CLB Karate Quân Đội (Phú Thọ)</strong></td>
+                    <td data-label="Vàng" style={{ textAlign: "center" }}>3</td>
+                    <td data-label="Bạc" style={{ textAlign: "center" }}>2</td>
+                    <td data-label="Đồng" style={{ textAlign: "center" }}>4</td>
+                    <td data-label="Tổng HC" style={{ textAlign: "center" }}>9</td>
+                    <td data-label="Điểm toàn đoàn" style={{ textAlign: "right" }}>88</td>
                   </tr>
                   <tr>
-                    <td><strong>5</strong></td>
-                    <td><strong>CLB Karate Thanh Ba</strong></td>
-                    <td style={{ textAlign: "center" }}>2</td>
-                    <td style={{ textAlign: "center" }}>3</td>
-                    <td style={{ textAlign: "center" }}>3</td>
-                    <td style={{ textAlign: "center" }}>8</td>
-                    <td style={{ textAlign: "right" }}>74</td>
+                    <td data-label="Hạng"><strong>5</strong></td>
+                    <td data-label="Đoàn / CLB"><strong>CLB Karate Thanh Ba</strong></td>
+                    <td data-label="Vàng" style={{ textAlign: "center" }}>2</td>
+                    <td data-label="Bạc" style={{ textAlign: "center" }}>3</td>
+                    <td data-label="Đồng" style={{ textAlign: "center" }}>3</td>
+                    <td data-label="Tổng HC" style={{ textAlign: "center" }}>8</td>
+                    <td data-label="Điểm toàn đoàn" style={{ textAlign: "right" }}>74</td>
                   </tr>
                 </tbody>
               </table>

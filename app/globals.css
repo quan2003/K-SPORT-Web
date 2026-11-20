@@ -11224,6 +11224,12 @@ a:hover { opacity: .78; }
   font-size: 16px;
 }
 
+.admin-nav-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
 .admin-nav-label {
   flex: 1;
 }
@@ -18585,3 +18591,671 @@ a:hover { opacity: .78; }
 
 .tournaments-page { max-width:1320px; }.tournaments-heading { display:flex; justify-content:space-between; align-items:end; margin-bottom:22px; }.tournaments-heading h1 { margin:0; font:700 46px/1 "Barlow Condensed",sans-serif; }.tournaments-heading p:not(.admin-eyebrow) { margin:6px 0 0; color:#64748b; }.tournaments-heading button,.tournament-tools button,.tournament-actions button { min-height:38px; padding:0 12px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; color:#334155; font-weight:700; cursor:pointer; }.tournament-tools { display:flex; justify-content:space-between; gap:15px; align-items:center; margin-bottom:18px; }.tournament-tools input { width:min(500px,100%); min-height:42px; padding:8px 12px; border:1px solid #cbd5e1; border-radius:7px; background:#fff; }.tournament-tools div { display:flex; gap:7px; }.tournament-tools button.active { background:#d7192d; color:#fff; border-color:#d7192d; }.tournaments-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }.tournament-card { padding:18px; border:1px solid #d9e1eb; border-radius:10px; background:#fff; }.tournament-card-top { display:flex; justify-content:space-between; color:#64748b; font-size:12px; }.tournament-status { padding:4px 7px; border-radius:4px; font-weight:700; }.tournament-status.active { background:#e7f7ef; color:#087f5b; }.tournament-status.purged { background:#f1f3f5; color:#64748b; }.tournament-card h2 { margin:13px 0 5px; font-size:18px; }.tournament-card p { margin:0; color:#64748b; font-size:13px; }.tournament-meta { display:flex; gap:18px; padding:15px 0; margin:15px 0; border-top:1px solid #edf1f5; border-bottom:1px solid #edf1f5; color:#64748b; font-size:12px; }.tournament-meta b { color:#182235; }.tournament-actions { display:flex; flex-wrap:wrap; gap:7px; }.tournament-actions button:disabled { opacity:.45; cursor:not-allowed; }.tournament-actions button:nth-child(2) { color:#1954a6; }.tournament-actions button:nth-child(3) { color:#9a6700; }.tournament-actions .danger { color:#b42318; }.tournament-modal { position:fixed; inset:0; z-index:40; display:grid; place-items:center; padding:16px; background:#07111dcc; }.tournament-modal>div { position:relative; width:min(600px,100%); padding:24px; border-radius:12px; background:#fff; color:#182235; }.tournament-modal .close { position:absolute; top:12px; right:15px; border:0; background:transparent; color:#334155; font-size:25px; cursor:pointer; }.tournament-modal h2 { margin:4px 0 18px; font-size:23px; }.tournament-modal dl { display:grid; grid-template-columns:140px 1fr; gap:10px; margin:0; font-size:14px; }.tournament-modal dt { color:#64748b; }.tournament-modal dd { margin:0; overflow-wrap:anywhere; }
 @media (max-width:900px) { .tournaments-grid { grid-template-columns:1fr; }.tournament-tools { align-items:stretch; flex-direction:column; }.tournament-tools div { flex-wrap:wrap; } }
+
+/* Admin phone composition: content is reflowed instead of shrinking desktop UI. */
+.admin-shell-v2 :is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(3, 105, 161, .28);
+  outline-offset: 2px;
+}
+
+.admin-brand-v2 .brand-dot,
+.admin-mobile-brand .brand-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: #ef3340;
+}
+
+.admin-nav-item,
+.admin-logout-btn,
+.users-tab-btn,
+.role-pill-btn,
+.btn-create-user {
+  transition-property: background-color, border-color, color, box-shadow, transform;
+}
+
+.admin-drawer-backdrop {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .admin-mobile-topbar {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 10px;
+    height: 60px;
+    padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+    box-shadow: none;
+  }
+
+  .admin-mobile-brand {
+    min-width: 0;
+    justify-self: start;
+    font-size: 22px;
+    white-space: nowrap;
+  }
+
+  .admin-mobile-role {
+    display: none;
+  }
+
+  .admin-mobile-web-link {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-sidebar-v2 {
+    width: min(320px, 88vw);
+    padding: max(18px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .admin-sidebar-v2.is-drawer-open {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .admin-sidebar-v2 .admin-nav-v2 {
+    display: grid;
+    gap: 4px;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .admin-sidebar-v2 .admin-nav-group-title {
+    padding-top: 10px;
+  }
+
+  .admin-sidebar-v2 .admin-nav-item {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .admin-workspace-v2,
+  .admin-main-v2,
+  .admin-main-v2 > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-main-v2 {
+    width: 100%;
+    padding: 20px 16px max(48px, env(safe-area-inset-bottom));
+    overflow-x: clip;
+  }
+
+  .admin-main-v2 :is(h1, h2, h3) {
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-main-v2 :is(.orders-heading, .requests-heading, .tournaments-heading, .admin-list-header,
+    .admin-editor-view-header, .admin-page-heading, .payment-config-heading, .payment-plans-heading,
+    .license-manager-header, .protected-admin-portal .admin-page-heading) {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .admin-main-v2 :is(.orders-heading h1, .requests-heading h1, .tournaments-heading h1,
+    .payment-config-heading h1, .license-manager h1, .protected-admin-portal .admin-page-heading h1) {
+    font-size: 30px;
+    line-height: 1.05;
+  }
+
+  .admin-main-v2 :is(.orders-heading, .requests-heading, .tournaments-heading, .payment-config-heading,
+    .license-manager-header) > button,
+  .admin-list-header > button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .protected-admin-header {
+    padding: 18px;
+    border-radius: 8px;
+  }
+
+  .protected-admin-header h1 {
+    font-size: 27px;
+  }
+
+  .protected-admin-header nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .protected-admin-header nav a {
+    min-height: 44px;
+    justify-content: center;
+    padding-inline: 8px;
+    text-align: center;
+  }
+
+  .admin-stat-grid,
+  .orders-stats,
+  .users-kpi-grid,
+  .admin-kpi-grid-pro,
+  .btc-kpi-grid,
+  .kpi-strip-v3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-stat-card,
+  .orders-stats > div,
+  .user-kpi-card {
+    min-width: 0;
+    padding: 15px;
+  }
+
+  .admin-data-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .admin-chart-panel,
+  .admin-panel,
+  .payment-config-card,
+  .payment-plan-card,
+  .tournament-card {
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .admin-bar-chart {
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  .admin-bar-column span {
+    font-size: 9px;
+  }
+
+  .license-create-form,
+  .payment-settings-grid,
+  .payment-plans-grid,
+  .payment-plan-card,
+  .orders-filter,
+  .order-edit-grid,
+  .form-row-2,
+  .checkbox-row {
+    grid-template-columns: 1fr;
+  }
+
+  .license-form-wide,
+  .license-form-actions,
+  .orders-filter label:first-child {
+    grid-column: auto;
+  }
+
+  .license-form-actions .button,
+  .payment-save-button,
+  .payment-plans-heading button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .license-toolbar,
+  .tournament-tools,
+  .users-toolbar,
+  .admin-list-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tournament-tools input,
+  .users-search-box,
+  .admin-search,
+  .admin-search input {
+    width: 100%;
+    max-width: none;
+  }
+
+  .tournament-tools > div,
+  .request-filters,
+  .role-filter-pills,
+  .users-main-tabs {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .tournament-tools button,
+  .request-filters button,
+  .role-pill-btn,
+  .users-tab-btn {
+    min-width: max-content;
+    min-height: 44px;
+  }
+
+  .request-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .request-card button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .tournament-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .tournament-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tournament-actions button {
+    min-height: 44px;
+  }
+
+  .tournament-modal,
+  .request-modal,
+  .admin-modal-overlay {
+    align-items: end;
+    padding: 12px 12px 0;
+    overscroll-behavior: contain;
+  }
+
+  .tournament-modal > div,
+  .request-modal > div,
+  .admin-modal-box,
+  .order-edit-panel {
+    width: 100%;
+    max-height: calc(100svh - 24px);
+    overflow-y: auto;
+    border-radius: 14px 14px 0 0;
+    background: #fff;
+    color: #182235;
+  }
+
+  .request-modal textarea {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: #182235;
+  }
+
+  .request-modal footer,
+  .admin-modal-actions,
+  .order-edit-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: sticky;
+    bottom: 0;
+    padding: 12px 0 max(8px, env(safe-area-inset-bottom));
+    background: #fff;
+  }
+
+  .request-modal footer button,
+  .admin-modal-actions button,
+  .order-edit-actions button {
+    min-height: 44px;
+  }
+
+  .tournament-modal dl {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .tournament-modal dd {
+    margin-bottom: 10px;
+  }
+
+  .admin-table-wrap:has(.admin-responsive-table),
+  .wkf-recent-table-wrap:has(.admin-responsive-table),
+  .license-table-wrap,
+  .orders-table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .admin-responsive-table,
+  .admin-responsive-table tbody,
+  .admin-responsive-table tr,
+  .admin-responsive-table td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-responsive-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .admin-responsive-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .admin-responsive-table tbody > tr:not(.admin-table-state) {
+    position: static;
+    padding: 8px 14px;
+    border: 1px solid #d9e1eb;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .admin-responsive-table tbody > tr:not(.admin-table-state) > td {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(92px, 34%) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    margin: 0;
+    padding: 10px 0;
+    border: 0;
+    border-top: 1px solid #edf1f5;
+    text-align: left !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-responsive-table tbody > tr:not(.admin-table-state) > td:first-child {
+    border-top: 0;
+  }
+
+  .admin-responsive-table td[data-label]::before {
+    content: attr(data-label);
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .admin-responsive-table .admin-table-state {
+    padding: 20px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .admin-responsive-table .admin-table-state td {
+    padding: 0;
+    border: 0;
+  }
+
+  .admin-responsive-table code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-responsive-table .admin-content-title {
+    min-width: 0;
+  }
+
+  .admin-responsive-table .admin-content-title img,
+  .admin-responsive-table .admin-content-thumb-empty {
+    width: 72px;
+    height: 50px;
+  }
+
+  .license-actions,
+  .orders-actions,
+  .user-action-btns,
+  .admin-content-card-actions {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .license-actions button,
+  .orders-actions button,
+  .user-action-btns button,
+  .admin-content-card-actions button {
+    min-height: 40px;
+    padding: 0 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .orders-pagination {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 14px 0;
+  }
+
+  .orders-pagination > div {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .orders-pagination button {
+    min-height: 44px;
+  }
+
+  .users-pro-table .user-profile-cell {
+    align-items: flex-start;
+  }
+
+  .users-pro-table .user-email,
+  .users-pro-table .scope-privilege {
+    overflow-wrap: anywhere;
+  }
+
+  .matrix-table {
+    min-width: 720px;
+  }
+
+  .admin-table-wrap:has(.matrix-table),
+  .wkf-recent-table-wrap:not(:has(.admin-responsive-table)) {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  /* Dashboard overview, Sponsors & BTC phone reflow */
+  .pro-alert-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 18px 16px;
+  }
+
+  .pro-alert-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .pro-alert-buttons > a {
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .time-filter-wrapper {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filter-tab-group {
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .filter-tab-btn {
+    flex: 1 0 auto;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  .filter-dropdown-box {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-select-pro {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  .sp-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sponsors-filter-bar {
+    align-items: stretch;
+  }
+
+  .sp-tab-group {
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .sp-tab-btn {
+    min-height: 44px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .view-mode-toggle {
+    width: 100%;
+  }
+
+  .view-btn {
+    flex: 1;
+    min-height: 40px;
+  }
+
+  .btc-section-card,
+  .btc-tatami-details-box {
+    padding: 16px;
+  }
+
+  .btc-card-header,
+  .btc-tatami-details-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .btc-card-header .btc-action-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .btc-tatami-selector {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .btc-tatami-selector > span {
+    width: 100%;
+  }
+
+  .btc-tatami-btn {
+    flex: 1 1 auto;
+    min-height: 44px;
+  }
+
+  .btc-tatami-scoreboard-preview {
+    padding: 16px;
+  }
+
+  .scoreboard-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .score-btn {
+    flex: 1 1 auto;
+    min-height: 44px;
+  }
+
+  .wkf-admin-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .wkf-admin-page-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-main-v2 {
+    padding-inline: 12px;
+  }
+
+  .admin-stat-grid,
+  .orders-stats,
+  .users-kpi-grid,
+  .admin-kpi-grid-pro,
+  .btc-kpi-grid,
+  .kpi-strip-v3,
+  .sponsors-kpi-bar,
+  .btc-weighin-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .protected-admin-header nav,
+  .tournament-actions,
+  .request-modal footer,
+  .admin-modal-actions,
+  .order-edit-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-responsive-table tbody > tr:not(.admin-table-state) > td {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .admin-responsive-table tbody > tr:not(.admin-table-state) > td::before {
+    display: block;
+  }
+
+  .license-code-boxes {
+    gap: 5px;
+  }
+
+  .license-code-box {
+    min-width: 0;
+    height: 50px;
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-sidebar-v2,
+  .admin-drawer-backdrop,
+  .admin-loading-spinner {
+    animation: none;
+    transition: none;
+  }
+}

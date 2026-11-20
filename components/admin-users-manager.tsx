@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, FormEvent, useMemo } from "react";
-import type { AdminUserItem } from "@/lib/admin-store";
+import type { AdminUserItem, EventItem } from "@/lib/admin-store";
 
 type RoleFilter = "all" | "admin" | "btc" | "editor";
 type ViewTab = "list" | "matrix";
@@ -26,10 +26,9 @@ export function AdminUsersManager() {
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newRole, setNewRole] = useState<AdminUserItem["role"]>("btc");
-  const [newAssignedTournament, setNewAssignedTournament] = useState(
-    "Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026"
-  );
+  const [newAssignedTournament, setNewAssignedTournament] = useState("");
   const [initialPassword, setInitialPassword] = useState("Ksport!Btc2026");
+  const [availableEvents, setAvailableEvents] = useState<EventItem[]>([]);
 
   // Edit form states
   const [editName, setEditName] = useState("");
@@ -68,6 +67,13 @@ export function AdminUsersManager() {
     return () => {
       isCancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/events", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : { items: [] }))
+      .then((data) => setAvailableEvents(Array.isArray(data.items) ? data.items : []))
+      .catch(() => setAvailableEvents([]));
   }, []);
 
   function notify(type: "success" | "error", text: string) {
@@ -173,7 +179,7 @@ export function AdminUsersManager() {
     setEditName(user.name);
     setEditEmail(user.email);
     setEditRole(user.role);
-    setEditTournament(user.assignedTournament || "Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026");
+    setEditTournament(user.assignedTournament || "");
     setEditStatus(user.status);
   }
 
@@ -360,7 +366,7 @@ export function AdminUsersManager() {
                 setNewName("");
                 setNewEmail("");
                 setNewRole("btc");
-                setNewAssignedTournament("Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026");
+                setNewAssignedTournament("");
                 setIsCreateOpen(true);
               }}
             >
@@ -370,7 +376,7 @@ export function AdminUsersManager() {
 
           {/* Users Table */}
           <div className="admin-table-wrap">
-            <table className="users-pro-table">
+            <table className="users-pro-table admin-responsive-table">
               <thead>
                 <tr>
                   <th>Tài Khoản &amp; Họ Tên</th>
@@ -398,7 +404,7 @@ export function AdminUsersManager() {
                   filteredUsers.map((user) => (
                     <tr key={user.id} className={user.status === "Tạm khóa" ? "row-locked" : ""}>
                       {/* Name & Avatar */}
-                      <td>
+                      <td data-label="Tài khoản & họ tên">
                         <div className="user-profile-cell">
                           <div className={`user-avatar-circle ${user.role}`}>
                             {user.role === "admin"
@@ -416,7 +422,7 @@ export function AdminUsersManager() {
                       </td>
 
                       {/* Role Badge */}
-                      <td>
+                      <td data-label="Vai trò">
                         <span className={`user-role-badge ${user.role}`}>
                           {user.role === "admin"
                             ? "Quản trị viên Tối cao"
@@ -427,7 +433,7 @@ export function AdminUsersManager() {
                       </td>
 
                       {/* Scope & Tournament */}
-                      <td>
+                      <td data-label="Phạm vi quyền hạn">
                         <div className="user-scope-box">
                           {user.role === "admin" ? (
                             <span className="scope-all">Toàn hệ thống K-SPORT</span>
@@ -447,7 +453,7 @@ export function AdminUsersManager() {
                       </td>
 
                       {/* Last Active */}
-                      <td>
+                      <td data-label="Hoạt động gần nhất">
                         <div className="user-active-cell">
                           <span
                             className={`online-indicator ${
@@ -461,7 +467,7 @@ export function AdminUsersManager() {
                       </td>
 
                       {/* Status Toggle */}
-                      <td style={{ textAlign: "center" }}>
+                      <td data-label="Trạng thái" style={{ textAlign: "center" }}>
                         <button
                           type="button"
                           className={`user-status-pill ${
@@ -476,7 +482,7 @@ export function AdminUsersManager() {
                       </td>
 
                       {/* Actions */}
-                      <td style={{ textAlign: "right" }}>
+                      <td data-label="Thao tác" style={{ textAlign: "right" }}>
                         <div className="user-action-btns">
                           <button
                             type="button"
@@ -695,15 +701,8 @@ export function AdminUsersManager() {
                     value={newAssignedTournament}
                     onChange={(e) => setNewAssignedTournament(e.target.value)}
                   >
-                    <option value="Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026">
-                      Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026
-                    </option>
-                    <option value="Cúp các CLB Karate mạnh toàn quốc 2026">
-                      Cúp các CLB Karate mạnh toàn quốc 2026
-                    </option>
-                    <option value="Giải vô địch Karate Trẻ Quốc gia 2026">
-                      Giải vô địch Karate Trẻ Quốc gia 2026
-                    </option>
+                    <option value="">{availableEvents.length ? "Chọn giải đấu thật" : "Chưa có giải đấu thật"}</option>
+                    {availableEvents.map((event) => <option key={event.id} value={event.name}>{event.name}</option>)}
                   </select>
                 </label>
               )}
@@ -806,15 +805,8 @@ export function AdminUsersManager() {
                     value={editTournament}
                     onChange={(e) => setEditTournament(e.target.value)}
                   >
-                    <option value="Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026">
-                      Giải vô địch các CLB Karate tỉnh Phú Thọ năm 2026
-                    </option>
-                    <option value="Cúp các CLB Karate mạnh toàn quốc 2026">
-                      Cúp các CLB Karate mạnh toàn quốc 2026
-                    </option>
-                    <option value="Giải vô địch Karate Trẻ Quốc gia 2026">
-                      Giải vô địch Karate Trẻ Quốc gia 2026
-                    </option>
+                    <option value="">{availableEvents.length ? "Chọn giải đấu thật" : "Chưa có giải đấu thật"}</option>
+                    {availableEvents.map((event) => <option key={event.id} value={event.name}>{event.name}</option>)}
                   </select>
                 </label>
               )}

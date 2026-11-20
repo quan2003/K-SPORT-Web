@@ -472,7 +472,7 @@ export function AdminWkfManager({
             {/* Table of Questions */}
             <div className="wkf-admin-table-col">
               <div className="wkf-recent-table-wrap">
-                <table className="wkf-table">
+                <table className="wkf-table admin-responsive-table">
                   <thead>
                     <tr>
                       <th scope="col">Mã / Câu</th>
@@ -490,14 +490,14 @@ export function AdminWkfManager({
                           editingQuestion?.id === q.id ? "is-selected-row" : ""
                         }
                       >
-                        <td>
+                        <td data-label="Mã / Câu">
                           <strong>#{q.questionNumber}</strong>
                           <div className="wkf-table-sub">
                             {q.category === "kumite" ? "Kumite" : "Kata"} · Trang{" "}
                             {q.questionSourcePage}
                           </div>
                         </td>
-                        <td>
+                        <td data-label="Nội dung">
                           <p className="wkf-admin-q-en" lang="en">
                             {q.textEn}
                           </p>
@@ -514,7 +514,7 @@ export function AdminWkfManager({
                             </p>
                           )}
                         </td>
-                        <td>
+                        <td data-label="Đáp án">
                           <span
                             className={`wkf-status-tag ${
                               q.correctAnswer ? "is-correct" : "is-wrong"
@@ -527,7 +527,7 @@ export function AdminWkfManager({
                               : "—"}
                           </span>
                         </td>
-                        <td>
+                        <td data-label="Xác minh">
                           <span
                             className={`wkf-ver-pill is-${q.verificationStatus}`}
                           >
@@ -538,7 +538,7 @@ export function AdminWkfManager({
                               : "Chưa xác minh"}
                           </span>
                         </td>
-                        <td>
+                        <td data-label="Thao tác">
                           <button
                             type="button"
                             className="wkf-btn wkf-btn-outline"
@@ -854,7 +854,7 @@ export function AdminWkfManager({
                 ✓ Toàn bộ 378 câu hỏi và 378 đáp án hiện tại đều đạt trạng thái Đã xác minh từ tài liệu nguồn và không có ô màu mơ hồ.
               </p>
             ) : (
-              <table className="wkf-table">
+              <table className="wkf-table admin-responsive-table">
                 <thead>
                   <tr>
                     <th scope="col">Mã câu</th>
@@ -867,13 +867,13 @@ export function AdminWkfManager({
                 <tbody>
                   {invalidOrUnverifiedRecords.map((q) => (
                     <tr key={q.id}>
-                      <td>
+                      <td data-label="Mã câu">
                         <strong>#{q.questionNumber}</strong> ({q.id})
                       </td>
-                      <td>{q.category.toUpperCase()}</td>
-                      <td lang="en">{q.textEn}</td>
-                      <td>{q.verificationStatus}</td>
-                      <td>
+                      <td data-label="Bộ đề">{q.category.toUpperCase()}</td>
+                      <td data-label="Nội dung tiếng Anh" lang="en">{q.textEn}</td>
+                      <td data-label="Trạng thái">{q.verificationStatus}</td>
+                      <td data-label="Thao tác">
                         <button
                           type="button"
                           className="wkf-btn wkf-btn-outline"
