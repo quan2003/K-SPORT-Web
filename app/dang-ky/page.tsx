@@ -21,7 +21,7 @@ export default function DangKyIndexPage() {
       </section>
 
       <section className="section">
-        <div className="container">
+        <div style={{ width: "min(1240px, calc(100% - 32px))", marginInline: "auto" }}>
           <div className="panel" style={{ maxWidth: 680, marginInline: "auto", padding: "2rem" }}>
             <h2 style={{ marginTop: 0 }}>Vui lòng mở đúng liên kết của giải đấu</h2>
             <p style={{ color: "var(--muted)", lineHeight: 1.6 }}>

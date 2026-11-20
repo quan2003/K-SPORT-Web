@@ -19360,3 +19360,14 @@ button.wkf-auth-google-quick-btn-real svg {
     transition: none;
   }
 }
+
+/* Athlete registration portal responsive 2-column workspace */
+.reg-workspace-grid {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+}
+
+@media (max-width: 960px) {
+  .reg-workspace-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

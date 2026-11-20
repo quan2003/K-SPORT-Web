@@ -41,7 +41,7 @@ export default async function DangKySlugPage({
           </div>
         </section>
         <section className="section">
-          <div className="container">
+          <div style={{ width: "min(1240px, calc(100% - 32px))", marginInline: "auto" }}>
             <div className="panel" style={{ maxWidth: 680, marginInline: "auto", padding: "2rem" }}>
               <p style={{ marginTop: 0, color: "var(--muted)" }}>
                 Không tìm thấy cấu hình cho đường dẫn <code>/dang-ky/{decodeURIComponent(slug)}</code>. Vui lòng kiểm tra lại liên kết do Ban Tổ Chức cung cấp.
