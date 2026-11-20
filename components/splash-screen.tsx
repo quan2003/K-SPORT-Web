@@ -44,7 +44,7 @@ export function SplashScreen() {
       </noscript>
       <div className="ks-splash-inner">
         <div className="ks-splash-logo">
-          <Image src="/images/logo-header.png" alt="K-SPORT" width={260} height={83} priority />
+          <Image src="/images/logo-header.png" alt="K-SPORT" width={260} height={83} style={{ height: "auto" }} priority />
         </div>
         <div className="ks-splash-track" aria-hidden="true">
           <span className="ks-splash-bar" />

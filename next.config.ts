@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: "marketplace.canva.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
     ],
   },
 };

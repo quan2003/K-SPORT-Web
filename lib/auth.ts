@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import type { UserRole } from "./user-store";
 
@@ -23,6 +24,26 @@ export type PublicSession = UserSession;
 export const USER_SESSION_COOKIE = "ksport_user_session";
 export const ADMIN_TOKEN_COOKIE = "ksport_admin_token";
 
+function getSessionSecret(): string {
+  return (
+    process.env.AUTH_SECRET?.trim() ||
+    process.env.LICENSE_MANAGER_GATE_SECRET?.trim() ||
+    "ksport-dev-session-secret-change-in-prod"
+  );
+}
+
+function signPayload(encodedPayload: string): string {
+  return createHmac("sha256", getSessionSecret())
+    .update(encodedPayload)
+    .digest("base64url");
+}
+
+function verifySignature(encodedPayload: string, signature: string): boolean {
+  const expected = signPayload(encodedPayload);
+  if (signature.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+}
+
 export function createUserSessionToken(user: UserSession): string {
   const payload = {
     userId: user.userId,
@@ -39,21 +60,30 @@ export function createUserSessionToken(user: UserSession): string {
     assignedTournament: user.assignedTournament,
     iat: Date.now(),
   };
-  return Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return `${encoded}.${signPayload(encoded)}`;
 }
 
-export function parseUserSessionToken(token: string): UserSession | null {
+export function parseUserSessionToken(
+  token: string,
+  options?: { allowRemoteJwt?: boolean },
+): UserSession | null {
   if (!token) return null;
   try {
+    const parts = token.split(".");
     let payloadRaw = "";
-    if (token.includes(".")) {
-      payloadRaw = Buffer.from(token.split(".")[1], "base64url").toString("utf8");
-    } else {
-      try {
-        payloadRaw = Buffer.from(token, "base64url").toString("utf8");
-      } catch {
-        payloadRaw = Buffer.from(token, "base64").toString("utf8");
+
+    if (parts.length === 2) {
+      const [encoded, signature] = parts;
+      if (!encoded || !signature || !verifySignature(encoded, signature)) {
+        return null;
       }
+      payloadRaw = Buffer.from(encoded, "base64url").toString("utf8");
+    } else if (parts.length === 3 && options?.allowRemoteJwt) {
+      // Remote JWT issued by KSPORT_ADMIN_API_URL (verified upstream by the license server).
+      payloadRaw = Buffer.from(parts[1], "base64url").toString("utf8");
+    } else {
+      return null;
     }
 
     const payload = JSON.parse(payloadRaw) as {
@@ -83,7 +113,7 @@ export function parseUserSessionToken(token: string): UserSession | null {
         ? "btc"
         : userId.startsWith("admin")
         ? "admin"
-        : "learner");
+        : "user");
 
     const defaultName =
       role === "btc"
@@ -105,7 +135,9 @@ export function parseUserSessionToken(token: string): UserSession | null {
       phone: payload.phone,
       gender: payload.gender,
       dateOfBirth: payload.dateOfBirth,
-      tournamentId: payload.tournamentId || (role === "btc" ? "giai-vo-dich-clb-karate-phu-tho-2026" : undefined),
+      tournamentId:
+        payload.tournamentId ||
+        (role === "btc" ? "giai-vo-dich-clb-karate-phu-tho-2026" : undefined),
       assignedTournament: payload.assignedTournament || undefined,
     };
   } catch {
@@ -116,7 +148,7 @@ export function parseUserSessionToken(token: string): UserSession | null {
 export async function getUserSession(): Promise<UserSession | null> {
   const cookieStore = await cookies();
 
-  // 1. Check user session cookie first
+  // 1. Check signed user session cookie first
   const userToken = cookieStore.get(USER_SESSION_COOKIE)?.value;
   if (userToken) {
     const session = parseUserSessionToken(userToken);
@@ -126,11 +158,10 @@ export async function getUserSession(): Promise<UserSession | null> {
   // 2. Fall back to admin token cookie
   const adminToken = cookieStore.get(ADMIN_TOKEN_COOKIE)?.value;
   if (adminToken) {
-    const session = parseUserSessionToken(adminToken);
+    const session = parseUserSessionToken(adminToken, {
+      allowRemoteJwt: Boolean(process.env.KSPORT_ADMIN_API_URL),
+    });
     if (session) {
-      // The license server JWT identifies an admin by its signed cookie but
-      // does not always include a `role` claim. The admin layout already
-      // requires this cookie, so preserve the admin context for API guards.
       if (session.role !== "admin" && session.role !== "btc") {
         return { ...session, role: "admin" };
       }

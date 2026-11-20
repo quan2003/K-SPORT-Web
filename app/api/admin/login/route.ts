@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ADMIN_TOKEN_COOKIE, getAdminApiBase } from "@/lib/admin-api";
-import type { AdminRole } from "@/lib/auth";
+import { createUserSessionToken, type AdminRole } from "@/lib/auth";
 
 type LocalAdminAuth = {
   valid: boolean;
@@ -11,50 +11,11 @@ type LocalAdminAuth = {
 
 function checkLocalCredentials(usernameInput: string, passwordInput: string): LocalAdminAuth {
   const u = usernameInput.trim().toLowerCase();
-  const p = passwordInput.trim();
+  const p = passwordInput;
 
-  // 1. BTC role credentials
-  const btcUsers = new Set(["btc-phutho", "btc", "bantochoi", "btc2026"]);
-  const btcPasswords = new Set([
-    "Ksport!Btc_2026#",
-    "Ksport!Btc2026",
-    "btc123",
-    "123456",
-    "btc",
-    "admin",
-  ]);
-
-  if (btcUsers.has(u) && btcPasswords.has(p)) {
-    return {
-      valid: true,
-      role: "btc",
-      name: "Ban Tổ Chức Phú Thọ 2026",
-      tournamentId: "giai-vo-dich-clb-karate-phu-tho-2026",
-    };
-  }
-
-  // 2. Super Admin credentials
-  const validUsers = new Set([
-    (process.env.WEB_ADMIN_USERNAME || "admin-k-sport").toLowerCase(),
-    "admin-k-sport",
-    "admin",
-    "ksport",
-    "quantri",
-  ]);
-
-  const validPasswords = new Set([
-    process.env.WEB_ADMIN_INITIAL_PASSWORD || "Ksport!Quan_2026#",
-    "Ksport!Quan_2026#",
-    "Ksport!Quan_2026",
-    "Ksport!Quan2026",
-    "admin",
-    "admin123",
-    "admin-k-sport",
-    "123456",
-    "ksport2026",
-  ]);
-
-  if (validUsers.has(u) && validPasswords.has(p)) {
+  const envAdminUser = process.env.WEB_ADMIN_USERNAME?.trim().toLowerCase();
+  const envAdminPass = process.env.WEB_ADMIN_INITIAL_PASSWORD;
+  if (envAdminUser && envAdminPass && u === envAdminUser && p === envAdminPass) {
     return {
       valid: true,
       role: "admin",
@@ -62,37 +23,45 @@ function checkLocalCredentials(usernameInput: string, passwordInput: string): Lo
     };
   }
 
-  // 3. Media / Truyen Thong role credentials
-  const mediaUsers = new Set(["truyenthong", "bientapvien", "media"]);
-  const mediaPasswords = new Set([
-    "Ksport!Media2026",
-    "Ksport!Media_2026#",
-    "media123",
-    "123456",
-    "admin",
-  ]);
-
-  if (mediaUsers.has(u) && mediaPasswords.has(p)) {
-    return {
-      valid: true,
-      role: "editor",
-      name: "Ban Thư ký & Truyền thông",
-    };
+  // Development-only fallback accounts (never active in production)
+  if (process.env.NODE_ENV !== "production") {
+    if (u === "admin-k-sport" && p === "Ksport!Quan_2026#") {
+      return { valid: true, role: "admin", name: "Quản trị viên Hệ thống" };
+    }
+    if (u === "btc-phutho" && p === "Ksport!Btc2026") {
+      return {
+        valid: true,
+        role: "btc",
+        name: "Ban Tổ Chức Phú Thọ 2026",
+        tournamentId: "giai-vo-dich-clb-karate-phu-tho-2026",
+      };
+    }
+    if (u === "truyenthong" && p === "Ksport!Media_2026#") {
+      return { valid: true, role: "editor", name: "Ban Thư ký & Truyền thông" };
+    }
   }
 
   return { valid: false, role: "admin", name: "" };
 }
 
-function createSessionResponse(username: string, role: AdminRole, name: string, tournamentId?: string, apiToken?: string) {
-  const sessionData = {
-    u: username,
-    role,
-    name,
-    tournamentId: tournamentId || "giai-vo-dich-clb-karate-phu-tho-2026",
-    t: Date.now(),
-  };
+function createSessionResponse(
+  username: string,
+  role: AdminRole,
+  name: string,
+  tournamentId?: string,
+  apiToken?: string,
+) {
+  const sessionToken =
+    apiToken ||
+    createUserSessionToken({
+      userId: username,
+      name,
+      email: `${username}@k-sport.net`,
+      role,
+      authProvider: "admin",
+      tournamentId: tournamentId || "giai-vo-dich-clb-karate-phu-tho-2026",
+    });
 
-  const sessionToken = apiToken || Buffer.from(JSON.stringify(sessionData)).toString("base64");
   const redirectUrl = role === "btc" ? "/admin/btc" : "/admin";
 
   const result = NextResponse.json({
@@ -136,53 +105,30 @@ export async function POST(request: Request) {
       };
       if (response.ok && payload.success && payload.token) {
         const user = payload.user;
-        return createSessionResponse(user?.username || username.trim(), user?.role || "admin", user?.name || "Quản trị viên", undefined, payload.token);
+        return createSessionResponse(
+          user?.username || username.trim(),
+          user?.role || "admin",
+          user?.name || "Quản trị viên",
+          undefined,
+          payload.token,
+        );
       }
-      return NextResponse.json({ message: payload.message || "Tên đăng nhập hoặc mật khẩu không chính xác." }, { status: 401 });
+      return NextResponse.json(
+        { message: payload.message || "Tên đăng nhập hoặc mật khẩu không chính xác." },
+        { status: 401 },
+      );
     } catch {
       return NextResponse.json({ message: "Không thể kết nối dịch vụ đăng nhập quản trị." }, { status: 503 });
     }
   }
 
-  // Local credentials remain available only for development without a configured API.
   const localAuth = checkLocalCredentials(username, password);
   if (localAuth.valid) {
     return createSessionResponse(username.trim(), localAuth.role, localAuth.name, localAuth.tournamentId);
   }
 
-  // 2. Fallback to remote API if configured
-  const apiBase = getAdminApiBase();
-  if (apiBase) {
-    try {
-      const response = await fetch(`${apiBase}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password }),
-        signal: AbortSignal.timeout(2500),
-      });
-
-      if (response.ok) {
-        const payload = (await response.json().catch(() => ({}))) as {
-          success?: boolean;
-          token?: string;
-          user?: { username?: string; role?: AdminRole; name?: string };
-        };
-        if (!payload.success || !payload.token) throw new Error("Remote authentication failed");
-        const u = payload.user?.username || username.trim();
-        const role = payload.user?.role || "admin";
-        const name = payload.user?.name || "Quản trị viên";
-        return createSessionResponse(u, role, name, undefined, payload.token);
-      }
-    } catch {
-      // remote failed/offline
-    }
-  }
-
   return NextResponse.json(
-    {
-      message:
-        "Tên đăng nhập hoặc mật khẩu không chính xác. Tài khoản Admin: admin-k-sport / Ksport!Quan_2026# hoặc Tài khoản BTC: btc-phutho / Ksport!Btc2026",
-    },
-    { status: 401 }
+    { message: "Tên đăng nhập hoặc mật khẩu không chính xác." },
+    { status: 401 },
   );
 }

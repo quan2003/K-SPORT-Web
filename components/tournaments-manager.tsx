@@ -37,6 +37,7 @@ export function TournamentsManager() {
   const [filter, setFilter] = useState<"all" | "active" | "purged">("all");
   const [message, setMessage] = useState("");
   const [detail, setDetail] = useState<Tournament | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ kind: "purge" | "delete"; tournament: Tournament } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -65,22 +66,20 @@ export function TournamentsManager() {
   };
 
   useEffect(() => {
-    void load();
+    void Promise.resolve().then(load);
   }, []);
 
   const isPurged = (tournament: Tournament) =>
     Boolean(tournament.is_purged) || tournament.status === "PURGED";
 
-  const kind = (tournament: Tournament) =>
-    isPurged(tournament) ? "purged" : "active";
-
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return items.filter((tournament) => {
+      const statusKind = Boolean(tournament.is_purged) || tournament.status === "PURGED" ? "purged" : "active";
       const text = `${tournament.name} ${tournament.machine_id ?? ""} ${tournament.location ?? ""}`.toLowerCase();
       return (
         (!needle || text.includes(needle)) &&
-        (filter === "all" || kind(tournament) === filter)
+        (filter === "all" || statusKind === filter)
       );
     });
   }, [filter, items, query]);
@@ -116,23 +115,34 @@ export function TournamentsManager() {
     }
   };
 
-  const purge = async (tournament: Tournament) => {
-    if (!window.confirm(`Dọn dữ liệu chi tiết của giải “${tournament.name}”?`)) return;
-    try {
-      await runAction(`purge/${tournament.id}`);
-      setMessage("Đã dọn dữ liệu chi tiết; thông tin chính của giải vẫn được giữ lại.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không thể dọn dữ liệu.");
-    }
+  const purge = (tournament: Tournament) => {
+    setConfirmAction({ kind: "purge", tournament });
   };
 
-  const remove = async (tournament: Tournament) => {
-    if (!window.confirm(`Xóa giải “${tournament.name}” khỏi danh sách?`)) return;
+  const remove = (tournament: Tournament) => {
+    setConfirmAction({ kind: "delete", tournament });
+  };
+
+  const executeConfirm = async () => {
+    if (!confirmAction) return;
+    const { kind, tournament } = confirmAction;
     try {
-      await runAction(`tournament/${tournament.id}`, "DELETE");
-      setMessage("Đã xóa giải đấu.");
+      if (kind === "purge") {
+        await runAction(`purge/${tournament.id}`);
+        setMessage("Đã dọn dữ liệu chi tiết; thông tin chính của giải vẫn được giữ lại.");
+      } else {
+        await runAction(`tournament/${tournament.id}`, "DELETE");
+        setMessage("Đã xóa giải đấu.");
+      }
+      setConfirmAction(null);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không thể xóa giải đấu.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : kind === "purge"
+            ? "Không thể dọn dữ liệu."
+            : "Không thể xóa giải đấu.",
+      );
     }
   };
 
@@ -201,7 +211,7 @@ export function TournamentsManager() {
             return (
               <article className="tournament-card" key={tournament.id}>
                 <div className="tournament-card-top">
-                  <span className={`tournament-status ${kind(tournament)}`}>
+                  <span className={`tournament-status ${purged ? "purged" : "active"}`}>
                     {purged ? "ĐÃ DỌN DỮ LIỆU" : "ĐANG HOẠT ĐỘNG"}
                   </span>
                   <span>{formatSize(tournament.storage_bytes, purged)}</span>
@@ -250,6 +260,29 @@ export function TournamentsManager() {
               <dt>Thời gian</dt><dd>{formatDateTime(detail.start_date)} — {formatDateTime(detail.end_date)}</dd>
               <dt>Dữ liệu</dt><dd>{formatSize(detail.storage_bytes, isPurged(detail))}</dd>
             </dl>
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-tournament-title">
+          <div className="admin-confirm-box">
+            <h3 id="confirm-tournament-title">
+              {confirmAction.kind === "purge" ? "Dọn dữ liệu chi tiết?" : "Xóa giải đấu?"}
+            </h3>
+            <p>
+              {confirmAction.kind === "purge"
+                ? `Dọn dữ liệu chi tiết của giải “${confirmAction.tournament.name}”? Thông tin chính vẫn được giữ lại.`
+                : `Xóa giải “${confirmAction.tournament.name}” khỏi danh sách?`}
+            </p>
+            <div className="admin-confirm-actions">
+              <button type="button" className="button ghost" onClick={() => setConfirmAction(null)}>
+                Hủy bỏ
+              </button>
+              <button type="button" className="button red" onClick={() => void executeConfirm()}>
+                Xác nhận
+              </button>
+            </div>
           </div>
         </div>
       )}
