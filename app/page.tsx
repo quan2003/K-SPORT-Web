@@ -21,6 +21,8 @@ import {
   sortMatches,
 } from "@/lib/public-data";
 
+export const revalidate = 30;
+
 export default async function Home() {
   const [events, matches, news, ranking, banners, athletes] = await Promise.all([
     getEvents(),
