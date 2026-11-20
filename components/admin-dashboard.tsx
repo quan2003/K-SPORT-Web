@@ -1,488 +1,448 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import type { Match, TournamentEvent } from "@/lib/public-data";
 
-type TimeMode = "today" | "week" | "month" | "year";
+export type AdminOverviewData = {
+  events: TournamentEvent[];
+  schedule: Match[];
+  results: Match[];
+  athletesCount: number;
+  clubsCount: number;
+  newsCount: number;
+  bannersCount: number;
+  activeSponsorsCount: number;
+  wkfQuestionsCount: number;
+  remote: {
+    connected: boolean;
+    totalLicenses?: number | null;
+    activeLicenses?: number | null;
+    requestsPending?: number | null;
+    paidOrders?: number | null;
+    syncedTournamentsCount?: number | null;
+    dailyRevenue?: { day: string; revenueVnd: number }[];
+  };
+  fetchedAt: string;
+};
 
-type ChartPoint = {
+type ChartMode = "tatami" | "events" | "revenue";
+
+type ChartBar = {
   label: string;
-  visits: number;
-  users: number;
+  primary: number;
+  secondary: number;
   highlight?: boolean;
 };
 
-// Rich realistic analytics datasets
-const ANALYTICS_DATA: {
-  today: ChartPoint[];
-  week: Record<string, ChartPoint[]>;
-  month: Record<string, ChartPoint[]>;
-  year: Record<string, ChartPoint[]>;
-} = {
-  today: [
-    { label: "06:00", visits: 120, users: 45 },
-    { label: "08:00", visits: 480, users: 190, highlight: true }, // Khai mạc
-    { label: "10:00", visits: 920, users: 380, highlight: true }, // Vòng loại Kata
-    { label: "12:00", visits: 640, users: 260 },
-    { label: "14:00", visits: 1150, users: 490, highlight: true }, // Tứ kết Kumite
-    { label: "16:00", visits: 1380, users: 560, highlight: true }, // Bán kết Kumite
-    { label: "18:00", visits: 890, users: 340 },
-    { label: "20:00", visits: 410, users: 180 },
-  ],
-  week: {
-    "Tuần 45 (Hiện tại)": [
-      { label: "Thứ 2 (04/11)", visits: 680, users: 290 },
-      { label: "Thứ 3 (05/11)", visits: 740, users: 310 },
-      { label: "Thứ 4 (06/11)", visits: 890, users: 380 },
-      { label: "Thứ 5 (07/11)", visits: 1120, users: 480 },
-      { label: "Thứ 6 (08/11)", visits: 2450, users: 1040, highlight: true }, // Khai mạc giải
-      { label: "Thứ 7 (09/11)", visits: 3180, users: 1360, highlight: true }, // Ngày thi đấu đỉnh cao
-      { label: "Chủ Nhật (10/11)", visits: 2890, users: 1220, highlight: true }, // Chung kết & Bế mạc
-    ],
-    "Tuần 44 (Tuần trước)": [
-      { label: "Thứ 2", visits: 420, users: 180 },
-      { label: "Thứ 3", visits: 480, users: 210 },
-      { label: "Thứ 4", visits: 520, users: 230 },
-      { label: "Thứ 5", visits: 610, users: 270 },
-      { label: "Thứ 6", visits: 780, users: 340 },
-      { label: "Thứ 7", visits: 890, users: 390 },
-      { label: "Chủ Nhật", visits: 820, users: 360 },
-    ],
-  },
-  month: {
-    "Tháng 11/2026": [
-      { label: "Tuần 1 (01-07/11)", visits: 4650, users: 1840 },
-      { label: "Tuần 2 (08-14/11 - Giải Phú Thọ)", visits: 11840, users: 4890, highlight: true },
-      { label: "Tuần 3 (15-21/11)", visits: 5200, users: 2100 },
-      { label: "Tuần 4 (22-30/11)", visits: 4800, users: 1950 },
-    ],
-    "Tháng 10/2026": [
-      { label: "Tuần 1", visits: 2800, users: 1100 },
-      { label: "Tuần 2", visits: 3100, users: 1250 },
-      { label: "Tuần 3", visits: 3950, users: 1620 },
-      { label: "Tuần 4", visits: 4200, users: 1740 },
-    ],
-    "Tháng 09/2026": [
-      { label: "Tuần 1", visits: 2400, users: 950 },
-      { label: "Tuần 2", visits: 2650, users: 1040 },
-      { label: "Tuần 3", visits: 3100, users: 1220 },
-      { label: "Tuần 4", visits: 3450, users: 1380 },
-    ],
-  },
-  year: {
-    "2026": [
-      { label: "Thg 1", visits: 2450, users: 980 },
-      { label: "Thg 2", visits: 2890, users: 1140 },
-      { label: "Thg 3", visits: 3650, users: 1480 },
-      { label: "Thg 4", visits: 4120, users: 1690 },
-      { label: "Thg 5", visits: 4980, users: 2040 },
-      { label: "Thg 6", visits: 5820, users: 2390 },
-      { label: "Thg 7", visits: 7920, users: 3250, highlight: true }, // Giải Trẻ Toàn Quốc
-      { label: "Thg 8", visits: 6410, users: 2610 },
-      { label: "Thg 9", visits: 5930, users: 2420 },
-      { label: "Thg 10", visits: 7450, users: 3080 },
-      { label: "Thg 11", visits: 12480, users: 5120, highlight: true }, // Giải Phú Thọ 2026
-      { label: "Thg 12 (Dự kiến)", visits: 8500, users: 3500 },
-    ],
-    "2025": [
-      { label: "Thg 1", visits: 1850, users: 740 },
-      { label: "Thg 2", visits: 2100, users: 850 },
-      { label: "Thg 3", visits: 2640, users: 1050 },
-      { label: "Thg 4", visits: 3100, users: 1240 },
-      { label: "Thg 5", visits: 3900, users: 1560 },
-      { label: "Thg 6", visits: 4800, users: 1920 },
-      { label: "Thg 7", visits: 6200, users: 2480 },
-      { label: "Thg 8", visits: 5400, users: 2160 },
-      { label: "Thg 9", visits: 4900, users: 1960 },
-      { label: "Thg 10", visits: 5600, users: 2240 },
-      { label: "Thg 11", visits: 7200, users: 2880 },
-      { label: "Thg 12", visits: 6100, users: 2440 },
-    ],
-    "2024": [
-      { label: "Thg 1", visits: 1200, users: 480 },
-      { label: "Thg 2", visits: 1450, users: 580 },
-      { label: "Thg 3", visits: 1900, users: 760 },
-      { label: "Thg 4", visits: 2300, users: 920 },
-      { label: "Thg 5", visits: 2800, users: 1120 },
-      { label: "Thg 6", visits: 3600, users: 1440 },
-      { label: "Thg 7", visits: 4900, users: 1960 },
-      { label: "Thg 8", visits: 4100, users: 1640 },
-      { label: "Thg 9", visits: 3700, users: 1480 },
-      { label: "Thg 10", visits: 4300, users: 1720 },
-      { label: "Thg 11", visits: 5200, users: 2080 },
-      { label: "Thg 12", visits: 4600, users: 1840 },
-    ],
-    "2023": [
-      { label: "Thg 1", visits: 800, users: 320 },
-      { label: "Thg 2", visits: 950, users: 380 },
-      { label: "Thg 3", visits: 1200, users: 480 },
-      { label: "Thg 4", visits: 1500, users: 600 },
-      { label: "Thg 5", visits: 1800, users: 720 },
-      { label: "Thg 6", visits: 2400, users: 960 },
-      { label: "Thg 7", visits: 3200, users: 1280 },
-      { label: "Thg 8", visits: 2700, users: 1080 },
-      { label: "Thg 9", visits: 2500, users: 1000 },
-      { label: "Thg 10", visits: 2900, users: 1160 },
-      { label: "Thg 11", visits: 3500, users: 1400 },
-      { label: "Thg 12", visits: 3100, users: 1240 },
-    ],
-  },
-};
+function dedupeMatches(schedule: Match[], results: Match[]): Match[] {
+  const map = new Map<string, Match>();
+  for (const m of schedule) map.set(m.id, m);
+  for (const m of results) map.set(m.id, m);
+  return [...map.values()];
+}
 
-export function AdminDashboard() {
-  const [mode, setMode] = useState<TimeMode>("year");
-  const [selectedYear, setSelectedYear] = useState<string>("2026");
-  const [selectedMonth, setSelectedMonth] = useState<string>("Tháng 11/2026");
-  const [selectedWeek, setSelectedWeek] = useState<string>("Tuần 45 (Hiện tại)");
-  const [hoveredPoint, setHoveredPoint] = useState<ChartPoint | null>(null);
+export function AdminDashboard({ data }: { data: AdminOverviewData }) {
+  const hasRevenue = Boolean(data.remote.connected && data.remote.dailyRevenue && data.remote.dailyRevenue.length > 0);
+  const [chartMode, setChartMode] = useState<ChartMode>("tatami");
+  const [hoveredBar, setHoveredBar] = useState<ChartBar | null>(null);
 
-  // Compute active data points
-  let currentPoints: ChartPoint[] = [];
-  if (mode === "today") {
-    currentPoints = ANALYTICS_DATA.today;
-  } else if (mode === "week") {
-    currentPoints = ANALYTICS_DATA.week[selectedWeek] || ANALYTICS_DATA.week["Tuần 45 (Hiện tại)"];
-  } else if (mode === "month") {
-    currentPoints = ANALYTICS_DATA.month[selectedMonth] || ANALYTICS_DATA.month["Tháng 11/2026"];
-  } else {
-    currentPoints = ANALYTICS_DATA.year[selectedYear] || ANALYTICS_DATA.year["2026"];
-  }
+  const count = useMemo(() => new Intl.NumberFormat("vi-VN"), []);
+  const allMatches = useMemo(() => dedupeMatches(data.schedule, data.results), [data.schedule, data.results]);
 
-  const totalVisits = currentPoints.reduce((acc, p) => acc + p.visits, 0);
-  const totalUsers = currentPoints.reduce((acc, p) => acc + p.users, 0);
-  const maxVisits = Math.max(...currentPoints.map((p) => p.visits), 1);
-  const count = new Intl.NumberFormat("vi-VN");
+  const liveEvents = useMemo(() => data.events.filter((e) => e.status === "Đang diễn ra"), [data.events]);
+  const upcomingEvents = useMemo(() => data.events.filter((e) => e.status === "Sắp diễn ra"), [data.events]);
+  const featuredEvent = liveEvents[0] || upcomingEvents[0] || data.events[0] || null;
+
+  const liveMatches = useMemo(() => allMatches.filter((m) => m.state === "Đang thi đấu"), [allMatches]);
+  const finishedMatches = useMemo(() => allMatches.filter((m) => m.state === "Đã kết thúc"), [allMatches]);
+  const upcomingMatches = useMemo(() => allMatches.filter((m) => m.state === "Sắp diễn ra"), [allMatches]);
+
+  const uniqueTatamis = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of allMatches) {
+      const name = m.tatami?.trim();
+      if (name) set.add(name);
+    }
+    return [...set].sort((a, b) => a.localeCompare(b, "vi", { numeric: true }));
+  }, [allMatches]);
+
+  const tatamiBars: ChartBar[] = useMemo(() => {
+    const counts = new Map<string, { total: number; finished: number; live: number }>();
+    for (const m of allMatches) {
+      const key = m.tatami?.trim() ? `Thảm ${m.tatami.replace(/^(tatami|thảm)\s*/i, "").trim()}` : "Chưa phân thảm";
+      const cur = counts.get(key) || { total: 0, finished: 0, live: 0 };
+      cur.total += 1;
+      if (m.state === "Đã kết thúc") cur.finished += 1;
+      if (m.state === "Đang thi đấu") cur.live += 1;
+      counts.set(key, cur);
+    }
+    return [...counts.entries()].map(([label, stat]) => ({
+      label,
+      primary: stat.total,
+      secondary: stat.finished,
+      highlight: stat.live > 0,
+    }));
+  }, [allMatches]);
+
+  const eventBars: ChartBar[] = useMemo(() => {
+    return data.events.slice(0, 10).map((ev) => {
+      const evMatches = allMatches.filter((m) => m.eventSlug === ev.slug || m.eventName === ev.name);
+      return {
+        label: ev.name.length > 22 ? `${ev.name.slice(0, 22)}…` : ev.name,
+        primary: evMatches.length > 0 ? evMatches.length : ev.categories.length,
+        secondary: evMatches.filter((m) => m.state === "Đã kết thúc").length,
+        highlight: ev.status === "Đang diễn ra",
+      };
+    });
+  }, [data.events, allMatches]);
+
+  const revenueBars: ChartBar[] = useMemo(() => {
+    if (!data.remote.dailyRevenue) return [];
+    return data.remote.dailyRevenue.map((item) => ({
+      label: item.day,
+      primary: item.revenueVnd,
+      secondary: 0,
+      highlight: item.revenueVnd > 0,
+    }));
+  }, [data.remote.dailyRevenue]);
+
+  const activeBars = chartMode === "revenue" ? revenueBars : chartMode === "events" ? eventBars : tatamiBars;
+  const maxBarValue = Math.max(...activeBars.map((b) => b.primary), 1);
+
+  const totalMatches = allMatches.length;
+  const finishedPct = totalMatches > 0 ? Math.round((finishedMatches.length / totalMatches) * 1000) / 10 : 0;
+  const livePct = totalMatches > 0 ? Math.round((liveMatches.length / totalMatches) * 1000) / 10 : 0;
+  const upcomingPct = totalMatches > 0 ? Math.max(0, Math.round((100 - finishedPct - livePct) * 10) / 10) : 0;
 
   return (
     <section className="admin-dashboard-v3" aria-labelledby="admin-overview-heading">
-      {/* 1. TOURNAMENT LIVE BANNER */}
+      {/* 1. TOURNAMENT LIVE BANNER (FROM REAL PUBLIC API) */}
       <div className="pro-alert-banner">
         <div className="pro-alert-content">
           <div className="pro-alert-badge">
-            <span className="live-dot-pulse" />
-            <span>ĐANG TRUYỀN DỮ LIỆU TRỰC TIẾP</span>
+            {liveEvents.length > 0 ? <span className="live-dot-pulse" /> : null}
+            <span>
+              {liveEvents.length > 0
+                ? "GIẢI ĐẤU ĐANG DIỄN RA (DỮ LIỆU THỰC TẾ)"
+                : featuredEvent
+                  ? `TRẠNG THÁI: ${featuredEvent.status.toUpperCase()}`
+                  : "HỆ THỐNG ĐỒNG BỘ DỮ LIỆU K-SPORT"}
+            </span>
           </div>
-          <h2 className="pro-alert-title">Giải vô địch các CLB Karate tỉnh Phú Thọ 2026</h2>
+          <h2 className="pro-alert-title">
+            {featuredEvent ? featuredEvent.name : "Chưa có giải đấu nào được đồng bộ từ máy chủ"}
+          </h2>
           <p className="pro-alert-sub">
-            342 VĐV tranh tài · 3 Thảm đấu Tatami điện tử · Cổng thông tin đang đón lượt truy cập cao điểm
+            {featuredEvent
+              ? `${featuredEvent.location || "Chưa cập nhật địa điểm"} · ${count.format(data.athletesCount)} VĐV · ${count.format(data.clubsCount)} CLB · ${uniqueTatamis.length} Thảm đấu`
+              : "Kết nối KSPORT_PUBLIC_API_URL hoặc đồng bộ giải đấu từ K-SPORT Desktop để hiển thị dữ liệu trực tiếp."}
           </p>
         </div>
         <div className="pro-alert-buttons">
           <Link href="/admin/btc" className="btn-pro-primary">
             🏆 Mở Thống Kê Ban Tổ Chức (BTC)
           </Link>
-          <Link href="/admin/sponsors" className="btn-pro-outline">
-            🤝 Quản Lý Nhà Tài Trợ Võ Phục
+          <Link href="/admin/events" className="btn-pro-outline">
+            🥋 Quản Lý Giải Đấu
           </Link>
         </div>
       </div>
 
-      {/* 2. HEADER & ADVANCED TIME FILTERS */}
+      {/* 2. HEADER & CHART VIEW SWITCHER */}
       <div className="analytics-control-bar">
         <div>
           <h1 id="admin-overview-heading" className="analytics-main-title">
-            Thống Kê Lượng Người Truy Cập K-SPORT
+            Tổng Quan Dữ Liệu Hệ Thống K-SPORT
           </h1>
           <p className="analytics-sub-title">
-            Dữ liệu người xem trực tiếp, người dùng quét mã QR thẻ VĐV và theo dõi kết quả các thảm đấu.
+            Dữ liệu thực tế tổng hợp từ Public API &amp; máy chủ quản trị lúc{" "}
+            {new Intl.DateTimeFormat("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+              hour: "2-digit",
+              minute: "2-digit",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }).format(new Date(data.fetchedAt))}
+            .
           </p>
         </div>
 
-        {/* Time Filter Controls */}
         <div className="time-filter-wrapper">
-          {/* Main Mode Tabs */}
-          <div className="filter-tab-group" role="tablist" aria-label="Khoảng thời gian thống kê">
+          <div className="filter-tab-group" role="tablist" aria-label="Chế độ biểu đồ thống kê">
             <button
               type="button"
               role="tab"
-              aria-selected={mode === "today"}
-              className={`filter-tab-btn ${mode === "today" ? "is-active" : ""}`}
-              onClick={() => setMode("today")}
+              aria-selected={chartMode === "tatami"}
+              className={`filter-tab-btn ${chartMode === "tatami" ? "is-active" : ""}`}
+              onClick={() => {
+                setChartMode("tatami");
+                setHoveredBar(null);
+              }}
             >
-              Hôm nay
+              Theo Thảm đấu
             </button>
             <button
               type="button"
               role="tab"
-              aria-selected={mode === "week"}
-              className={`filter-tab-btn ${mode === "week" ? "is-active" : ""}`}
-              onClick={() => setMode("week")}
+              aria-selected={chartMode === "events"}
+              className={`filter-tab-btn ${chartMode === "events" ? "is-active" : ""}`}
+              onClick={() => {
+                setChartMode("events");
+                setHoveredBar(null);
+              }}
             >
-              Theo tuần
+              Theo Giải đấu
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === "month"}
-              className={`filter-tab-btn ${mode === "month" ? "is-active" : ""}`}
-              onClick={() => setMode("month")}
-            >
-              Theo tháng
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === "year"}
-              className={`filter-tab-btn ${mode === "year" ? "is-active" : ""}`}
-              onClick={() => setMode("year")}
-            >
-              Theo năm
-            </button>
+            {hasRevenue ? (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={chartMode === "revenue"}
+                className={`filter-tab-btn ${chartMode === "revenue" ? "is-active" : ""}`}
+                onClick={() => {
+                  setChartMode("revenue");
+                  setHoveredBar(null);
+                }}
+              >
+                Doanh thu 14 ngày (VPS)
+              </button>
+            ) : null}
           </div>
-
-          {/* Granular Dropdowns depending on Mode */}
-          {mode === "year" && (
-            <div className="filter-dropdown-box">
-              <label htmlFor="year-select">Chọn năm:</label>
-              <select
-                id="year-select"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="filter-select-pro"
-              >
-                <option value="2026">Năm 2026 (Năm hiện tại)</option>
-                <option value="2025">Năm 2025</option>
-                <option value="2024">Năm 2024</option>
-                <option value="2023">Năm 2023</option>
-              </select>
-            </div>
-          )}
-
-          {mode === "month" && (
-            <div className="filter-dropdown-box">
-              <label htmlFor="month-select">Chọn tháng:</label>
-              <select
-                id="month-select"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="filter-select-pro"
-              >
-                <option value="Tháng 11/2026">Tháng 11/2026 (Giải Phú Thọ)</option>
-                <option value="Tháng 10/2026">Tháng 10/2026</option>
-                <option value="Tháng 09/2026">Tháng 09/2026</option>
-              </select>
-            </div>
-          )}
-
-          {mode === "week" && (
-            <div className="filter-dropdown-box">
-              <label htmlFor="week-select">Chọn tuần:</label>
-              <select
-                id="week-select"
-                value={selectedWeek}
-                onChange={(e) => setSelectedWeek(e.target.value)}
-                className="filter-select-pro"
-              >
-                <option value="Tuần 45 (Hiện tại)">Tuần 45 (04/11 - 10/11/2026)</option>
-                <option value="Tuần 44 (Tuần trước)">Tuần 44 (28/10 - 03/11/2026)</option>
-              </select>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* 3. KPI STATS STRIP */}
+      {/* 3. KPI STATS STRIP (100% REAL DATA) */}
       <div className="kpi-strip-v3">
         <div className="kpi-box-v3">
-          <div className="kpi-icon-v3 red">📈</div>
+          <div className="kpi-icon-v3 red">🥋</div>
           <div className="kpi-content-v3">
-            <span className="kpi-label-v3">Tổng Lượt Truy Cập (Pageviews)</span>
-            <strong className="kpi-val-v3">{count.format(totalVisits)}</strong>
-            <span className="kpi-growth-tag positive">↑ +24.8% so với kỳ trước</span>
+            <span className="kpi-label-v3">Giải Đấu Công Khai</span>
+            <strong className="kpi-val-v3">{count.format(data.events.length)}</strong>
+            <span className="kpi-sub-v3">
+              {liveEvents.length} đang diễn ra · {upcomingEvents.length} sắp diễn ra
+            </span>
           </div>
         </div>
 
         <div className="kpi-box-v3">
           <div className="kpi-icon-v3 blue">👥</div>
           <div className="kpi-content-v3">
-            <span className="kpi-label-v3">Khách Truy Cập Duy Nhất</span>
-            <strong className="kpi-val-v3">{count.format(totalUsers)}</strong>
-            <span className="kpi-growth-tag positive">↑ +19.2% tăng trưởng</span>
+            <span className="kpi-label-v3">Vận Động Viên &amp; CLB</span>
+            <strong className="kpi-val-v3">{count.format(data.athletesCount)}</strong>
+            <span className="kpi-sub-v3">Thuộc {count.format(data.clubsCount)} CLB / Đoàn tham dự</span>
           </div>
         </div>
 
         <div className="kpi-box-v3">
-          <div className="kpi-icon-v3 amber">📱</div>
+          <div className="kpi-icon-v3 amber">⚡</div>
           <div className="kpi-content-v3">
-            <span className="kpi-label-v3">Quét Mã QR Thẻ VĐV &amp; Tatami</span>
-            <strong className="kpi-val-v3">34.2%</strong>
-            <span className="kpi-sub-v3">Hơn 4,200 lượt quét thẻ trên sàn đấu</span>
+            <span className="kpi-label-v3">Trận Đấu &amp; Kết Quả</span>
+            <strong className="kpi-val-v3">{count.format(totalMatches)}</strong>
+            <span className="kpi-sub-v3">
+              {count.format(finishedMatches.length)} đã xong · {count.format(liveMatches.length)} đang đấu
+            </span>
           </div>
         </div>
 
         <div className="kpi-box-v3">
-          <div className="kpi-icon-v3 emerald">⏱️</div>
+          <div className="kpi-icon-v3 emerald">🔑</div>
           <div className="kpi-content-v3">
-            <span className="kpi-label-v3">Thời Gian Xem Trực Tiếp TB</span>
-            <strong className="kpi-val-v3">4m 38s</strong>
-            <span className="kpi-sub-v3">Khán giả theo dõi sát các trận Kumite</span>
+            <span className="kpi-label-v3">License &amp; Đơn Hàng (VPS)</span>
+            <strong className="kpi-val-v3">
+              {data.remote.connected && typeof data.remote.activeLicenses === "number"
+                ? count.format(data.remote.activeLicenses)
+                : "—"}
+            </strong>
+            <span className="kpi-sub-v3">
+              {data.remote.connected
+                ? `Tổng ${count.format(data.remote.totalLicenses ?? 0)} license · ${count.format(data.remote.paidOrders ?? 0)} đơn đã thanh toán`
+                : "Chưa kết nối phiên VPS quản trị"}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 4. MAIN INTERACTIVE CHART */}
+      {/* 4. REAL DATA BAR CHART */}
       <div className="chart-card-v3">
         <div className="chart-header-v3">
           <div>
             <h3>
-              Biểu đồ lưu lượng truy cập {mode === "today" ? "Hôm nay (theo khung giờ)" : mode === "week" ? selectedWeek : mode === "month" ? selectedMonth : `Năm ${selectedYear} (12 Tháng)`}
+              {chartMode === "tatami"
+                ? "Phân bổ số trận đấu theo Thảm (Tatami)"
+                : chartMode === "events"
+                  ? "Quy mô trận đấu / nội dung theo Giải đấu"
+                  : "Doanh thu License 14 ngày gần nhất (VNĐ)"}
             </h3>
             <p>
-              Rê chuột vào các cột mốc để xem chi tiết lượt xem và số người truy cập tương ứng.
+              {activeBars.length > 0
+                ? "Rê chuột vào từng cột để xem số liệu chính xác từ hệ thống."
+                : "Chưa có dữ liệu trận đấu hoặc giải đấu nào từ máy chủ."}
             </p>
           </div>
-          {hoveredPoint && (
+          {hoveredBar && (
             <div className="chart-tooltip-badge">
-              <strong>{hoveredPoint.label}:</strong> {count.format(hoveredPoint.visits)} lượt xem · {count.format(hoveredPoint.users)} người
+              <strong>{hoveredBar.label}:</strong> {count.format(hoveredBar.primary)}{" "}
+              {chartMode === "revenue" ? "VNĐ" : "trận / nội dung"}
+              {chartMode !== "revenue" && hoveredBar.secondary > 0
+                ? ` (${count.format(hoveredBar.secondary)} đã hoàn thành)`
+                : ""}
             </div>
           )}
         </div>
 
-        {/* Visual Bar/Area Hybrid SVG Chart */}
-        <div className="chart-visual-container">
-          <div className="chart-bars-wrap">
-            {currentPoints.map((point) => {
-              const heightPercent = Math.max((point.visits / maxVisits) * 100, 8);
-              return (
-                <div
-                  key={point.label}
-                  className={`chart-bar-col ${point.highlight ? "is-highlighted" : ""}`}
-                  onMouseEnter={() => setHoveredPoint(point)}
-                  onMouseLeave={() => setHoveredPoint(null)}
-                >
-                  <div className="chart-bar-fill-wrap">
-                    <div
-                      className="chart-bar-fill"
-                      style={{ height: `${heightPercent}%` }}
-                    >
-                      <span className="chart-bar-tooltip-top">{count.format(point.visits)}</span>
-                    </div>
-                  </div>
-                  <span className="chart-bar-x-label">{point.label}</span>
-                </div>
-              );
-            })}
+        {activeBars.length === 0 ? (
+          <div className="chart-visual-container" style={{ display: "grid", placeItems: "center", minHeight: 180 }}>
+            <p style={{ color: "var(--muted)", margin: 0 }}>
+              Chưa có dữ liệu từ API cho chế độ hiển thị này.
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="chart-visual-container">
+            <div className="chart-bars-wrap">
+              {activeBars.map((bar) => {
+                const heightPercent = Math.max((bar.primary / maxBarValue) * 100, 8);
+                return (
+                  <div
+                    key={bar.label}
+                    className={`chart-bar-col ${bar.highlight ? "is-highlighted" : ""}`}
+                    onMouseEnter={() => setHoveredBar(bar)}
+                    onMouseLeave={() => setHoveredBar(null)}
+                  >
+                    <div className="chart-bar-fill-wrap">
+                      <div className="chart-bar-fill" style={{ height: `${heightPercent}%` }}>
+                        <span className="chart-bar-tooltip-top">{count.format(bar.primary)}</span>
+                      </div>
+                    </div>
+                    <span className="chart-bar-x-label">{bar.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 5. MULTI-COLUMN INSIGHTS (DEVICES, CHANNELS, POPULAR MATCHES) */}
+      {/* 5. MULTI-COLUMN REAL INSIGHTS */}
       <div className="insights-grid-v3">
-        {/* Device Breakdown */}
+        {/* Match Progress Breakdown */}
         <div className="insight-card-v3">
           <div className="insight-header">
-            <h4>Thiết Bị Truy Cập</h4>
-            <span className="insight-tag">Realtime</span>
+            <h4>Tiến Độ Trận Đấu Thực Tế</h4>
+            <span className="insight-tag">Public API</span>
           </div>
           <div className="device-stat-list">
             <div className="device-stat-row">
               <div className="device-info">
-                <span>📱 Điện thoại di động (Smartphones)</span>
-                <strong>74.2%</strong>
+                <span>✅ Đã kết thúc ({count.format(finishedMatches.length)} trận)</span>
+                <strong>{finishedPct}%</strong>
               </div>
-              <div className="progress-track"><div className="progress-bar red" style={{ width: "74.2%" }} /></div>
+              <div className="progress-track">
+                <div className="progress-bar green" style={{ width: `${finishedPct}%` }} />
+              </div>
             </div>
 
             <div className="device-stat-row">
               <div className="device-info">
-                <span>💻 Máy tính &amp; Laptop</span>
-                <strong>21.6%</strong>
+                <span>🔴 Đang thi đấu ({count.format(liveMatches.length)} trận)</span>
+                <strong>{livePct}%</strong>
               </div>
-              <div className="progress-track"><div className="progress-bar blue" style={{ width: "21.6%" }} /></div>
+              <div className="progress-track">
+                <div className="progress-bar red" style={{ width: `${livePct}%` }} />
+              </div>
             </div>
 
             <div className="device-stat-row">
               <div className="device-info">
-                <span>📟 Máy tính bảng &amp; Màn hình LED Thảm</span>
-                <strong>4.2%</strong>
+                <span>🕒 Sắp diễn ra ({count.format(upcomingMatches.length)} trận)</span>
+                <strong>{upcomingPct}%</strong>
               </div>
-              <div className="progress-track"><div className="progress-bar green" style={{ width: "4.2%" }} /></div>
+              <div className="progress-track">
+                <div className="progress-bar blue" style={{ width: `${upcomingPct}%` }} />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Traffic Channels */}
+        {/* System Content & Modules */}
         <div className="insight-card-v3">
           <div className="insight-header">
-            <h4>Nguồn Truy Cập &amp; Tiếp Cận</h4>
-            <span className="insight-tag">K-SPORT Tracking</span>
+            <h4>Tài Nguyên &amp; Mô-đun Hệ Thống</h4>
+            <span className="insight-tag">Thực tế</span>
           </div>
           <ul className="channel-list">
             <li>
               <span className="channel-dot qr" />
               <div className="channel-meta">
-                <strong>Quét mã QR Thẻ VĐV &amp; Poster</strong>
-                <small>Khán đài và võ sinh quét trực tiếp tại sàn đấu</small>
+                <strong>Ngân hàng đề WKF Exam</strong>
+                <small>Dữ liệu câu hỏi &amp; đáp án chính thức</small>
               </div>
-              <strong className="channel-pct">38.4%</strong>
+              <strong className="channel-pct">{count.format(data.wkfQuestionsCount)} câu</strong>
             </li>
             <li>
               <span className="channel-dot direct" />
               <div className="channel-meta">
-                <strong>Truy cập trực tiếp k-sport.net</strong>
-                <small>Ban huấn luyện, trọng tài và VĐV lưu bookmark</small>
+                <strong>Tin tức &amp; Banner công khai</strong>
+                <small>Đồng bộ từ /api/public/news &amp; /banners</small>
               </div>
-              <strong className="channel-pct">32.1%</strong>
+              <strong className="channel-pct">
+                {data.newsCount} tin · {data.bannersCount} banner
+              </strong>
             </li>
             <li>
               <span className="channel-dot social" />
               <div className="channel-meta">
-                <strong>Mạng xã hội (Facebook, Zalo)</strong>
-                <small>Chia sẻ link livestream và bảng điểm thảm đấu</small>
+                <strong>Nhà tài trợ đang kích hoạt</strong>
+                <small>Quản lý tại mục Nhà tài trợ &amp; Võ phục</small>
               </div>
-              <strong className="channel-pct">21.5%</strong>
+              <strong className="channel-pct">{count.format(data.activeSponsorsCount)} đơn vị</strong>
             </li>
             <li>
               <span className="channel-dot search" />
               <div className="channel-meta">
-                <strong>Tìm kiếm Google</strong>
-                <small>Tìm kiếm kết quả giải Karate Phú Thọ</small>
+                <strong>Giải đấu Cloud Sync (VPS)</strong>
+                <small>
+                  {data.remote.connected ? "Đã kết nối máy chủ quản trị" : "Chưa kết nối phiên VPS"}
+                </small>
               </div>
-              <strong className="channel-pct">8.0%</strong>
+              <strong className="channel-pct">
+                {typeof data.remote.syncedTournamentsCount === "number"
+                  ? `${count.format(data.remote.syncedTournamentsCount)} giải`
+                  : "—"}
+              </strong>
             </li>
           </ul>
         </div>
 
-        {/* Top Visited Pages & Matches */}
+        {/* Real Tournaments List */}
         <div className="insight-card-v3">
           <div className="insight-header">
-            <h4>Trang &amp; Thảm Đấu Được Xem Nhiều</h4>
-            <span className="insight-tag">Hôm nay</span>
+            <h4>Danh Sách Giải Đấu Hiện Có</h4>
+            <span className="insight-tag">{data.events.length} giải</span>
           </div>
-          <ul className="top-pages-list">
-            <li>
-              <span className="page-rank">1</span>
-              <div className="page-info">
-                <strong>Thảm 1 — Kumite Nam -67kg</strong>
-                <small>/schedule (Thảm 1 trực tiếp)</small>
-              </div>
-              <span className="page-views">2,410 lượt</span>
-            </li>
-            <li>
-              <span className="page-rank">2</span>
-              <div className="page-info">
-                <strong>Thảm 2 — Kumite Nữ -55kg</strong>
-                <small>/schedule (Thảm 2 trực tiếp)</small>
-              </div>
-              <span className="page-views">1,890 lượt</span>
-            </li>
-            <li>
-              <span className="page-rank">3</span>
-              <div className="page-info">
-                <strong>Bảng Tổng Sắp Huy Chương</strong>
-                <small>/ranking (Toàn đoàn Phú Thọ 2026)</small>
-              </div>
-              <span className="page-views">1,420 lượt</span>
-            </li>
-            <li>
-              <span className="page-rank">4</span>
-              <div className="page-info">
-                <strong>Thẻ VĐV Nguyễn Văn A</strong>
-                <small>/athletes/athlete-vie-0001 (Quét QR)</small>
-              </div>
-              <span className="page-views">980 lượt</span>
-            </li>
-          </ul>
+          {data.events.length === 0 ? (
+            <p style={{ color: "var(--muted)", margin: "0.5rem 0 0" }}>
+              Chưa có giải đấu nào trong Public API.
+            </p>
+          ) : (
+            <ul className="top-pages-list">
+              {data.events.slice(0, 4).map((ev, index) => (
+                <li key={ev.slug}>
+                  <span className="page-rank">{index + 1}</span>
+                  <div className="page-info">
+                    <strong>
+                      <Link href={`/events/${ev.slug}`}>{ev.name}</Link>
+                    </strong>
+                    <small>
+                      {ev.location || "Chưa rõ địa điểm"} · {ev.date}
+                    </small>
+                  </div>
+                  <span className="page-views">{ev.status}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </section>

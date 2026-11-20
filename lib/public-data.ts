@@ -188,7 +188,7 @@ function getCacheState(): PublicDataCacheState {
 }
 
 const knownPublicApiUrls = [
-  "https://admin.luuquancoder.id.vn/api/public",
+
   "https://api.k-sport.net/api/public",
 ];
 

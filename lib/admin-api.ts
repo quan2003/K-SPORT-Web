@@ -7,7 +7,7 @@ function resolveAdminApiBase() {
   if (explicit) return explicit;
   const publicApi = process.env.KSPORT_PUBLIC_API_URL?.replace(/\/$/, "");
   if (publicApi) return publicApi.replace(/\/api\/public$/, "");
-  return "https://admin.luuquancoder.id.vn";
+  return "https://api.k-sport.net";
 }
 
 export async function adminApiFetch(path: string, init: RequestInit = {}) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { ADMIN_TOKEN_COOKIE } from "@/lib/admin-api";
+import { ADMIN_TOKEN_COOKIE, adminApiFetch } from "@/lib/admin-api";
 import { getUsersStore, addUserItem, AdminUserItem } from "@/lib/admin-store";
 import { getPublicSession } from "@/lib/auth";
 
@@ -13,7 +13,45 @@ export async function GET() {
     return NextResponse.json({ message: "Khu vực giới hạn cho Quản trị viên" }, { status: 403 });
   }
 
-  return NextResponse.json({ items: getUsersStore() });
+  // Try real VPS admin users API first
+  try {
+    const remoteRes = await adminApiFetch("/api/admin/users", {
+      signal: AbortSignal.timeout(3_000),
+    });
+    if (remoteRes.ok) {
+      const payload = (await remoteRes.json().catch(() => ({}))) as Record<string, unknown>;
+      const rawUsers = (
+        Array.isArray(payload.users)
+          ? payload.users
+          : Array.isArray(payload.items)
+            ? payload.items
+            : Array.isArray(payload.data)
+              ? payload.data
+              : []
+      ) as Record<string, unknown>[];
+
+      const mapped: AdminUserItem[] = rawUsers.map((u, idx) => {
+        const rawRole = String(u.role || "editor").toLowerCase();
+        const role: AdminUserItem["role"] =
+          rawRole === "admin" || rawRole === "superadmin" ? "admin" : rawRole === "btc" ? "btc" : "editor";
+        return {
+          id: String(u.id || u._id || `remote-${idx}`),
+          username: String(u.username || u.email || `user-${idx}`),
+          name: String(u.name || u.fullName || u.username || "Người dùng"),
+          email: String(u.email || ""),
+          role,
+          assignedTournament: u.assignedTournament ? String(u.assignedTournament) : undefined,
+          lastActive: String(u.lastActive || u.updatedAt || "Đã đồng bộ VPS"),
+          status: u.isActive === false || u.status === "Tạm khóa" ? "Tạm khóa" : "Hoạt động",
+        };
+      });
+      return NextResponse.json({ items: mapped, source: "vps" });
+    }
+  } catch {
+    // Fallback to local store (empty unless created in session)
+  }
+
+  return NextResponse.json({ items: getUsersStore(), source: "local" });
 }
 
 export async function POST(request: Request) {

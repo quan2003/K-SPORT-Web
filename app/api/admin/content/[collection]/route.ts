@@ -3,21 +3,24 @@ import { adminApiFetch, ADMIN_TOKEN_COOKIE } from "@/lib/admin-api";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getBannersStore, getNewsStore } from "@/lib/admin-store";
+import { getBanners, getNews } from "@/lib/public-data";
 
 const collections = new Set(["news", "banners"]);
 
-function getLocalItems(collection: string) {
+async function getPublicFallbackItems(collection: string) {
   if (collection === "banners") {
-    return getBannersStore().map((b) => ({
+    const items = await getBanners().catch(() => []);
+    return items.map((b) => ({
       ...b,
-      isPublished: (b as { isPublished?: boolean }).isPublished ?? true,
+      isPublished: true,
       imageUrl: b.image,
     }));
   }
-  return getNewsStore().map((n) => ({
+  const items = await getNews().catch(() => []);
+  return items.map((n) => ({
     ...n,
     id: n.slug,
-    isPublished: (n as { isPublished?: boolean }).isPublished ?? true,
+    isPublished: true,
     imageUrl: n.image,
   }));
 }
@@ -53,9 +56,9 @@ async function forward(request: Request, params: Promise<{ collection: string }>
     if (response.status === 401 || response.status === 403) result.cookies.delete(ADMIN_TOKEN_COOKIE);
     return result;
   } catch {
-    // 2. Seamless local fallback
+    // 2. Public API fallback (never serve mock data)
     if (method === "GET") {
-      const items = getLocalItems(collection);
+      const items = await getPublicFallbackItems(collection);
       return NextResponse.json({ items });
     }
     // POST creation fallback

@@ -1,6 +1,18 @@
 import type { Metadata } from "next";
 import { getPublicSession } from "@/lib/auth";
 import { AdminBtcDashboard } from "@/components/admin-btc-dashboard";
+import {
+  getAthletes,
+  getClubs,
+  getEvents,
+  getRanking,
+  getResults,
+  getSchedule,
+  sortEvents,
+} from "@/lib/public-data";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Bảng Điều Hành Ban Tổ Chức (BTC) · K-SPORT",
@@ -8,7 +20,27 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminBtcPage() {
-  const session = await getPublicSession();
-  return <AdminBtcDashboard session={session} />;
-}
+  const [session, eventsRaw, schedule, results, athletes, clubs, ranking] = await Promise.all([
+    getPublicSession(),
+    getEvents(),
+    getSchedule(),
+    getResults(),
+    getAthletes(),
+    getClubs(),
+    getRanking(),
+  ]);
 
+  const events = sortEvents(eventsRaw);
+
+  return (
+    <AdminBtcDashboard
+      session={session}
+      events={events}
+      schedule={schedule}
+      results={results}
+      athletes={athletes}
+      clubs={clubs}
+      ranking={ranking}
+    />
+  );
+}
