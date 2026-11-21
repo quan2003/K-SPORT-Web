@@ -235,27 +235,33 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
             <>
               <label>
                 Nhãn nhỏ
-                <div style={{ display: "grid", gap: "0.4rem" }}>
-                  <select
-                    aria-label="Chọn mẫu nhãn nhỏ"
-                    value={BANNER_EYEBROW_PRESETS.includes(eyebrowValue) ? eyebrowValue : ""}
-                    onChange={(e) => {
-                      if (e.target.value) setEyebrowValue(e.target.value);
-                    }}
-                  >
-                    <option value="">-- Chọn mẫu có sẵn hoặc tự nhập bên dưới --</option>
-                    {BANNER_EYEBROW_PRESETS.map((preset) => (
-                      <option key={preset} value={preset}>{preset}</option>
-                    ))}
-                  </select>
+                <input type="hidden" name="eyebrow" value={eyebrowValue} />
+                <select
+                  aria-label="Chọn nhãn nhỏ"
+                  value={BANNER_EYEBROW_PRESETS.includes(eyebrowValue) ? eyebrowValue : "__custom__"}
+                  onChange={(e) => {
+                    if (e.target.value === "__custom__") {
+                      if (BANNER_EYEBROW_PRESETS.includes(eyebrowValue)) setEyebrowValue("");
+                    } else {
+                      setEyebrowValue(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="">-- Chọn nhãn nhỏ --</option>
+                  {BANNER_EYEBROW_PRESETS.map((preset) => (
+                    <option key={preset} value={preset}>{preset}</option>
+                  ))}
+                  <option value="__custom__">Tự nhập nhãn khác...</option>
+                </select>
+                {!BANNER_EYEBROW_PRESETS.includes(eyebrowValue) ? (
                   <input
-                    name="eyebrow"
+                    style={{ marginTop: "0.4rem" }}
                     autoComplete="off"
                     value={eyebrowValue}
                     onChange={(e) => setEyebrowValue(e.target.value)}
-                    placeholder="Hoặc tự nhập nhãn nhỏ..."
+                    placeholder="Nhập nhãn nhỏ tùy chỉnh..."
                   />
-                </div>
+                ) : null}
               </label>
               <label>Tiêu đề<input name="title" required autoComplete="off" defaultValue={value("title")} /></label>
               <label className="admin-field-wide">Mô tả<textarea name="description" autoComplete="off" defaultValue={value("description")} /></label>
