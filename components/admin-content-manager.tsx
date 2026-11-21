@@ -70,6 +70,7 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
   const [imageUrlValue, setImageUrlValue] = useState("");
   const [eyebrowValue, setEyebrowValue] = useState("");
   const imageUrlRef = useRef<HTMLInputElement>(null);
+  const fileUploadRef = useRef<HTMLInputElement>(null);
   const editorTitleRef = useRef<HTMLHeadingElement>(null);
   const isNews = kind === "news";
   const contentName = isNews ? "bài viết" : "banner";
@@ -274,7 +275,44 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
             </>
           )}
         </div>
-        <aside className="admin-editor-aside"><label className="admin-image-upload">Ảnh đại diện<input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={isUploading} /><small>{isUploading ? "Đang tải ảnh lên…" : "JPG, PNG hoặc WebP · tối đa 8 MB"}</small></label>{shownImageUrl ? <div className="admin-image-preview"><ContentImage src={shownImageUrl} alt="Xem trước ảnh bìa" width={640} height={360} /></div> : <div className="admin-image-placeholder">Chưa có ảnh. Dán URL hoặc chọn ảnh từ máy.</div>}<label className="admin-check"><input name="isPublished" type="checkbox" defaultChecked={Boolean(form.isPublished)} /> Công khai ngay sau khi lưu</label></aside>
+        <aside className="admin-editor-aside">
+          <div className="admin-image-upload" style={{ display: "grid", gap: "10px" }}>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--ink)" }}>Ảnh đại diện</span>
+            <input
+              ref={fileUploadRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={uploadImage}
+              disabled={isUploading}
+              style={{ display: "none" }}
+            />
+            <button
+              type="button"
+              onClick={() => fileUploadRef.current?.click()}
+              disabled={isUploading}
+              style={{
+                minHeight: "40px",
+                padding: "8px 14px",
+                borderRadius: "6px",
+                border: "1px solid #cbd5e1",
+                background: "#ffffff",
+                color: "#1d4ed8",
+                fontWeight: 600,
+                fontSize: "14px",
+                cursor: isUploading ? "wait" : "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+              }}
+            >
+              {isUploading ? "Đang tải ảnh lên…" : "📁 Chọn ảnh từ máy tính"}
+            </button>
+            <small style={{ color: "#536071", fontSize: "12px" }}>JPG, PNG hoặc WebP · tối đa 8 MB</small>
+          </div>
+          {shownImageUrl ? <div className="admin-image-preview"><ContentImage src={shownImageUrl} alt="Xem trước ảnh bìa" width={640} height={360} /></div> : <div className="admin-image-placeholder">Chưa có ảnh. Dán URL hoặc chọn ảnh từ máy.</div>}
+          <label className="admin-check"><input name="isPublished" type="checkbox" defaultChecked={Boolean(form.isPublished)} /> Công khai ngay sau khi lưu</label>
+        </aside>
         <div className="admin-editor-actions"><button type="button" className="admin-text-button" onClick={closeEditor}>Hủy</button><button className="button red" type="submit" disabled={isSaving}>{isSaving ? "Đang lưu…" : editing ? "Lưu thay đổi" : `Tạo ${contentName}`}</button></div>
       </form>
     </section> : <section className="admin-list-view" aria-labelledby="admin-list-heading">
