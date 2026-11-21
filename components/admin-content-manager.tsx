@@ -44,6 +44,16 @@ function toApiPublishedAt(value: FormDataEntryValue | undefined) {
 const emptyNews = { title: "", slug: "", category: "Tin tức", summary: "", body: "", imageUrl: "", publishedAt: new Date().toISOString().slice(0, 10), isPublished: false };
 const emptyBanner = { eyebrow: "", title: "", description: "", imageUrl: "", primaryLabel: "", primaryHref: "", secondaryLabel: "", secondaryHref: "", position: 0, isPublished: false };
 
+const BANNER_EYEBROW_PRESETS = [
+  "GIẢI ĐẤU SẮP DIỄN RA",
+  "GIẢI ĐẤU ĐANG DIỄN RA",
+  "MỞ ĐĂNG KÝ VĐV",
+  "THÔNG BÁO CHÍNH THỨC",
+  "PHẦN MỀM K-SPORT",
+  "THI TRỌNG TÀI WKF",
+  "TIN NỔI BẬT",
+];
+
 export function AdminContentManager({ kind }: { kind: ContentKind }) {
   const router = useRouter();
   const [items, setItems] = useState<ContentItem[]>([]);
@@ -58,6 +68,7 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [imageUrlValue, setImageUrlValue] = useState("");
+  const [eyebrowValue, setEyebrowValue] = useState("");
   const imageUrlRef = useRef<HTMLInputElement>(null);
   const editorTitleRef = useRef<HTMLHeadingElement>(null);
   const isNews = kind === "news";
@@ -110,12 +121,14 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
     setEditing(item ?? null);
     setUploadedImageUrl("");
     setImageUrlValue(String(item?.image ?? item?.imageUrl ?? ""));
+    setEyebrowValue(String(item?.eyebrow ?? ""));
     setIsEditorOpen(true);
     window.setTimeout(() => editorTitleRef.current?.focus(), 0);
   }
   function closeEditor() {
     setUploadedImageUrl("");
     setImageUrlValue("");
+    setEyebrowValue("");
     setEditing(null);
     setIsEditorOpen(false);
   }
@@ -126,15 +139,30 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) { showToast("error", "Chỉ nhận ảnh JPG, PNG hoặc WebP, tối đa 8 MB."); event.target.value = ""; return; }
     setIsUploading(true);
     try {
-      const signatureResponse = await fetch("/api/admin/content/upload-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contentType: file.type, sizeBytes: file.size }) });
-      const signature = await signatureResponse.json().catch(() => ({}));
-      if (requireLogin(signatureResponse)) return;
-      if (!signatureResponse.ok || !signature.uploadUrl || !signature.fileUrl) throw new Error(signature.message || "Không thể chuẩn bị tải ảnh lên");
-      const uploadResponse = await fetch(signature.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
-      if (!uploadResponse.ok) throw new Error("Không thể tải ảnh lên kho lưu trữ");
-      if (imageUrlRef.current) imageUrlRef.current.value = signature.fileUrl;
-      setUploadedImageUrl(signature.fileUrl);
-      setImageUrlValue(signature.fileUrl);
+      let nextFileUrl = "";
+      const signatureResponse = await fetch("/api/admin/content/upload-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contentType: file.type, sizeBytes: file.size }) }).catch(() => null);
+      const signature = signatureResponse ? await signatureResponse.json().catch(() => ({})) : {};
+      if (signatureResponse && requireLogin(signatureResponse)) return;
+      if (signatureResponse?.ok && signature.uploadUrl && signature.fileUrl) {
+        const uploadResponse = await fetch(signature.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file }).catch(() => null);
+        if (uploadResponse?.ok) nextFileUrl = String(signature.fileUrl);
+      }
+      if (!nextFileUrl) {
+        const localForm = new FormData();
+        localForm.append("file", file);
+        const localResponse = await fetch("/api/admin/content/upload-local", { method: "POST", body: localForm });
+        const localPayload = (await localResponse.json().catch(() => ({}))) as { fileUrl?: string; message?: string };
+        if (requireLogin(localResponse)) return;
+        if (!localResponse.ok || !localPayload.fileUrl) throw new Error(localPayload.message || "Không thể tải ảnh lên kho lưu trữ");
+        nextFileUrl = localPayload.fileUrl;
+      }
+      // local & remote handled above
+      if (imageUrlRef.current) imageUrlRef.current.value = nextFileUrl;
+      setUploadedImageUrl(nextFileUrl);
+      setImageUrlValue(nextFileUrl);
+      // url updated above
+      // state updated above
+      // imageUrlValue updated above
       showToast("success", "Đã tải ảnh lên. Nhấn Lưu nội dung để áp dụng.");
     } catch (error) { showToast("error", error instanceof Error ? error.message : "Không thể tải ảnh lên"); }
     finally { setIsUploading(false); event.target.value = ""; }
@@ -143,7 +171,7 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget));
-    const bannerImageUrl = String(values.imageUrl || form.imageUrl || form.image || "");
+    const bannerImageUrl = String(values.imageUrl ?? imageUrlValue ?? "");
     const data = {
       ...values,
       isPublished: values.isPublished === "on",
@@ -205,7 +233,30 @@ export function AdminContentManager({ kind }: { kind: ContentKind }) {
             </>
           ) : (
             <>
-              <label>Nhãn nhỏ<input name="eyebrow" autoComplete="off" defaultValue={value("eyebrow")} /></label>
+              <label>
+                Nhãn nhỏ
+                <div style={{ display: "grid", gap: "0.4rem" }}>
+                  <select
+                    aria-label="Chọn mẫu nhãn nhỏ"
+                    value={BANNER_EYEBROW_PRESETS.includes(eyebrowValue) ? eyebrowValue : ""}
+                    onChange={(e) => {
+                      if (e.target.value) setEyebrowValue(e.target.value);
+                    }}
+                  >
+                    <option value="">-- Chọn mẫu có sẵn hoặc tự nhập bên dưới --</option>
+                    {BANNER_EYEBROW_PRESETS.map((preset) => (
+                      <option key={preset} value={preset}>{preset}</option>
+                    ))}
+                  </select>
+                  <input
+                    name="eyebrow"
+                    autoComplete="off"
+                    value={eyebrowValue}
+                    onChange={(e) => setEyebrowValue(e.target.value)}
+                    placeholder="Hoặc tự nhập nhãn nhỏ..."
+                  />
+                </div>
+              </label>
               <label>Tiêu đề<input name="title" required autoComplete="off" defaultValue={value("title")} /></label>
               <label className="admin-field-wide">Mô tả<textarea name="description" autoComplete="off" defaultValue={value("description")} /></label>
               <label>Đường dẫn ảnh banner<input ref={imageUrlRef} name="imageUrl" type="text" autoComplete="off" value={imageUrlValue} onChange={(e) => { setImageUrlValue(e.target.value); setUploadedImageUrl(""); }} placeholder="/images/... hoặc https://…" /></label>
