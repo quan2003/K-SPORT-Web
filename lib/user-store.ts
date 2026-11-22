@@ -154,8 +154,12 @@ function persistUsers(): void {
   }
 }
 
+const SEED_USER_IDS = new Set(["user-admin", "user-btc", "user-default", "user-learner-01"]);
+
 export function listSafeUsers(): SafeUser[] {
-  return Array.from(getUsersMap().values()).map(stripSensitive);
+  return Array.from(getUsersMap().values())
+    .filter((u) => !SEED_USER_IDS.has(u.id))
+    .map(stripSensitive);
 }
 
 export function getUserByEmail(email: string): UserRecord | null {

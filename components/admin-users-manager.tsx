@@ -114,10 +114,17 @@ export function AdminUsersManager() {
     }
     const nextStatus = user.status === "Hoạt động" ? "Tạm khóa" : "Hoạt động";
     try {
-      const res = await fetch(`/api/admin/users/${user.id}`, {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(user.id)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify({
+          status: nextStatus,
+          email: user.email,
+          name: user.name,
+          username: user.username,
+          role: user.role,
+          assignedTournament: user.assignedTournament,
+        }),
       });
       if (res.ok) {
         setUsers((prev) =>
@@ -154,6 +161,7 @@ export function AdminUsersManager() {
           role: newRole,
           assignedTournament:
             newRole === "btc" ? newAssignedTournament : undefined,
+          password: initialPassword,
           status: "Hoạt động",
         }),
       });
@@ -190,10 +198,11 @@ export function AdminUsersManager() {
     if (!editingUser) return;
 
     try {
-      const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(editingUser.id)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          username: editingUser.username,
           name: editName.trim(),
           email: editEmail.trim(),
           role: editRole,
@@ -227,7 +236,7 @@ export function AdminUsersManager() {
     setDeletingUser(null);
 
     try {
-      const res = await fetch(`/api/admin/users/${target.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(target.id)}`, { method: "DELETE" });
       if (res.ok) {
         setUsers((prev) => prev.filter((u) => u.id !== target.id));
         notify("success", `Đã xóa tài khoản "${target.name}" thành công`);
@@ -855,7 +864,23 @@ export function AdminUsersManager() {
               Mật khẩu mới cho tài khoản <strong>@{resettingUser.username}</strong> ({resettingUser.name}):
             </p>
             <div className="reset-pwd-display">
-              <code>{newPassword}</code>
+              <input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                aria-label="Mật khẩu mới"
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  padding: "8px 10px",
+                  fontFamily: "monospace",
+                  fontSize: "0.95rem",
+                  background: "#ffffff",
+                  color: "#0f172a",
+                }}
+              />
               <button
                 type="button"
                 className="btn-copy-pwd"
@@ -868,18 +893,50 @@ export function AdminUsersManager() {
               </button>
             </div>
             <p className="reset-pwd-sub">
-              Hãy gửi mật khẩu này cho người dùng qua kênh liên lạc bảo mật. Mật khẩu có hiệu lực ngay lập tức.
+              Hãy gửi mật khẩu này cho người dùng qua kênh liên lạc bảo mật. Bấm Lưu & Hoàn tất để áp dụng ngay.
             </p>
             <div className="admin-confirm-actions">
               <button
                 type="button"
+                className="btn-cancel"
+                onClick={() => setResettingUser(null)}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
                 className="button red"
-                onClick={() => {
-                  setResettingUser(null);
-                  notify("success", `Đã cấp mật khẩu mới cho @${resettingUser.username}`);
+                onClick={async () => {
+                  const pwd = newPassword.trim();
+                  if (pwd.length < 6) {
+                    notify("error", "Mật khẩu mới cần ít nhất 6 ký tự");
+                    return;
+                  }
+                  try {
+                    const res = await fetch(`/api/admin/users/${encodeURIComponent(resettingUser.id)}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        password: pwd,
+                        email: resettingUser.email,
+                        name: resettingUser.name,
+                        username: resettingUser.username,
+                        role: resettingUser.role,
+                        status: resettingUser.status,
+                        assignedTournament: resettingUser.assignedTournament,
+                      }),
+                    });
+                    const payload = (await res.json().catch(() => ({}))) as { message?: string };
+                    if (!res.ok) throw new Error(payload.message || "Không thể lưu mật khẩu mới");
+                    notify("success", `Đã lưu mật khẩu mới cho @${resettingUser.username}`);
+                    setResettingUser(null);
+                    fetchUsers();
+                  } catch (err) {
+                    notify("error", err instanceof Error ? err.message : "Lỗi đổi mật khẩu");
+                  }
                 }}
               >
-                Hoàn tất
+                Lưu & Hoàn tất
               </button>
             </div>
           </div>

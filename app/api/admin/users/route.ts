@@ -4,6 +4,7 @@ import { ADMIN_TOKEN_COOKIE, adminApiFetch } from "@/lib/admin-api";
 import { getUsersStore, addUserItem, getUserOverrides, AdminUserItem } from "@/lib/admin-store";
 import { getPublicSession } from "@/lib/auth";
 import { listSafeUsers } from "@/lib/user-store";
+import { createSupabaseUser, listSupabaseUsers } from "@/lib/supabase-users";
 
 const SUPER_ADMIN_EMAILS = new Set(["luuquan232003@gmail.com", "luuquankarate@gmail.com"]);
 
@@ -40,7 +41,19 @@ export async function GET() {
   const merged: AdminUserItem[] = [];
   const seenEmails = new Set<string>();
 
-  // 1. Try real VPS admin users API first
+  // 1. Load persistent Supabase admin_accounts first (takes precedence for edits/roles/passwords)
+  const supabaseUsers = await listSupabaseUsers();
+  for (const su of supabaseUsers) {
+    const emailLower = su.email.toLowerCase();
+    const mapped: AdminUserItem = {
+      ...su,
+      role: mapRole(su.role, su.email, su.name),
+    };
+    merged.push(mapped);
+    if (emailLower) seenEmails.add(emailLower);
+  }
+
+  // 2. Try real VPS admin users API
   try {
     const remoteRes = await adminApiFetch("/api/admin/users", {
       signal: AbortSignal.timeout(3_000),
@@ -59,6 +72,8 @@ export async function GET() {
 
       rawUsers.forEach((u, idx) => {
         const email = String(u.email || "");
+        const emailLower = email.toLowerCase();
+        if (emailLower && seenEmails.has(emailLower)) return;
         const name = String(u.name || u.fullName || u.username || "Người dùng");
         const id = String(u.id || u._id || email || `remote-${idx}`);
         const base: AdminUserItem = {
@@ -73,14 +88,14 @@ export async function GET() {
         };
         const ov = overrides[id] || overrides[email];
         merged.push(ov ? { ...base, ...ov } : base);
-        if (email) seenEmails.add(email.toLowerCase());
+        if (emailLower) seenEmails.add(emailLower);
       });
     }
   } catch {
     // VPS unreachable, continue with local users
   }
 
-  // 2. Include web registered / normal users from user-store
+  // 3. Include web registered / normal users from user-store
   for (const wu of listSafeUsers()) {
     const emailLower = wu.email.toLowerCase();
     if (seenEmails.has(emailLower)) continue;
@@ -98,8 +113,9 @@ export async function GET() {
     seenEmails.add(emailLower);
   }
 
-  // 3. Include locally created admin users
+  // 4. Include locally created admin users
   for (const lu of getUsersStore()) {
+    if (seenEmails.has(lu.email.toLowerCase())) continue;
     const ov = overrides[lu.id];
     merged.push(ov ? { ...lu, ...ov } : lu);
   }
@@ -120,6 +136,25 @@ export async function POST(request: Request) {
     const body = (await request.json()) as Partial<AdminUserItem> & { password?: string };
     if (!body.username || !body.name) {
       return NextResponse.json({ message: "Vui lòng nhập tên đăng nhập và họ tên" }, { status: 400 });
+    }
+
+    const email = (body.email?.trim() || `${body.username.trim()}@k-sport.net`).toLowerCase();
+    const username = body.username.trim().toLowerCase();
+    const role = body.role || "btc";
+
+    // Persist in Supabase admin_accounts first so account & password work across Vercel serverless
+    const sbResult = await createSupabaseUser({
+      username,
+      name: body.name.trim(),
+      email,
+      role,
+      assignedTournament: body.assignedTournament?.trim() || undefined,
+      status: body.status || "Hoạt động",
+      password: body.password || "Ksport!Btc2026",
+    });
+
+    if (sbResult.item) {
+      return NextResponse.json({ item: sbResult.item, message: "Thêm người dùng thành công" }, { status: 201 });
     }
 
     try {
@@ -146,10 +181,10 @@ export async function POST(request: Request) {
     }
 
     const newItem = addUserItem({
-      username: body.username.trim().toLowerCase(),
+      username,
       name: body.name.trim(),
-      email: body.email?.trim() || `${body.username}@k-sport.net`,
-      role: body.role || "btc",
+      email,
+      role,
       assignedTournament: body.assignedTournament?.trim() || undefined,
       status: body.status || "Hoạt động",
     });

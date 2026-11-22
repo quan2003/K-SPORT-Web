@@ -7,6 +7,7 @@ import {
 import type { AdminRole } from "@/lib/auth";
 import { getAdminApiBase } from "@/lib/admin-api";
 import { authenticateWithPassword } from "@/lib/user-store";
+import { authenticateSupabaseUser } from "@/lib/supabase-users";
 
 export async function POST(request: Request) {
   try {
@@ -63,6 +64,59 @@ export async function POST(request: Request) {
       } catch {
         // Fall through to local website authentication when the API is unavailable.
       }
+    }
+
+    // 2. Check persistent Supabase admin_accounts (supports BTC/Admin/Editor/User created or edited in /admin/users)
+    const sbAuth = await authenticateSupabaseUser(loginIdentifier, String(password));
+    if (sbAuth.suspended) {
+      return NextResponse.json(
+        { success: false, error: "Tài khoản này đang bị tạm khóa. Vui lòng liên hệ Quản trị viên." },
+        { status: 403 }
+      );
+    }
+    if (sbAuth.user) {
+      const sbUser = sbAuth.user;
+      const sessionToken = createUserSessionToken({
+        userId: sbUser.id,
+        name: sbUser.name,
+        email: sbUser.email,
+        role: sbUser.role,
+        authProvider: sbUser.authProvider,
+        tournamentId: sbUser.role === "btc" ? sbUser.assignedTournament || "giai-vo-dich-clb-karate-phu-tho-2026" : undefined,
+      });
+      const response = NextResponse.json({
+        success: true,
+        user: sbUser,
+        redirectUrl:
+          sbUser.role === "admin"
+            ? "/admin"
+            : sbUser.role === "btc"
+            ? "/admin/btc"
+            : sbUser.role === "editor"
+            ? "/admin/news"
+            : "/wkf-exam",
+      });
+      response.cookies.set({
+        name: USER_SESSION_COOKIE,
+        value: sessionToken,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+      if (sbUser.role === "admin" || sbUser.role === "btc" || sbUser.role === "editor") {
+        response.cookies.set({
+          name: ADMIN_TOKEN_COOKIE,
+          value: sessionToken,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 7 * 24 * 60 * 60,
+        });
+      }
+      return response;
     }
 
     const user = authenticateWithPassword(loginIdentifier, String(password));

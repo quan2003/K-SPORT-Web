@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { ADMIN_TOKEN_COOKIE, adminApiFetch } from "@/lib/admin-api";
 import { updateUserItem, deleteUserItem, setUserOverride, AdminUserItem } from "@/lib/admin-store";
 import { getPublicSession } from "@/lib/auth";
+import { deleteSupabaseUser, updateSupabaseUser } from "@/lib/supabase-users";
 
 const PROTECTED_EMAILS = new Set(["luuquan232003@gmail.com", "luuquankarate@gmail.com"]);
 
@@ -19,7 +20,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const decodedId = decodeURIComponent(id);
 
   try {
-    const updates = (await request.json()) as Partial<AdminUserItem>;
+    const updates = (await request.json()) as Partial<AdminUserItem> & { password?: string };
     const targetEmail = String(updates.email || decodedId).trim().toLowerCase();
 
     if (
@@ -30,6 +31,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         { message: "Không thể hạ quyền hoặc tạm khóa tài khoản Super Admin hệ thống." },
         { status: 403 },
       );
+    }
+
+    // Persist to Supabase admin_accounts so edits & password changes survive across Vercel serverless
+    const sbUpdated = await updateSupabaseUser(decodedId, updates);
+    if (sbUpdated) {
+      const { password: _pwd, ...safeUpdates } = updates;
+      updateUserItem(decodedId, safeUpdates);
+      setUserOverride(decodedId, safeUpdates);
+      return NextResponse.json({
+        item: sbUpdated,
+        message: updates.password ? "Đã cập nhật mật khẩu mới" : "Cập nhật tài khoản thành công",
+      });
     }
 
     // Try VPS admin API first if supported
@@ -87,6 +100,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     );
   }
 
+  const sbDeleted = await deleteSupabaseUser(decodedId);
+
   try {
     const remoteRes = await adminApiFetch(`/api/admin/users/${encodeURIComponent(decodedId)}`, {
       method: "DELETE",
@@ -96,7 +111,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     if (remoteRes.ok) {
       return NextResponse.json({ success: true, message: remotePayload.message || "Đã xóa người dùng" });
     }
-    if (remoteRes.status !== 404) {
+    if (remoteRes.status !== 404 && !sbDeleted) {
       return NextResponse.json(
         { message: remotePayload.message || `Máy chủ từ chối xóa (${remoteRes.status})` },
         { status: remoteRes.status },
@@ -106,7 +121,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     // VPS unreachable, fall through to local store
   }
 
-  const deleted = deleteUserItem(decodedId);
+  const deleted = deleteUserItem(decodedId) || sbDeleted;
   if (!deleted) {
     return NextResponse.json(
       { message: "Không tìm thấy người dùng để xóa (hoặc tài khoản được bảo vệ)." },
