@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         email: sbUser.email,
         role: sbUser.role,
         authProvider: sbUser.authProvider,
-        tournamentId: sbUser.role === "btc" ? sbUser.assignedTournament || "giai-vo-dich-clb-karate-phu-tho-2026" : undefined,
+        tournamentId: sbUser.role === "btc" ? sbUser.assignedTournament : undefined,
       });
       const response = NextResponse.json({
         success: true,
@@ -141,7 +141,7 @@ export async function POST(request: Request) {
       phone: user.phone,
       gender: user.gender,
       dateOfBirth: user.dateOfBirth,
-      tournamentId: user.role === "btc" ? "giai-vo-dich-clb-karate-phu-tho-2026" : undefined,
+      tournamentId: undefined,
     });
 
     const response = NextResponse.json({

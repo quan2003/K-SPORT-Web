@@ -6,6 +6,21 @@ import type { AdminUserItem, EventItem } from "@/lib/admin-store";
 type RoleFilter = "all" | "admin" | "btc" | "editor" | "user";
 type ViewTab = "list" | "matrix";
 
+function formatLastActive(value: string): string {
+  if (!value) return "—";
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return value;
+  return new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(dt);
+}
+
 export function AdminUsersManager() {
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -280,7 +295,7 @@ export function AdminUsersManager() {
           <div className="user-kpi-body">
             <span className="user-kpi-label">Ban Tổ Chức Giải (Role BTC)</span>
             <strong className="user-kpi-number">{counts.btc}</strong>
-            <span className="user-kpi-desc">Điều hành Giải Phú Thọ 2026</span>
+            <span className="user-kpi-desc">Điều hành &amp; thống kê giải được gán</span>
           </div>
         </div>
 
@@ -486,7 +501,7 @@ export function AdminUsersManager() {
                                 : ""
                             }`}
                           />
-                          <span>{user.lastActive}</span>
+                          <span>{formatLastActive(user.lastActive)}</span>
                         </div>
                       </td>
 
