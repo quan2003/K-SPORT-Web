@@ -393,6 +393,25 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
                     <div className="progress-bar green" style={{ width: `${tabletPct}%` }} />
                   </div>
                 </div>
+                {data.analytics.deviceDetails?.length > 0 ? (
+                  <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {data.analytics.deviceDetails.map((d) => (
+                      <span
+                        key={d.label}
+                        style={{
+                          fontSize: "12px",
+                          padding: "3px 8px",
+                          borderRadius: "6px",
+                          background: "#f1f5f9",
+                          color: "#334155",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {d.label}: {count.format(d.count)}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             );
           })()}
