@@ -55,8 +55,8 @@ export function GoogleSignInButton({ className, label = "Tiếp tục với Goog
           },
         });
         target.current.replaceChildren();
-        const measured = Math.floor(target.current.parentElement?.getBoundingClientRect().width || 0);
-        const width = measured > 0 ? Math.min(360, Math.max(200, measured - 4)) : 320;
+        const parentWidth = Math.floor(target.current.parentElement?.getBoundingClientRect().width || 0);
+        const width = parentWidth > 0 ? Math.min(340, Math.max(220, parentWidth - 16)) : 320;
         window.google.accounts.id.renderButton(target.current, {
           theme: "outline",
           size: "large",

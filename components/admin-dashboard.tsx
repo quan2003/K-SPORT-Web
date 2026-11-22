@@ -23,12 +23,11 @@ export type AdminOverviewData = {
     requestsPending?: number | null;
     paidOrders?: number | null;
     syncedTournamentsCount?: number | null;
-    dailyRevenue?: { day: string; revenueVnd: number }[];
   };
   fetchedAt: string;
 };
 
-type ChartMode = "tatami" | "events" | "revenue";
+type ChartMode = "visitors" | "tatami" | "events";
 
 type ChartBar = {
   label: string;
@@ -45,8 +44,7 @@ function dedupeMatches(schedule: Match[], results: Match[]): Match[] {
 }
 
 export function AdminDashboard({ data }: { data: AdminOverviewData }) {
-  const hasRevenue = Boolean(data.remote.connected && data.remote.dailyRevenue && data.remote.dailyRevenue.length > 0);
-  const [chartMode, setChartMode] = useState<ChartMode>("tatami");
+  const [chartMode, setChartMode] = useState<ChartMode>("visitors");
   const [hoveredBar, setHoveredBar] = useState<ChartBar | null>(null);
 
   const count = useMemo(() => new Intl.NumberFormat("vi-VN"), []);
@@ -98,17 +96,17 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
     });
   }, [data.events, allMatches]);
 
-  const revenueBars: ChartBar[] = useMemo(() => {
-    if (!data.remote.dailyRevenue) return [];
-    return data.remote.dailyRevenue.map((item) => ({
-      label: item.day,
-      primary: item.revenueVnd,
-      secondary: 0,
-      highlight: item.revenueVnd > 0,
+  const visitorBars: ChartBar[] = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    return data.analytics.monthly.map((m) => ({
+      label: m.label,
+      primary: m.views,
+      secondary: m.users,
+      highlight: m.monthIndex === currentMonth && m.views > 0,
     }));
-  }, [data.remote.dailyRevenue]);
+  }, [data.analytics.monthly]);
 
-  const activeBars = chartMode === "revenue" ? revenueBars : chartMode === "events" ? eventBars : tatamiBars;
+  const activeBars = chartMode === "visitors" ? visitorBars : chartMode === "events" ? eventBars : tatamiBars;
   const maxBarValue = Math.max(...activeBars.map((b) => b.primary), 1);
 
   const totalMatches = allMatches.length;
@@ -172,6 +170,18 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
             <button
               type="button"
               role="tab"
+              aria-selected={chartMode === "visitors"}
+              className={`filter-tab-btn ${chartMode === "visitors" ? "is-active" : ""}`}
+              onClick={() => {
+                setChartMode("visitors");
+                setHoveredBar(null);
+              }}
+            >
+              Người dùng (12 tháng)
+            </button>
+            <button
+              type="button"
+              role="tab"
               aria-selected={chartMode === "tatami"}
               className={`filter-tab-btn ${chartMode === "tatami" ? "is-active" : ""}`}
               onClick={() => {
@@ -193,20 +203,6 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
             >
               Theo Giải đấu
             </button>
-            {hasRevenue ? (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={chartMode === "revenue"}
-                className={`filter-tab-btn ${chartMode === "revenue" ? "is-active" : ""}`}
-                onClick={() => {
-                  setChartMode("revenue");
-                  setHoveredBar(null);
-                }}
-              >
-                Doanh thu 14 ngày (VPS)
-              </button>
-            ) : null}
           </div>
         </div>
       </div>
@@ -267,25 +263,29 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
         <div className="chart-header-v3">
           <div>
             <h3>
-              {chartMode === "tatami"
-                ? "Phân bổ số trận đấu theo Thảm (Tatami)"
-                : chartMode === "events"
-                  ? "Quy mô trận đấu / nội dung theo Giải đấu"
-                  : "Doanh thu License 14 ngày gần nhất (VNĐ)"}
+              {chartMode === "visitors"
+                ? `Biểu đồ lưu lượng người dùng Năm ${data.analytics.year} (12 Tháng)`
+                : chartMode === "tatami"
+                  ? "Phân bổ số trận đấu theo Thảm (Tatami)"
+                  : "Quy mô trận đấu / nội dung theo Giải đấu"}
             </h3>
             <p>
-              {activeBars.length > 0
-                ? "Rê chuột vào từng cột để xem số liệu chính xác từ hệ thống."
-                : "Chưa có dữ liệu trận đấu hoặc giải đấu nào từ máy chủ."}
+              {chartMode === "visitors"
+                ? "Số liệu thực tế ghi nhận lượt xem trang và người dùng duy nhất theo từng tháng."
+                : activeBars.length > 0
+                  ? "Rê chuột vào từng cột để xem số liệu chính xác từ hệ thống."
+                  : "Chưa có dữ liệu trận đấu hoặc giải đấu nào từ máy chủ."}
             </p>
           </div>
           {hoveredBar && (
             <div className="chart-tooltip-badge">
               <strong>{hoveredBar.label}:</strong> {count.format(hoveredBar.primary)}{" "}
-              {chartMode === "revenue" ? "VNĐ" : "trận / nội dung"}
-              {chartMode !== "revenue" && hoveredBar.secondary > 0
-                ? ` (${count.format(hoveredBar.secondary)} đã hoàn thành)`
-                : ""}
+              {chartMode === "visitors" ? "lượt xem" : "trận / nội dung"}
+              {chartMode === "visitors"
+                ? ` · ${count.format(hoveredBar.secondary)} người dùng duy nhất`
+                : hoveredBar.secondary > 0
+                  ? ` (${count.format(hoveredBar.secondary)} đã hoàn thành)`
+                  : ""}
             </div>
           )}
         </div>

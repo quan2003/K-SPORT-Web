@@ -38,10 +38,6 @@ async function fetchRemoteStats(): Promise<AdminOverviewData["remote"]> {
       statsObj.payments && typeof statsObj.payments === "object" ? statsObj.payments : {}
     ) as Record<string, unknown>;
 
-    const dailyRevenueRaw = Array.isArray(statsObj.dailyRevenue)
-      ? (statsObj.dailyRevenue as Record<string, unknown>[])
-      : [];
-
     let syncedTournamentsCount: number | null = null;
     if (tournamentsRes.ok) {
       const tPayload = (await tournamentsRes.json().catch(() => ({}))) as Record<string, unknown>;
@@ -60,10 +56,6 @@ async function fetchRemoteStats(): Promise<AdminOverviewData["remote"]> {
       requestsPending: typeof statsObj.requestsPending === "number" ? statsObj.requestsPending : null,
       paidOrders: typeof payments.paid_orders === "number" ? payments.paid_orders : null,
       syncedTournamentsCount,
-      dailyRevenue: dailyRevenueRaw.map((item) => ({
-        day: String(item.day || ""),
-        revenueVnd: Number(item.revenue_vnd || 0),
-      })),
     };
   } catch {
     return { connected: false };
