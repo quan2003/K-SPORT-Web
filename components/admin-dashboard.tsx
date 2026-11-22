@@ -47,6 +47,7 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
   const [chartMode, setChartMode] = useState<ChartMode>("visitors");
   const [selectedYear, setSelectedYear] = useState<number>(data.analytics.year);
   const [hoveredBar, setHoveredBar] = useState<ChartBar | null>(null);
+  const [hoveredUserBar, setHoveredUserBar] = useState<ChartBar | null>(null);
 
   const count = useMemo(() => new Intl.NumberFormat("vi-VN"), []);
   const allMatches = useMemo(() => dedupeMatches(data.schedule, data.results), [data.schedule, data.results]);
@@ -110,6 +111,7 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
 
   const activeBars = chartMode === "visitors" ? visitorBars : chartMode === "events" ? eventBars : tatamiBars;
   const maxBarValue = Math.max(...activeBars.map((b) => b.primary), 1);
+  const maxUniqueUsers = Math.max(...visitorBars.map((b) => b.secondary), 1);
 
   const totalMatches = allMatches.length;
 
@@ -280,69 +282,150 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
         </div>
       </div>
 
-      {/* 4. REAL DATA BAR CHART */}
-      <div className="chart-card-v3">
-        <div className="chart-header-v3">
-          <div>
-            <h3>
-              {chartMode === "visitors"
-                ? `Biểu đồ lưu lượng người dùng Năm ${selectedYear} (12 Tháng)`
-                : chartMode === "tatami"
+      {/* 4. REAL DATA BAR CHARTS */}
+      {chartMode === "visitors" ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))",
+            gap: "18px",
+          }}
+        >
+          {/* Chart 1: Pageviews */}
+          <div className="chart-card-v3">
+            <div className="chart-header-v3">
+              <div>
+                <h3>Lượt Xem Trang (Pageviews) Năm {selectedYear}</h3>
+                <p>Tổng số lượt xem các trang công khai theo từng tháng.</p>
+              </div>
+              {hoveredBar && (
+                <div className="chart-tooltip-badge">
+                  <strong>{hoveredBar.label}:</strong> {count.format(hoveredBar.primary)} lượt xem
+                </div>
+              )}
+            </div>
+            <div className="chart-visual-container">
+              <div className="chart-bars-wrap">
+                {visitorBars.map((bar) => {
+                  const heightPercent = bar.primary > 0 ? Math.max((bar.primary / maxBarValue) * 100, 8) : 6;
+                  return (
+                    <div
+                      key={`pv-${bar.label}`}
+                      className={`chart-bar-col ${bar.highlight ? "is-highlighted" : ""}`}
+                      onMouseEnter={() => setHoveredBar(bar)}
+                      onMouseLeave={() => setHoveredBar(null)}
+                    >
+                      <div className="chart-bar-fill-wrap">
+                        <div className="chart-bar-fill" style={{ height: `${heightPercent}%` }}>
+                          <span className="chart-bar-tooltip-top">{count.format(bar.primary)}</span>
+                        </div>
+                      </div>
+                      <span className="chart-bar-x-label">{bar.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Chart 2: Unique Visitors */}
+          <div className="chart-card-v3">
+            <div className="chart-header-v3">
+              <div>
+                <h3>Người Dùng Duy Nhất (Unique Visitors) Năm {selectedYear}</h3>
+                <p>Số lượng thiết bị / người dùng thực tế truy cập mỗi tháng.</p>
+              </div>
+              {hoveredUserBar && (
+                <div className="chart-tooltip-badge">
+                  <strong>{hoveredUserBar.label}:</strong> {count.format(hoveredUserBar.secondary)} người dùng
+                </div>
+              )}
+            </div>
+            <div className="chart-visual-container">
+              <div className="chart-bars-wrap">
+                {visitorBars.map((bar) => {
+                  const heightPercent = bar.secondary > 0 ? Math.max((bar.secondary / maxUniqueUsers) * 100, 8) : 6;
+                  return (
+                    <div
+                      key={`uv-${bar.label}`}
+                      className={`chart-bar-col ${bar.secondary > 0 && bar.highlight ? "is-highlighted" : ""}`}
+                      onMouseEnter={() => setHoveredUserBar(bar)}
+                      onMouseLeave={() => setHoveredUserBar(null)}
+                    >
+                      <div className="chart-bar-fill-wrap">
+                        <div
+                          className="chart-bar-fill"
+                          style={{
+                            height: `${heightPercent}%`,
+                            ...(bar.secondary > 0 ? { background: "#1d4ed8" } : {}),
+                          }}
+                        >
+                          <span className="chart-bar-tooltip-top">{count.format(bar.secondary)}</span>
+                        </div>
+                      </div>
+                      <span className="chart-bar-x-label">{bar.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="chart-card-v3">
+          <div className="chart-header-v3">
+            <div>
+              <h3>
+                {chartMode === "tatami"
                   ? "Phân bổ số trận đấu theo Thảm (Tatami)"
                   : "Quy mô trận đấu / nội dung theo Giải đấu"}
-            </h3>
-            <p>
-              {chartMode === "visitors"
-                ? "Số liệu thực tế ghi nhận lượt xem trang và người dùng duy nhất theo từng tháng."
-                : activeBars.length > 0
+              </h3>
+              <p>
+                {activeBars.length > 0
                   ? "Rê chuột vào từng cột để xem số liệu chính xác từ hệ thống."
                   : "Chưa có dữ liệu trận đấu hoặc giải đấu nào từ máy chủ."}
-            </p>
+              </p>
+            </div>
+            {hoveredBar && (
+              <div className="chart-tooltip-badge">
+                <strong>{hoveredBar.label}:</strong> {count.format(hoveredBar.primary)} trận / nội dung
+                {hoveredBar.secondary > 0 ? ` (${count.format(hoveredBar.secondary)} đã hoàn thành)` : ""}
+              </div>
+            )}
           </div>
-          {hoveredBar && (
-            <div className="chart-tooltip-badge">
-              <strong>{hoveredBar.label}:</strong> {count.format(hoveredBar.primary)}{" "}
-              {chartMode === "visitors" ? "lượt xem" : "trận / nội dung"}
-              {chartMode === "visitors"
-                ? ` · ${count.format(hoveredBar.secondary)} người dùng duy nhất`
-                : hoveredBar.secondary > 0
-                  ? ` (${count.format(hoveredBar.secondary)} đã hoàn thành)`
-                  : ""}
+
+          {activeBars.length === 0 ? (
+            <div className="chart-visual-container" style={{ display: "grid", placeItems: "center", minHeight: 180 }}>
+              <p style={{ color: "var(--muted)", margin: 0 }}>
+                Chưa có dữ liệu từ API cho chế độ hiển thị này.
+              </p>
+            </div>
+          ) : (
+            <div className="chart-visual-container">
+              <div className="chart-bars-wrap">
+                {activeBars.map((bar) => {
+                  const heightPercent = Math.max((bar.primary / maxBarValue) * 100, 8);
+                  return (
+                    <div
+                      key={bar.label}
+                      className={`chart-bar-col ${bar.highlight ? "is-highlighted" : ""}`}
+                      onMouseEnter={() => setHoveredBar(bar)}
+                      onMouseLeave={() => setHoveredBar(null)}
+                    >
+                      <div className="chart-bar-fill-wrap">
+                        <div className="chart-bar-fill" style={{ height: `${heightPercent}%` }}>
+                          <span className="chart-bar-tooltip-top">{count.format(bar.primary)}</span>
+                        </div>
+                      </div>
+                      <span className="chart-bar-x-label">{bar.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
-
-        {activeBars.length === 0 ? (
-          <div className="chart-visual-container" style={{ display: "grid", placeItems: "center", minHeight: 180 }}>
-            <p style={{ color: "var(--muted)", margin: 0 }}>
-              Chưa có dữ liệu từ API cho chế độ hiển thị này.
-            </p>
-          </div>
-        ) : (
-          <div className="chart-visual-container">
-            <div className="chart-bars-wrap">
-              {activeBars.map((bar) => {
-                const heightPercent = Math.max((bar.primary / maxBarValue) * 100, 8);
-                return (
-                  <div
-                    key={bar.label}
-                    className={`chart-bar-col ${bar.highlight ? "is-highlighted" : ""}`}
-                    onMouseEnter={() => setHoveredBar(bar)}
-                    onMouseLeave={() => setHoveredBar(null)}
-                  >
-                    <div className="chart-bar-fill-wrap">
-                      <div className="chart-bar-fill" style={{ height: `${heightPercent}%` }}>
-                        <span className="chart-bar-tooltip-top">{count.format(bar.primary)}</span>
-                      </div>
-                    </div>
-                    <span className="chart-bar-x-label">{bar.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* 5. MULTI-COLUMN REAL INSIGHTS */}
       <div className="insights-grid-v3">
