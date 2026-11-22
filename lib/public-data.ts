@@ -410,17 +410,39 @@ async function getRecord<T>(apiPath: string): Promise<T | null> {
   return null;
 }
 
+function resolveBannerImageForEvent(event: TournamentEvent, banners: PublicBanner[]): string | undefined {
+  if (event.image) return event.image;
+  const eventNameNorm = event.name.trim().toLocaleLowerCase("vi");
+  const slugPath = `/events/${event.slug}`;
+  const matched = banners.find((b) => {
+    const hasHref =
+      (b.primaryHref && b.primaryHref.includes(slugPath)) ||
+      (b.secondaryHref && b.secondaryHref.includes(slugPath));
+    const hasTitle = b.title?.trim().toLocaleLowerCase("vi") === eventNameNorm;
+    return (hasHref || hasTitle) && Boolean(b.image);
+  });
+  return matched?.image ? toAbsolutePublicUrl(matched.image) || matched.image : undefined;
+}
+
 export const getEvents = async () => {
-  const list = (await getCollection<TournamentEvent>("/events")).map((event) => normalizeEvent(event));
-  return list;
+  const [rawEvents, banners] = await Promise.all([
+    getCollection<TournamentEvent>("/events"),
+    getBanners().catch(() => [] as PublicBanner[]),
+  ]);
+  return rawEvents.map((event) => {
+    const normalized = normalizeEvent(event);
+    const matchedImage = resolveBannerImageForEvent(normalized, banners);
+    return matchedImage ? { ...normalized, image: matchedImage } : normalized;
+  });
 };
 
 export const getEvent = async (slug: string) => {
   const events = await getEvents();
   const matched = events.find((event) => event.slug === slug);
   if (matched) return matched;
-  const event = await getRecord<TournamentEvent>(`/events/${encodeURIComponent(slug)}`);
-  if (event) return normalizeEvent(event);
+  const [event, banners] = await Promise.all([getRecord<TournamentEvent>(`/events/${encodeURIComponent(slug)}`), getBanners().catch(() => [] as PublicBanner[])]);
+  if (event) { const normalized = normalizeEvent(event); const matchedImage = resolveBannerImageForEvent(normalized, banners); return matchedImage ? { ...normalized, image: matchedImage } : normalized; }
+
   return null;
 };
 

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ADMIN_TOKEN_COOKIE, adminApiFetch } from "@/lib/admin-api";
-import { getEventsStore, addEventItem, EventItem } from "@/lib/admin-store";
+import { getEventsStore, addEventItem, getEventTierOverrides, EventItem } from "@/lib/admin-store";
 import { getAthletes, getEvents, getSchedule, getResults } from "@/lib/public-data";
+import { suggestTournamentTier } from "@/lib/ranking-rules";
 import { revalidatePath } from "next/cache";
 
 export async function GET() {
@@ -77,7 +78,17 @@ export async function GET() {
     (localItem) => !mappedPublic.some((p) => p.id === localItem.id || p.name === localItem.name),
   );
 
-  return NextResponse.json({ items: [...mappedPublic, ...remoteEvents, ...localCreated] });
+  const tierOverrides = getEventTierOverrides();
+  const merged = [...mappedPublic, ...remoteEvents, ...localCreated].map((ev) => {
+    const manualTier = tierOverrides[ev.id] || (ev.tierSource === "manual" ? ev.tier : undefined);
+    return {
+      ...ev,
+      tier: manualTier || suggestTournamentTier(ev.name),
+      tierSource: manualTier ? ("manual" as const) : ("auto" as const),
+    };
+  });
+
+  return NextResponse.json({ items: merged });
 }
 
 export async function POST(request: Request) {

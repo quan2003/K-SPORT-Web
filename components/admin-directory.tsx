@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, FormEvent } from "react";
 import type { EventItem, AdminUserItem } from "@/lib/admin-store";
+import { TOURNAMENT_TIER_META, type TournamentTier } from "@/lib/ranking-rules";
 
 type DirectoryKind = "events" | "users";
 
@@ -73,6 +74,24 @@ export function AdminDirectory({ kind }: { kind: DirectoryKind }) {
   function notify(type: "success" | "error", text: string) {
     setToast({ type, text });
     setTimeout(() => setToast(null), 4000);
+  }
+
+  async function handleTierChange(eventId: string, newTier: TournamentTier) {
+    setEvents((prev) =>
+      prev.map((ev) => (ev.id === eventId ? { ...ev, tier: newTier, tierSource: "manual" } : ev)),
+    );
+    try {
+      const res = await fetch(`/api/admin/events/${encodeURIComponent(eventId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: newTier }),
+      });
+      if (!res.ok) throw new Error("Không thể cập nhật cấp giải");
+      notify("success", `Đã cập nhật cấp giải: ${TOURNAMENT_TIER_META[newTier].label}`);
+    } catch (err) {
+      notify("error", err instanceof Error ? err.message : "Lỗi cập nhật cấp giải");
+      fetchData();
+    }
   }
 
   async function handleCreateEvent(e: FormEvent) {
@@ -214,16 +233,17 @@ export function AdminDirectory({ kind }: { kind: DirectoryKind }) {
               <tr>
                 <th scope="col">Giải đấu</th>
                 <th scope="col">Thời gian &amp; Địa điểm</th>
+                <th scope="col">Cấp giải (Hệ số WKF)</th>
                 <th scope="col" className="num">VĐV Đăng ký</th>
                 <th scope="col">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} style={{ textAlign: "center", padding: "24px" }}>Đang tải danh sách giải đấu...</td></tr>
+                <tr><td colSpan={5} style={{ textAlign: "center", padding: "24px" }}>Đang tải danh sách giải đấu...</td></tr>
               ) : events.length === 0 ? (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center", padding: "32px" }}>
+                  <td colSpan={5} style={{ textAlign: "center", padding: "32px" }}>
                     Chưa có giải đấu thật trong hệ thống.
                   </td>
                 </tr>
@@ -236,6 +256,33 @@ export function AdminDirectory({ kind }: { kind: DirectoryKind }) {
                   <td>
                     <span>{row.date}</span>
                     <small>{row.location}</small>
+                  </td>
+                  <td>
+                    <div style={{ display: "grid", gap: "4px", minWidth: "210px" }}>
+                      <select
+                        aria-label={`Cấp giải của ${row.name}`}
+                        value={row.tier || "club"}
+                        onChange={(e) => handleTierChange(row.id, e.target.value as TournamentTier)}
+                        style={{
+                          minHeight: "36px",
+                          padding: "4px 8px",
+                          borderRadius: "6px",
+                          border: "1px solid #cbd5e1",
+                          background: "#ffffff",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {(Object.keys(TOURNAMENT_TIER_META) as TournamentTier[]).map((tierKey) => (
+                          <option key={tierKey} value={tierKey}>
+                            {TOURNAMENT_TIER_META[tierKey].label}
+                          </option>
+                        ))}
+                      </select>
+                      <small style={{ color: row.tierSource === "manual" ? "#15803d" : "#64748b", fontSize: "11px" }}>
+                        {row.tierSource === "manual" ? "✓ Admin đã chỉnh" : "Tự gợi ý theo tên giải"}
+                      </small>
+                    </div>
                   </td>
                   <td className="num">
                     <strong>{row.registrations}</strong> VĐV

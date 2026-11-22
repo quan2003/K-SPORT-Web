@@ -19371,3 +19371,26 @@ button.wkf-auth-google-quick-btn-real svg {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* High-contrast solid status tags when overlaid on event card images */
+.ks-event-card-badges .ks-status-tag.is-upcoming {
+  background: #ffffff;
+  color: #073b7a;
+  border-color: #cbd5e1;
+}
+
+.ks-event-card-badges .ks-status-tag.is-live {
+  background: #d50b27;
+  color: #ffffff;
+  border-color: #d50b27;
+}
+
+.ks-event-card-badges .ks-status-tag.is-live .ks-pulse-dot {
+  background: #ffffff;
+}
+
+.ks-event-card-badges .ks-status-tag.is-ended {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}

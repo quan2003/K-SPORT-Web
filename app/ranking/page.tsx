@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { InternalLayout } from "@/components/portal-ui";
 import { RankingView } from "@/components/ranking/ranking-view";
 import { getRanking, getAthletes } from "@/lib/public-data";
+import { getEventTierOverrides } from "@/lib/admin-store";
+import { calculateWkfPoints, suggestTournamentTier } from "@/lib/ranking-rules";
 
 export const metadata: Metadata = {
   title: "Bảng Xếp Hạng Vận Động Viên Karate Toàn Quốc | K-SPORT",
@@ -23,7 +25,29 @@ export default async function RankingPage({
   const topParam = typeof params.top === "string" ? Number.parseInt(params.top, 10) : 10;
   const top = [10, 32, 64, 9999].includes(topParam) ? topParam : 10;
 
-  const [ranking, athletes] = await Promise.all([getRanking(), getAthletes()]);
+  const [rawRanking, athletes] = await Promise.all([getRanking(), getAthletes()]);
+  const tierOverrides = getEventTierOverrides();
+
+  const ranking = rawRanking.map((entry) => {
+    const manualTier = tierOverrides[entry.eventSlug];
+    const resolvedTier = manualTier || suggestTournamentTier(entry.eventName);
+    const hasMedals =
+      (entry.medals?.gold ?? 0) > 0 ||
+      (entry.medals?.silver ?? 0) > 0 ||
+      (entry.medals?.bronze ?? 0) > 0;
+    const shouldComputePoints = (entry.points === 0 && hasMedals) || Boolean(manualTier && hasMedals);
+    return shouldComputePoints
+      ? {
+          ...entry,
+          points: calculateWkfPoints({
+            gold: entry.medals?.gold,
+            silver: entry.medals?.silver,
+            bronze: entry.medals?.bronze,
+            tier: resolvedTier,
+          }),
+        }
+      : entry;
+  });
 
   return (
     <InternalLayout>
@@ -38,6 +62,17 @@ export default async function RankingPage({
             <p className="ks-events-hero-sub">
               Tra cứu thứ hạng, số điểm tích lũy và phong độ thi đấu của các vận động viên Kumite và Kata trên toàn quốc. Cập nhật liên tục từ kết quả các giải đấu chính thức.
             </p>
+            <div style={{ marginTop: "1rem" }}>
+              <a
+                href="/documents/ksport_ranking_rules_2026.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="button red"
+                style={{ minHeight: "42px", display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                📄 Xem Quy tắc tính điểm K-SPORT 2026 (PDF)
+              </a>
+            </div>
           </div>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import { mockBanners, mockNews } from "@/lib/mock-data";
+import type { TournamentTier } from "@/lib/ranking-rules";
 
 export type SponsorTier = "diamond" | "gold" | "silver" | "equipment" | "beverage" | "media";
 
@@ -29,6 +30,8 @@ export type EventItem = {
   organizer?: string;
   tatamiCount?: number;
   categoriesCount?: number;
+  tier?: TournamentTier;
+  tierSource?: "auto" | "manual";
 };
 
 export type AdminUserItem = {
@@ -225,6 +228,20 @@ declare global {
   var __ksport_users: AdminUserItem[] | undefined;
   var __ksport_banners: typeof mockBanners | undefined;
   var __ksport_news: typeof mockNews | undefined;
+  var __ksport_event_tiers: Record<string, TournamentTier> | undefined;
+}
+
+export function getEventTierOverrides(): Record<string, TournamentTier> {
+  if (!global.__ksport_event_tiers) {
+    global.__ksport_event_tiers = {};
+  }
+  return global.__ksport_event_tiers;
+}
+
+export function setEventTierOverride(eventId: string, tier: TournamentTier) {
+  const store = getEventTierOverrides();
+  store[eventId] = tier;
+  updateEventItem(eventId, { tier, tierSource: "manual" });
 }
 
 export function getSponsorsStore(): SponsorItem[] {
