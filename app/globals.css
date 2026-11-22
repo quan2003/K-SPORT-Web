@@ -11807,18 +11807,25 @@ a:hover { opacity: .78; }
 
 .btc-header-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
   flex-shrink: 0;
 }
 
 .btc-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 40px;
   padding: 0 16px;
   border-radius: 6px;
-  font: 600 13px/1 "Barlow", sans-serif;
+  font: 600 13px/1.2 "Barlow", sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   border: 0;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .btc-action-btn.primary {

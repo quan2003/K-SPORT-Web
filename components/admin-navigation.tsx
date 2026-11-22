@@ -8,7 +8,6 @@ export function AdminNavigation({ role = "admin" }: { role?: AdminRole | string 
   const pathname = usePathname();
   const navItems = role === "btc" ? [
     { label: "Thống kê BTC", href: "/admin/btc", icon: "🏆", badge: "Ưu tiên" },
-    { label: "Thông tin giải đấu", href: "/admin/events", icon: "🥋" },
   ] : [
     { label: "Tổng quan", href: "/admin", icon: "📊" },
     { label: "Thống kê BTC", href: "/admin/btc", icon: "🏆", badge: "Role BTC" },

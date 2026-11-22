@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AdminNavigation } from "@/components/admin-navigation";
 import { LicenseAdminNavigation } from "@/components/license-admin-navigation";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
@@ -17,8 +17,16 @@ export function AdminShellClient({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const isBtc = session?.role === "btc";
+  const isBtcBlockedPath = isBtc && !pathname.startsWith("/admin/btc");
   const isLicensePortal = ["/admin/licenses", "/admin/tournaments", "/admin/payment-orders", "/admin/payment-config", "/admin/requests"].some((path) => pathname.startsWith(path));
+
+  useEffect(() => {
+    if (isBtcBlockedPath) {
+      router.replace("/admin/btc");
+    }
+  }, [isBtcBlockedPath, router]);
 
   // Prevent background body scroll when mobile drawer is open
   useEffect(() => {
@@ -64,7 +72,7 @@ export function AdminShellClient({
           )}
         </button>
 
-        <Link className="admin-mobile-brand" href="/admin" translate="no">
+        <Link className="admin-mobile-brand" href={isBtc ? "/admin/btc" : "/admin"} translate="no">
           <span className="brand-dot" aria-hidden="true" />
           <span className="brand-red">K-</span>SPORT
         </Link>
@@ -159,7 +167,13 @@ export function AdminShellClient({
         </header>
 
         <main id="main-content" className="admin-main-v2">
-          {children}
+          {isBtcBlockedPath ? (
+            <div style={{ padding: "32px", textAlign: "center", color: "#475569" }}>
+              Đang chuyển hướng về Bảng Điều Hành Ban Tổ Chức...
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </section>
     </div>

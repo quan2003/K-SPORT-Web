@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { AdminDashboard, type AdminOverviewData } from "@/components/admin-dashboard";
+import { getPublicSession } from "@/lib/auth";
 import { adminApiFetch } from "@/lib/admin-api";
 import { getSponsorsStore } from "@/lib/admin-store";
 import {
@@ -63,6 +65,9 @@ async function fetchRemoteStats(): Promise<AdminOverviewData["remote"]> {
 }
 
 export default async function AdminPage() {
+  const session = await getPublicSession();
+  if (session?.role === "btc") redirect("/admin/btc");
+
   const [eventsRaw, schedule, results, athletes, clubs, news, banners, remote] = await Promise.all([
     getEvents(),
     getSchedule(),
