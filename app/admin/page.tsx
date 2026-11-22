@@ -77,7 +77,7 @@ export default async function AdminPage() {
   const events = sortEvents(eventsRaw);
   const wkfQuestionsCount = getQuestionBank().questions.length;
   const activeSponsorsCount = getSponsorsStore().filter((s) => s.isActive).length;
-  const analytics = getSiteAnalyticsSnapshot();
+  const analytics = await getSiteAnalyticsSnapshot();
 
   const data: AdminOverviewData = {
     events,

@@ -16,6 +16,7 @@ export type SiteAnalyticsSnapshot = {
   availableYears: number[];
   year: number;
   startedAt: string;
+  persistent?: boolean;
 };
 
 type YearBucket = {
@@ -32,6 +33,22 @@ type AnalyticsState = {
   startedAt: string;
 };
 
+const DEFAULT_SUPABASE_URL = "https://qjipcijesxlwnqdrsljl.supabase.co";
+const DEFAULT_SUPABASE_KEY = "sb_publishable_xbGNC6A3fRVrtr7YEmV8tA_EwyB2t39";
+
+function getSupabaseConfig() {
+  const url = (
+    process.env.REGISTRATION_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_REGISTRATION_SUPABASE_URL ||
+    DEFAULT_SUPABASE_URL
+  ).replace(/\/$/, "");
+  const key =
+    process.env.REGISTRATION_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_REGISTRATION_SUPABASE_ANON_KEY ||
+    DEFAULT_SUPABASE_KEY;
+  return { url, key };
+}
+
 const globalForAnalytics = globalThis as typeof globalThis & {
   __ksport_site_analytics?: AnalyticsState;
 };
@@ -43,8 +60,8 @@ function createYearBucket(): YearBucket {
   };
 }
 
-function getCurrentVietnamYearMonth(): { year: number; monthIndex: number } {
-  const vn = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+function getCurrentVietnamYearMonth(date = new Date()): { year: number; monthIndex: number } {
+  const vn = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
   return { year: vn.getFullYear(), monthIndex: vn.getMonth() };
 }
 
@@ -69,32 +86,32 @@ export function detectDeviceKind(userAgent: string): DeviceKind {
   return "desktop";
 }
 
-export function recordSiteVisit(input: {
+export async function recordSiteVisit(input: {
   path: string;
   sessionId: string;
   userAgent: string;
 }) {
-  const state = getState();
   const cleanPath = (input.path || "/").split("?")[0].slice(0, 120) || "/";
   if (cleanPath.startsWith("/admin") || cleanPath.startsWith("/api")) return;
 
+  const device = detectDeviceKind(input.userAgent);
   const { year, monthIndex } = getCurrentVietnamYearMonth();
+
+  // Always update local in-memory state as immediate fallback
+  const state = getState();
   let bucket = state.byYear.get(year);
   if (!bucket) {
     bucket = createYearBucket();
     state.byYear.set(year, bucket);
   }
-
   state.pageviews += 1;
   bucket.monthlyViews[monthIndex] = (bucket.monthlyViews[monthIndex] || 0) + 1;
   state.pageCounts.set(cleanPath, (state.pageCounts.get(cleanPath) || 0) + 1);
-
   if (input.sessionId) {
     if (!state.sessions.has(input.sessionId)) {
       if (state.sessions.size >= 50_000) state.sessions.clear();
       state.sessions.add(input.sessionId);
-      const kind = detectDeviceKind(input.userAgent);
-      state.devices[kind] += 1;
+      state.devices[device] += 1;
     }
     const monthSet = bucket.monthlySessions[monthIndex];
     if (monthSet && !monthSet.has(input.sessionId)) {
@@ -102,12 +119,124 @@ export function recordSiteVisit(input: {
       monthSet.add(input.sessionId);
     }
   }
+
+  // Persist to Supabase `site_visits` if table exists
+  try {
+    const { url, key } = getSupabaseConfig();
+    await fetch(`${url}/rest/v1/site_visits`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        path: cleanPath,
+        session_id: input.sessionId || "anon",
+        device,
+      }),
+      signal: AbortSignal.timeout(3_000),
+    });
+  } catch {
+    // Ignore if Supabase table is not created yet
+  }
 }
 
-export function getSiteAnalyticsSnapshot(): SiteAnalyticsSnapshot {
-  const state = getState();
+type SupabaseVisitRow = {
+  path: string;
+  session_id: string;
+  device: DeviceKind;
+  created_at: string;
+};
+
+export async function getSiteAnalyticsSnapshot(): Promise<SiteAnalyticsSnapshot> {
   const { year: currentYear } = getCurrentVietnamYearMonth();
 
+  // Try persistent Supabase `site_visits` first
+  try {
+    const { url, key } = getSupabaseConfig();
+    const res = await fetch(
+      `${url}/rest/v1/site_visits?select=path,session_id,device,created_at&order=created_at.desc&limit=10000`,
+      {
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+        },
+        cache: "no-store",
+        signal: AbortSignal.timeout(4_000),
+      },
+    );
+
+    if (res.ok) {
+      const rows = (await res.json()) as SupabaseVisitRow[];
+      const sessions = new Set<string>();
+      const devices: Record<DeviceKind, number> = { mobile: 0, desktop: 0, tablet: 0 };
+      const pageCounts = new Map<string, number>();
+      const byYear = new Map<number, YearBucket>();
+      byYear.set(currentYear, createYearBucket());
+
+      for (const r of rows) {
+        const dt = r.created_at ? new Date(r.created_at) : new Date();
+        const { year, monthIndex } = getCurrentVietnamYearMonth(
+          Number.isNaN(dt.getTime()) ? new Date() : dt,
+        );
+        let bucket = byYear.get(year);
+        if (!bucket) {
+          bucket = createYearBucket();
+          byYear.set(year, bucket);
+        }
+
+        bucket.monthlyViews[monthIndex] = (bucket.monthlyViews[monthIndex] || 0) + 1;
+        const p = r.path || "/";
+        pageCounts.set(p, (pageCounts.get(p) || 0) + 1);
+
+        const sid = r.session_id || "";
+        if (sid && sid !== "anon") {
+          if (!sessions.has(sid)) {
+            sessions.add(sid);
+            const dev: DeviceKind =
+              r.device === "mobile" || r.device === "tablet" ? r.device : "desktop";
+            devices[dev] += 1;
+          }
+          bucket.monthlySessions[monthIndex]?.add(sid);
+        }
+      }
+
+      const availableYears = [...byYear.keys()].sort((a, b) => b - a);
+      const monthlyByYear: Record<number, MonthlyTrafficPoint[]> = {};
+      for (const y of availableYears) {
+        const b = byYear.get(y)!;
+        monthlyByYear[y] = Array.from({ length: 12 }, (_, idx) => ({
+          monthIndex: idx,
+          label: `Thg ${idx + 1}`,
+          views: b.monthlyViews[idx] || 0,
+          users: b.monthlySessions[idx]?.size || 0,
+        }));
+      }
+
+      const topPages = [...pageCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([path, views]) => ({ path, views }));
+
+      return {
+        pageviews: rows.length,
+        uniqueVisitors: sessions.size,
+        devices,
+        topPages,
+        monthlyByYear,
+        availableYears,
+        year: currentYear,
+        startedAt: rows[rows.length - 1]?.created_at || new Date().toISOString(),
+        persistent: true,
+      };
+    }
+  } catch {
+    // Fallback to in-memory snapshot below
+  }
+
+  const state = getState();
   if (!state.byYear.has(currentYear)) {
     state.byYear.set(currentYear, createYearBucket());
   }
@@ -138,5 +267,6 @@ export function getSiteAnalyticsSnapshot(): SiteAnalyticsSnapshot {
     availableYears,
     year: currentYear,
     startedAt: state.startedAt,
+    persistent: false,
   };
 }
