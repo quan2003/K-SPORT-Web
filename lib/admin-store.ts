@@ -39,7 +39,7 @@ export type AdminUserItem = {
   username: string;
   name: string;
   email: string;
-  role: "admin" | "btc" | "editor";
+  role: "admin" | "btc" | "editor" | "user";
   assignedTournament?: string;
   lastActive: string;
   status: "Hoạt động" | "Tạm khóa";
@@ -229,6 +229,19 @@ declare global {
   var __ksport_banners: typeof mockBanners | undefined;
   var __ksport_news: typeof mockNews | undefined;
   var __ksport_event_tiers: Record<string, TournamentTier> | undefined;
+  var __ksport_user_overrides: Record<string, Partial<AdminUserItem>> | undefined;
+}
+
+export function getUserOverrides(): Record<string, Partial<AdminUserItem>> {
+  if (!global.__ksport_user_overrides) {
+    global.__ksport_user_overrides = {};
+  }
+  return global.__ksport_user_overrides;
+}
+
+export function setUserOverride(id: string, updates: Partial<AdminUserItem>) {
+  const store = getUserOverrides();
+  store[id] = { ...(store[id] || {}), ...updates };
 }
 
 export function getEventTierOverrides(): Record<string, TournamentTier> {

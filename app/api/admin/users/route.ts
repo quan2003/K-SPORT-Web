@@ -1,8 +1,31 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ADMIN_TOKEN_COOKIE, adminApiFetch } from "@/lib/admin-api";
-import { getUsersStore, addUserItem, AdminUserItem } from "@/lib/admin-store";
+import { getUsersStore, addUserItem, getUserOverrides, AdminUserItem } from "@/lib/admin-store";
 import { getPublicSession } from "@/lib/auth";
+import { listSafeUsers } from "@/lib/user-store";
+
+const SUPER_ADMIN_EMAILS = new Set(["luuquan232003@gmail.com", "luuquankarate@gmail.com"]);
+
+function mapRole(rawRoleValue: unknown, emailValue: string, nameValue: string): AdminUserItem["role"] {
+  const emailLower = emailValue.trim().toLowerCase();
+  const nameLower = nameValue.trim().toLowerCase();
+  const rawRole = String(rawRoleValue || "").trim().toLowerCase();
+
+  if (
+    rawRole === "admin" ||
+    rawRole === "superadmin" ||
+    rawRole === "super_admin" ||
+    SUPER_ADMIN_EMAILS.has(emailLower) ||
+    nameLower.includes("super admin")
+  ) {
+    return "admin";
+  }
+  if (rawRole === "btc") return "btc";
+  if (rawRole === "editor") return "editor";
+  if (["user", "viewer", "learner", "referee"].includes(rawRole)) return "user";
+  return "editor";
+}
 
 export async function GET() {
   const token = (await cookies()).get(ADMIN_TOKEN_COOKIE)?.value;
@@ -13,7 +36,11 @@ export async function GET() {
     return NextResponse.json({ message: "Khu vực giới hạn cho Quản trị viên" }, { status: 403 });
   }
 
-  // Try real VPS admin users API first
+  const overrides = getUserOverrides();
+  const merged: AdminUserItem[] = [];
+  const seenEmails = new Set<string>();
+
+  // 1. Try real VPS admin users API first
   try {
     const remoteRes = await adminApiFetch("/api/admin/users", {
       signal: AbortSignal.timeout(3_000),
@@ -30,28 +57,54 @@ export async function GET() {
               : []
       ) as Record<string, unknown>[];
 
-      const mapped: AdminUserItem[] = rawUsers.map((u, idx) => {
-        const rawRole = String(u.role || "editor").toLowerCase();
-        const role: AdminUserItem["role"] =
-          rawRole === "admin" || rawRole === "superadmin" ? "admin" : rawRole === "btc" ? "btc" : "editor";
-        return {
-          id: String(u.id || u._id || `remote-${idx}`),
-          username: String(u.username || u.email || `user-${idx}`),
-          name: String(u.name || u.fullName || u.username || "Người dùng"),
-          email: String(u.email || ""),
-          role,
+      rawUsers.forEach((u, idx) => {
+        const email = String(u.email || "");
+        const name = String(u.name || u.fullName || u.username || "Người dùng");
+        const id = String(u.id || u._id || email || `remote-${idx}`);
+        const base: AdminUserItem = {
+          id,
+          username: String(u.username || email || `user-${idx}`),
+          name,
+          email,
+          role: mapRole(u.role, email, name),
           assignedTournament: u.assignedTournament ? String(u.assignedTournament) : undefined,
-          lastActive: String(u.lastActive || u.updatedAt || "Đã đồng bộ VPS"),
+          lastActive: String(u.lastActive || u.updatedAt || u.created_at || "Đã đồng bộ VPS"),
           status: u.isActive === false || u.status === "Tạm khóa" ? "Tạm khóa" : "Hoạt động",
         };
+        const ov = overrides[id] || overrides[email];
+        merged.push(ov ? { ...base, ...ov } : base);
+        if (email) seenEmails.add(email.toLowerCase());
       });
-      return NextResponse.json({ items: mapped, source: "vps" });
     }
   } catch {
-    // Fallback to local store (empty unless created in session)
+    // VPS unreachable, continue with local users
   }
 
-  return NextResponse.json({ items: getUsersStore(), source: "local" });
+  // 2. Include web registered / normal users from user-store
+  for (const wu of listSafeUsers()) {
+    const emailLower = wu.email.toLowerCase();
+    if (seenEmails.has(emailLower)) continue;
+    const base: AdminUserItem = {
+      id: wu.id,
+      username: wu.email,
+      name: wu.name,
+      email: wu.email,
+      role: mapRole(wu.role, wu.email, wu.name),
+      lastActive: wu.lastLoginAt || wu.createdAt,
+      status: "Hoạt động",
+    };
+    const ov = overrides[wu.id] || overrides[wu.email];
+    merged.push(ov ? { ...base, ...ov } : base);
+    seenEmails.add(emailLower);
+  }
+
+  // 3. Include locally created admin users
+  for (const lu of getUsersStore()) {
+    const ov = overrides[lu.id];
+    merged.push(ov ? { ...lu, ...ov } : lu);
+  }
+
+  return NextResponse.json({ items: merged });
 }
 
 export async function POST(request: Request) {

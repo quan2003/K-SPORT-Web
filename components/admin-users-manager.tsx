@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, FormEvent, useMemo } from "react";
 import type { AdminUserItem, EventItem } from "@/lib/admin-store";
 
-type RoleFilter = "all" | "admin" | "btc" | "editor";
+type RoleFilter = "all" | "admin" | "btc" | "editor" | "user";
 type ViewTab = "list" | "matrix";
 
 export function AdminUsersManager() {
@@ -102,6 +102,7 @@ export function AdminUsersManager() {
       admin: users.filter((u) => u.role === "admin").length,
       btc: users.filter((u) => u.role === "btc").length,
       editor: users.filter((u) => u.role === "editor").length,
+      user: users.filter((u) => u.role === "user").length,
     };
   }, [users]);
 
@@ -357,6 +358,13 @@ export function AdminUsersManager() {
               >
                 📢 Truyền thông ({counts.editor})
               </button>
+              <button
+                type="button"
+                className={`role-pill-btn ${roleFilter === "user" ? "is-active" : ""}`}
+                onClick={() => setRoleFilter("user")}
+              >
+                👤 Người dùng ({counts.user})
+              </button>
             </div>
 
             <button
@@ -412,6 +420,8 @@ export function AdminUsersManager() {
                               ? "👑"
                               : user.role === "btc"
                               ? "🏆"
+                              : user.role === "user"
+                              ? "👤"
                               : "📢"}
                           </div>
                           <div className="user-names">
@@ -429,6 +439,8 @@ export function AdminUsersManager() {
                             ? "Quản trị viên Tối cao"
                             : user.role === "btc"
                             ? "Ban Tổ Chức (BTC)"
+                            : user.role === "user"
+                            ? "Người dùng bình thường"
                             : "Truyền thông"}
                         </span>
                       </td>
@@ -438,6 +450,8 @@ export function AdminUsersManager() {
                         <div className="user-scope-box">
                           {user.role === "admin" ? (
                             <span className="scope-all">Toàn hệ thống K-SPORT</span>
+                          ) : user.role === "user" ? (
+                            <span className="scope-all" style={{ color: "#475569" }}>Học &amp; thi WKF Exam</span>
                           ) : (
                             <>
                               <strong className="scope-tournament-title">
@@ -691,6 +705,7 @@ export function AdminUsersManager() {
                 >
                   <option value="btc">🏆 Ban Tổ Chức Giải (Role BTC - Xem thống kê và điều hành giải đấu)</option>
                   <option value="editor">📢 Ban Truyền thông (Đăng tin tức, bài viết &amp; Banner)</option>
+                  <option value="user">👤 Người dùng bình thường (Học &amp; thi WKF Exam)</option>
                   <option value="admin">👑 Quản trị viên Tối cao (Toàn quyền hệ thống)</option>
                 </select>
               </label>
@@ -783,6 +798,7 @@ export function AdminUsersManager() {
                     <option value="admin">Quản trị viên Tối cao</option>
                     <option value="btc">Ban Tổ Chức (BTC)</option>
                     <option value="editor">Ban Truyền thông</option>
+                    <option value="user">Người dùng bình thường</option>
                   </select>
                 </label>
 

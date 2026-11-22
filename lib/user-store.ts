@@ -154,6 +154,10 @@ function persistUsers(): void {
   }
 }
 
+export function listSafeUsers(): SafeUser[] {
+  return Array.from(getUsersMap().values()).map(stripSensitive);
+}
+
 export function getUserByEmail(email: string): UserRecord | null {
   const normalized = email.trim().toLowerCase();
   const map = getUsersMap();

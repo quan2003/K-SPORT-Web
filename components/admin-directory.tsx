@@ -10,6 +10,7 @@ const roleMeta: Record<AdminUserItem["role"], { label: string; scope: string }> 
   admin: { label: "Quản trị hệ thống", scope: "Toàn hệ thống" },
   btc: { label: "Ban Tổ Chức (BTC)", scope: "Giải đấu được phân công" },
   editor: { label: "Ban Truyền thông", scope: "Nội dung & Truyền thông" },
+  user: { label: "Người dùng bình thường", scope: "Học & thi WKF Exam" },
 };
 
 export function AdminDirectory({ kind }: { kind: DirectoryKind }) {
