@@ -13,6 +13,7 @@ import {
   sortEvents,
 } from "@/lib/public-data";
 import { getQuestionBank } from "@/lib/wkf-exam/question-bank";
+import { getSiteAnalyticsSnapshot } from "@/lib/analytics-store";
 
 export const metadata: Metadata = { title: "Quản trị K-SPORT" };
 export const dynamic = "force-dynamic";
@@ -84,6 +85,7 @@ export default async function AdminPage() {
   const events = sortEvents(eventsRaw);
   const wkfQuestionsCount = getQuestionBank().questions.length;
   const activeSponsorsCount = getSponsorsStore().filter((s) => s.isActive).length;
+  const analytics = getSiteAnalyticsSnapshot();
 
   const data: AdminOverviewData = {
     events,
@@ -95,6 +97,7 @@ export default async function AdminPage() {
     bannersCount: banners.length,
     activeSponsorsCount,
     wkfQuestionsCount,
+    analytics,
     remote,
     fetchedAt: new Date().toISOString(),
   };

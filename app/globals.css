@@ -19394,3 +19394,43 @@ button.wkf-auth-google-quick-btn-real svg {
   color: #334155;
   border-color: #cbd5e1;
 }
+
+/* Prevent long venue addresses from overflowing hero spotlight card */
+.ks-spotlight-card .ks-spotlight-meta {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+.ks-spotlight-card .ks-meta-item {
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.ks-spotlight-card .ks-meta-item span {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Also apply high-contrast solid status tags on featured tournament card images */
+.ks-featured-badge-bar .ks-status-tag.is-upcoming {
+  background: #ffffff;
+  color: #073b7a;
+  border-color: #cbd5e1;
+}
+
+.ks-featured-badge-bar .ks-status-tag.is-live {
+  background: #d50b27;
+  color: #ffffff;
+  border-color: #d50b27;
+}
+
+.ks-featured-badge-bar .ks-status-tag.is-live .ks-pulse-dot {
+  background: #ffffff;
+}
+
+.ks-featured-badge-bar .ks-status-tag.is-ended {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}

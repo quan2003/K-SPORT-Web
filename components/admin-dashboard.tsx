@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Match, TournamentEvent } from "@/lib/public-data";
+import type { SiteAnalyticsSnapshot } from "@/lib/analytics-store";
 
 export type AdminOverviewData = {
   events: TournamentEvent[];
@@ -14,6 +15,7 @@ export type AdminOverviewData = {
   bannersCount: number;
   activeSponsorsCount: number;
   wkfQuestionsCount: number;
+  analytics: SiteAnalyticsSnapshot;
   remote: {
     connected: boolean;
     totalLicenses?: number | null;
@@ -56,7 +58,6 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
 
   const liveMatches = useMemo(() => allMatches.filter((m) => m.state === "Đang thi đấu"), [allMatches]);
   const finishedMatches = useMemo(() => allMatches.filter((m) => m.state === "Đã kết thúc"), [allMatches]);
-  const upcomingMatches = useMemo(() => allMatches.filter((m) => m.state === "Sắp diễn ra"), [allMatches]);
 
   const uniqueTatamis = useMemo(() => {
     const set = new Set<string>();
@@ -111,9 +112,6 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
   const maxBarValue = Math.max(...activeBars.map((b) => b.primary), 1);
 
   const totalMatches = allMatches.length;
-  const finishedPct = totalMatches > 0 ? Math.round((finishedMatches.length / totalMatches) * 1000) / 10 : 0;
-  const livePct = totalMatches > 0 ? Math.round((liveMatches.length / totalMatches) * 1000) / 10 : 0;
-  const upcomingPct = totalMatches > 0 ? Math.max(0, Math.round((100 - finishedPct - livePct) * 10) / 10) : 0;
 
   return (
     <section className="admin-dashboard-v3" aria-labelledby="admin-overview-heading">
@@ -326,43 +324,82 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
 
       {/* 5. MULTI-COLUMN REAL INSIGHTS */}
       <div className="insights-grid-v3">
-        {/* Match Progress Breakdown */}
+        {/* Real Device & Visitor Breakdown */}
         <div className="insight-card-v3">
           <div className="insight-header">
-            <h4>Tiến Độ Trận Đấu Thực Tế</h4>
-            <span className="insight-tag">Public API</span>
+            <h4>Người Dùng &amp; Thiết Bị Truy Cập</h4>
+            <span className="insight-tag">Realtime</span>
           </div>
-          <div className="device-stat-list">
-            <div className="device-stat-row">
-              <div className="device-info">
-                <span>✅ Đã kết thúc ({count.format(finishedMatches.length)} trận)</span>
-                <strong>{finishedPct}%</strong>
+          {(() => {
+            const totalDev =
+              data.analytics.devices.mobile +
+              data.analytics.devices.desktop +
+              data.analytics.devices.tablet;
+            const mobilePct = totalDev > 0 ? Math.round((data.analytics.devices.mobile / totalDev) * 1000) / 10 : 0;
+            const desktopPct = totalDev > 0 ? Math.round((data.analytics.devices.desktop / totalDev) * 1000) / 10 : 0;
+            const tabletPct = totalDev > 0 ? Math.max(0, Math.round((100 - mobilePct - desktopPct) * 10) / 10) : 0;
+            return (
+              <div className="device-stat-list">
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#475569", marginBottom: "6px" }}>
+                  <span>Lượt xem: <strong>{count.format(data.analytics.pageviews)}</strong></span>
+                  <span>Người dùng duy nhất: <strong>{count.format(data.analytics.uniqueVisitors)}</strong></span>
+                </div>
+                <div className="device-stat-row">
+                  <div className="device-info">
+                    <span>📱 Điện thoại ({count.format(data.analytics.devices.mobile)})</span>
+                    <strong>{mobilePct}%</strong>
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-bar red" style={{ width: `${mobilePct}%` }} />
+                  </div>
+                </div>
+                <div className="device-stat-row">
+                  <div className="device-info">
+                    <span>💻 Máy tính &amp; Laptop ({count.format(data.analytics.devices.desktop)})</span>
+                    <strong>{desktopPct}%</strong>
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-bar blue" style={{ width: `${desktopPct}%` }} />
+                  </div>
+                </div>
+                <div className="device-stat-row">
+                  <div className="device-info">
+                    <span>📟 Máy tính bảng ({count.format(data.analytics.devices.tablet)})</span>
+                    <strong>{tabletPct}%</strong>
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-bar green" style={{ width: `${tabletPct}%` }} />
+                  </div>
+                </div>
               </div>
-              <div className="progress-track">
-                <div className="progress-bar green" style={{ width: `${finishedPct}%` }} />
-              </div>
-            </div>
+            );
+          })()}
+        </div>
 
-            <div className="device-stat-row">
-              <div className="device-info">
-                <span>🔴 Đang thi đấu ({count.format(liveMatches.length)} trận)</span>
-                <strong>{livePct}%</strong>
-              </div>
-              <div className="progress-track">
-                <div className="progress-bar red" style={{ width: `${livePct}%` }} />
-              </div>
-            </div>
-
-            <div className="device-stat-row">
-              <div className="device-info">
-                <span>🕒 Sắp diễn ra ({count.format(upcomingMatches.length)} trận)</span>
-                <strong>{upcomingPct}%</strong>
-              </div>
-              <div className="progress-track">
-                <div className="progress-bar blue" style={{ width: `${upcomingPct}%` }} />
-              </div>
-            </div>
+        {/* Top Visited Pages (Real) */}
+        <div className="insight-card-v3">
+          <div className="insight-header">
+            <h4>Trang Được Truy Cập Nhiều</h4>
+            <span className="insight-tag">Phiên hiện tại</span>
           </div>
+          {data.analytics.topPages.length === 0 ? (
+            <p style={{ color: "var(--muted)", margin: "0.5rem 0 0" }}>
+              Chưa ghi nhận lượt truy cập công khai nào trong phiên máy chủ hiện tại.
+            </p>
+          ) : (
+            <ul className="top-pages-list">
+              {data.analytics.topPages.map((item, idx) => (
+                <li key={item.path}>
+                  <span className="page-rank">{idx + 1}</span>
+                  <div className="page-info">
+                    <strong>{item.path}</strong>
+                    <small>Đường dẫn công khai</small>
+                  </div>
+                  <span className="page-views">{count.format(item.views)} lượt</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* System Content & Modules */}

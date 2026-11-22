@@ -56,7 +56,7 @@ export function GoogleSignInButton({ className, label = "Tiếp tục với Goog
         });
         target.current.replaceChildren();
         const measured = Math.floor(target.current.parentElement?.getBoundingClientRect().width || 0);
-        const width = measured > 0 ? Math.min(400, Math.max(200, measured)) : 320;
+        const width = measured > 0 ? Math.min(360, Math.max(200, measured - 4)) : 320;
         window.google.accounts.id.renderButton(target.current, {
           theme: "outline",
           size: "large",
@@ -143,8 +143,12 @@ export function GoogleSignInButton({ className, label = "Tiếp tục với Goog
       )}
       <div
         ref={target}
-        className={sdkState === "ready" ? className : undefined}
-        style={sdkState === "ready" ? undefined : { display: "none" }}
+        style={{
+          width: "100%",
+          display: sdkState === "ready" ? "flex" : "none",
+          justifyContent: "center",
+          overflow: "hidden",
+        }}
       />
       {error && (
         <p className="auth-message auth-message-error" role="alert">

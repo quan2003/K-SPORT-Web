@@ -6,6 +6,7 @@ import "@fontsource/barlow-condensed/700.css";
 import "./globals.css";
 import { SplashScreen } from "@/components/splash-screen";
 import { CookieConsentBanner } from "@/components/cookie-consent";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://k-sport.net"),
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body id="top">
         <a className="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
         <SplashScreen />
+        <AnalyticsTracker />
         {children}
         <CookieConsentBanner />
       </body>
