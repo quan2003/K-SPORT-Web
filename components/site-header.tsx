@@ -32,6 +32,20 @@ export function SiteHeader() {
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
   const [query, setQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [releaseTag, setReleaseTag] = useState<string>(SOFTWARE_RELEASE.tag);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/software/latest")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { tag?: string } | null) => {
+        if (!cancelled && data?.tag) setReleaseTag(data.tag);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const mobileNavRef = useRef<HTMLElement>(null);
@@ -197,7 +211,7 @@ export function SiteHeader() {
                 type="button"
                 className="ks-header-cta-btn"
                 onClick={() => setModalOpen(true)}
-                title={`Tải phần mềm K-SPORT ${SOFTWARE_RELEASE.tag} - Chọn hệ điều hành`}
+                title={`Tải phần mềm K-SPORT ${releaseTag} - Chọn hệ điều hành`}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -208,7 +222,7 @@ export function SiteHeader() {
                   <span className="ks-cta-title-full">Phần Mềm K-SPORT</span>
                   <span className="ks-cta-title-short">Phần Mềm</span>
                 </span>
-                <span className="ks-cta-badge">{SOFTWARE_RELEASE.tag}</span>
+                <span className="ks-cta-badge">{releaseTag}</span>
               </button>
 
               {/* Download Dropdown on Hover/Focus */}
@@ -217,7 +231,7 @@ export function SiteHeader() {
                   <div className="ks-download-menu-head">
                     <div className="ks-download-ver-row">
                       <span className="ks-download-dot" />
-                      <strong>K-SPORT {SOFTWARE_RELEASE.tag}</strong>
+                      <strong>K-SPORT {releaseTag}</strong>
                       <span className="ks-download-status">Mới nhất</span>
                     </div>
                     <p className="ks-download-desc">Phần mềm quản lý giải đấu & bảng điểm Tatami chuẩn WKF</p>
@@ -437,7 +451,7 @@ export function SiteHeader() {
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
-                  <span>Tải Phần Mềm K-SPORT ({SOFTWARE_RELEASE.tag})</span>
+                  <span>Tải Phần Mềm K-SPORT ({releaseTag})</span>
                 </button>
 
                 <div className="ks-drawer-contact-info">

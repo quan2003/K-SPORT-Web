@@ -4,9 +4,9 @@
  */
 
 export const SOFTWARE_RELEASE = {
-  version: "3.0.14",
-  tag: "v3.0.14",
-  releaseDate: "09/11/2026",
+  version: "3.0.15",
+  tag: "v3.0.15",
+  releaseDate: "22/11/2026",
   downloadWindows: "/api/download?os=windows",
   downloadMac: "/api/download?os=mac",
   downloadLinux: "/api/download?os=linux",
