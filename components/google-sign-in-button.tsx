@@ -56,7 +56,7 @@ export function GoogleSignInButton({ className, label = "Tiếp tục với Goog
         });
         target.current.replaceChildren();
         const parentWidth = Math.floor(target.current.parentElement?.getBoundingClientRect().width || 0);
-        const width = parentWidth > 0 ? Math.min(340, Math.max(220, parentWidth - 16)) : 320;
+        const width = parentWidth > 0 ? Math.min(320, Math.max(200, parentWidth - 32)) : 300;
         window.google.accounts.id.renderButton(target.current, {
           theme: "outline",
           size: "large",
@@ -147,7 +147,6 @@ export function GoogleSignInButton({ className, label = "Tiếp tục với Goog
           width: "100%",
           display: sdkState === "ready" ? "flex" : "none",
           justifyContent: "center",
-          overflow: "hidden",
         }}
       />
       {error && (

@@ -12937,8 +12937,8 @@ a:hover { opacity: .78; }
 .wkf-auth-guest-actions > .wkf-auth-google-quick-btn { display: none !important; }
 
 .google-sign-in-control { display: grid; gap: 8px; width: 100%; }
-.google-sign-in-control > div { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.google-sign-in-control iframe { display: block; max-width: 100%; }
+.google-sign-in-control > div { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; overflow: visible; }
+.google-sign-in-control iframe { display: block; }
 button.auth-google-btn-real,
 button.ks-auth-google-btn-real,
 button.wkf-google-btn-real,

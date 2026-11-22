@@ -45,6 +45,7 @@ function dedupeMatches(schedule: Match[], results: Match[]): Match[] {
 
 export function AdminDashboard({ data }: { data: AdminOverviewData }) {
   const [chartMode, setChartMode] = useState<ChartMode>("visitors");
+  const [selectedYear, setSelectedYear] = useState<number>(data.analytics.year);
   const [hoveredBar, setHoveredBar] = useState<ChartBar | null>(null);
 
   const count = useMemo(() => new Intl.NumberFormat("vi-VN"), []);
@@ -98,13 +99,14 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
 
   const visitorBars: ChartBar[] = useMemo(() => {
     const currentMonth = new Date().getMonth();
-    return data.analytics.monthly.map((m) => ({
+    const yearPoints = data.analytics.monthlyByYear[selectedYear] || [];
+    return yearPoints.map((m) => ({
       label: m.label,
       primary: m.views,
       secondary: m.users,
-      highlight: m.monthIndex === currentMonth && m.views > 0,
+      highlight: selectedYear === data.analytics.year && m.monthIndex === currentMonth && m.views > 0,
     }));
-  }, [data.analytics.monthly]);
+  }, [data.analytics.monthlyByYear, data.analytics.year, selectedYear]);
 
   const activeBars = chartMode === "visitors" ? visitorBars : chartMode === "events" ? eventBars : tatamiBars;
   const maxBarValue = Math.max(...activeBars.map((b) => b.primary), 1);
@@ -204,6 +206,26 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
               Theo Giải đấu
             </button>
           </div>
+          {chartMode === "visitors" ? (
+            <div className="filter-dropdown-box">
+              <label htmlFor="admin-year-select">Năm:</label>
+              <select
+                id="admin-year-select"
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(Number(e.target.value));
+                  setHoveredBar(null);
+                }}
+                className="filter-select-pro"
+              >
+                {data.analytics.availableYears.map((y) => (
+                  <option key={y} value={y}>
+                    {y === data.analytics.year ? `Năm ${y} (Hiện tại)` : `Năm ${y}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -264,7 +286,7 @@ export function AdminDashboard({ data }: { data: AdminOverviewData }) {
           <div>
             <h3>
               {chartMode === "visitors"
-                ? `Biểu đồ lưu lượng người dùng Năm ${data.analytics.year} (12 Tháng)`
+                ? `Biểu đồ lưu lượng người dùng Năm ${selectedYear} (12 Tháng)`
                 : chartMode === "tatami"
                   ? "Phân bổ số trận đấu theo Thảm (Tatami)"
                   : "Quy mô trận đấu / nội dung theo Giải đấu"}
