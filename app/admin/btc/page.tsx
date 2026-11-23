@@ -30,7 +30,14 @@ export default async function AdminBtcPage() {
     getRanking(),
   ]);
 
-  const events = sortEvents(eventsRaw);
+  let events = sortEvents(eventsRaw);
+  if (session?.role === "btc" && session.tournamentId) {
+    const assignedKey = session.tournamentId.trim().toLowerCase();
+    const matched = events.filter(
+      (ev) => ev.slug.toLowerCase() === assignedKey || ev.name.toLowerCase() === assignedKey,
+    );
+    if (matched.length > 0) events = matched;
+  }
 
   return (
     <AdminBtcDashboard

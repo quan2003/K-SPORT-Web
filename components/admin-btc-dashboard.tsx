@@ -136,6 +136,7 @@ export function AdminBtcDashboard({
   const [paidClubs, setPaidClubs] = useState<Record<string, boolean>>(() => readStoredPaid(initialEventKey));
 
   const isBtcOrAdmin = session?.role === "btc" || session?.role === "admin";
+  const isLockedToAssignedEvent = session?.role === "btc" && Boolean(session?.tournamentId);
   const count = useMemo(() => new Intl.NumberFormat("vi-VN"), []);
 
   const selectedEvent = useMemo(
@@ -837,7 +838,7 @@ export function AdminBtcDashboard({
         </div>
 
         <div className="btc-header-actions">
-          {events.length > 1 ? (
+          {!isLockedToAssignedEvent && events.length > 1 ? (
             <select
               aria-label="Chọn giải đấu"
               className="filter-select-pro"

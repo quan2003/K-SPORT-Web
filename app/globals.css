@@ -11763,6 +11763,11 @@ a:hover { opacity: .78; }
   margin-bottom: 24px;
 }
 
+.btc-header-left {
+  flex: 1;
+  min-width: 0;
+}
+
 .btc-badge-row {
   display: flex;
   flex-wrap: wrap;
@@ -11791,7 +11796,8 @@ a:hover { opacity: .78; }
 }
 
 .btc-tournament-title {
-  font-size: 26px;
+  font-size: clamp(20px, 2.2vw, 26px);
+  line-height: 1.25;
   font-weight: 800;
   margin: 0 0 10px;
   color: #fff;
@@ -11807,9 +11813,19 @@ a:hover { opacity: .78; }
 
 .btc-header-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   flex-shrink: 0;
+  max-width: 100%;
+}
+
+.btc-header-actions .filter-select-pro {
+  max-width: 260px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .btc-action-btn {
@@ -19222,6 +19238,32 @@ button.wkf-auth-google-quick-btn-real svg {
   }
 
   .filter-select-pro {
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  .btc-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 18px;
+  }
+
+  .btc-header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .btc-header-actions .filter-select-pro {
+    max-width: 100%;
+  }
+
+  .btc-header-actions .btc-action-btn {
     flex: 1;
     min-height: 44px;
   }
