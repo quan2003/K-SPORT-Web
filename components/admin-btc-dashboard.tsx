@@ -12,10 +12,9 @@ type BtcTab =
   | "fees"
   | "by-club"
   | "by-category"
-  | "overview"
-  | "tatami"
   | "medals"
-  | "sync";
+  | "overview"
+  | "tatami";
 
 interface AdminBtcDashboardProps {
   session: PublicSession | null;
@@ -127,6 +126,8 @@ export function AdminBtcDashboard({
   const [categorySearch, setCategorySearch] = useState("");
   const [categoryDiscipline, setCategoryDiscipline] = useState<"all" | "kata" | "kumite">("all");
   const [selectedCategories, setSelectedCategories] = useState<Set<string> | null>(null);
+  const [medalTypeFilter, setMedalTypeFilter] = useState<"all" | "kata" | "kumite">("all");
+  const [medalGenderFilter, setMedalGenderFilter] = useState<"all" | "male" | "female">("all");
 
   const initialEventKey = events[0]?.slug || "default";
 
@@ -481,24 +482,52 @@ export function AdminBtcDashboard({
     [tatamiGroups, activeTatamiLabel],
   );
 
-  const clubStandings = useMemo(() => {
-    const map = new Map<
-      string,
-      { club: string; gold: number; silver: number; bronze: number; points: number }
-    >();
-    for (const r of eventRanking) {
-      const clubName = r.club?.trim() || "Đoàn khác";
-      const cur = map.get(clubName) || { club: clubName, gold: 0, silver: 0, bronze: 0, points: 0 };
-      cur.gold += r.medals?.gold ?? 0;
-      cur.silver += r.medals?.silver ?? 0;
-      cur.bronze += r.medals?.bronze ?? 0;
-      cur.points += r.points ?? 0;
-      map.set(clubName, cur);
+  // Real Medal Tally (mirrors Desktop StatisticsPage.jsx: pre-populates all participating clubs + filters)
+  const { medalTallyRows, medalTotals } = useMemo(() => {
+    const map = new Map<string, { club: string; gold: number; silver: number; bronze: number; total: number }>();
+    for (const cName of clubNames) {
+      map.set(cName, { club: cName, gold: 0, silver: 0, bronze: 0, total: 0 });
     }
-    return [...map.values()].sort(
-      (a, b) => b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze || b.points - a.points,
+
+    for (const r of eventRanking) {
+      const cat = String(r.category || "").toLowerCase();
+      if (medalTypeFilter === "kata" && !cat.includes("kata")) continue;
+      if (medalTypeFilter === "kumite" && !cat.includes("kumite")) continue;
+      if (medalGenderFilter === "male" && inferGenderFromCategory(r.category) !== "male") continue;
+      if (medalGenderFilter === "female" && inferGenderFromCategory(r.category) !== "female") continue;
+
+      const cName = r.club?.trim() || "Đoàn khác";
+      const cur = map.get(cName) || { club: cName, gold: 0, silver: 0, bronze: 0, total: 0 };
+      const g = r.medals?.gold ?? 0;
+      const s = r.medals?.silver ?? 0;
+      const b = r.medals?.bronze ?? 0;
+      cur.gold += g;
+      cur.silver += s;
+      cur.bronze += b;
+      cur.total += g + s + b;
+      map.set(cName, cur);
+    }
+
+    const rows = [...map.values()].sort(
+      (a, b) =>
+        b.gold - a.gold ||
+        b.silver - a.silver ||
+        b.bronze - a.bronze ||
+        a.club.localeCompare(b.club, "vi"),
     );
-  }, [eventRanking]);
+
+    const totals = rows.reduce(
+      (acc, r) => ({
+        gold: acc.gold + r.gold,
+        silver: acc.silver + r.silver,
+        bronze: acc.bronze + r.bronze,
+        total: acc.total + r.total,
+      }),
+      { gold: 0, silver: 0, bronze: 0, total: 0 },
+    );
+
+    return { medalTallyRows: rows, medalTotals: totals };
+  }, [clubNames, eventRanking, medalTypeFilter, medalGenderFilter]);
 
   if (!isBtcOrAdmin) {
     return (
@@ -728,6 +757,53 @@ export function AdminBtcDashboard({
     });
   };
 
+  const handleExportMedalsPDF = () => {
+    const rowsHtml = medalTallyRows
+      .map(
+        (r, idx) => `
+      <tr>
+        <td class="text-center">${idx + 1}</td>
+        <td class="text-left bold">${escapeHtml(r.club)}</td>
+        <td class="text-center bold">${r.gold}</td>
+        <td class="text-center bold">${r.silver}</td>
+        <td class="text-center bold">${r.bronze}</td>
+        <td class="text-center bg-total">${r.total}</td>
+      </tr>`,
+      )
+      .join("");
+
+    const bodyHtml = `
+      <table>
+        <thead>
+          <tr>
+            <th style="width:52px;">Hạng</th>
+            <th class="text-left">Đơn vị / CLB</th>
+            <th style="width:82px;background:#ca8a04;color:#fff;">🥇 Vàng</th>
+            <th style="width:82px;background:#64748b;color:#fff;">🥈 Bạc</th>
+            <th style="width:82px;background:#b45309;color:#fff;">🥉 Đồng</th>
+            <th style="width:90px;">Tổng HC</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+        <tfoot>
+          <tr class="row-grand-total">
+            <td colspan="2" class="text-center">TỔNG CỘNG</td>
+            <td class="text-center">${medalTotals.gold}</td>
+            <td class="text-center">${medalTotals.silver}</td>
+            <td class="text-center">${medalTotals.bronze}</td>
+            <td class="text-center">${medalTotals.total}</td>
+          </tr>
+        </tfoot>
+      </table>`;
+
+    printBtcHtmlReport({
+      title: "BẢNG TỔNG SẮP HUY CHƯƠNG THỰC TẾ",
+      tournamentName: tournamentTitle,
+      subtitle: `Loại: ${medalTypeFilter === "all" ? "Tất cả" : medalTypeFilter.toUpperCase()} · Giới tính: ${medalGenderFilter === "all" ? "Tất cả" : medalGenderFilter === "male" ? "Nam" : "Nữ"}`,
+      bodyHtml,
+    });
+  };
+
   return (
     <div className="btc-portal">
       {/* Tournament Top Banner */}
@@ -885,6 +961,15 @@ export function AdminBtcDashboard({
         <button
           type="button"
           role="tab"
+          aria-selected={activeTab === "medals"}
+          className={`btc-tab ${activeTab === "medals" ? "is-active" : ""}`}
+          onClick={() => setActiveTab("medals")}
+        >
+          🥇 Huy chương ({medalTotals.total})
+        </button>
+        <button
+          type="button"
+          role="tab"
           aria-selected={activeTab === "overview"}
           className={`btc-tab ${activeTab === "overview" ? "is-active" : ""}`}
           onClick={() => setActiveTab("overview")}
@@ -899,24 +984,6 @@ export function AdminBtcDashboard({
           onClick={() => setActiveTab("tatami")}
         >
           🥋 Lịch &amp; Trận ({eventMatches.length})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "medals"}
-          className={`btc-tab ${activeTab === "medals" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("medals")}
-        >
-          🥇 BXH Đoàn ({clubStandings.length})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "sync"}
-          className={`btc-tab ${activeTab === "sync" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("sync")}
-        >
-          ⚖️ Cân ký &amp; Trọng tài
         </button>
       </div>
 
@@ -1182,9 +1249,26 @@ export function AdminBtcDashboard({
               <div className="btc-group-list">
                 {visibleClubGroups.map((g) => {
                   const checked = activeSelectedClubs.has(g.club);
+                  const toggleClub = () => {
+                    const next = new Set(activeSelectedClubs);
+                    if (checked) next.delete(g.club);
+                    else next.add(g.club);
+                    setSelectedClubs(next);
+                  };
                   return (
-                    <details key={g.club} className="btc-group-card" open={visibleClubGroups.length <= 5}>
-                      <summary className="btc-group-summary">
+                    <div key={g.club} className="btc-group-card">
+                      <div
+                        className="btc-group-summary"
+                        onClick={toggleClub}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            toggleClub();
+                          }
+                        }}
+                      >
                         <label
                           className="btc-group-check"
                           onClick={(e) => e.stopPropagation()}
@@ -1192,44 +1276,42 @@ export function AdminBtcDashboard({
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={() => {
-                              const next = new Set(activeSelectedClubs);
-                              if (checked) next.delete(g.club);
-                              else next.add(g.club);
-                              setSelectedClubs(next);
-                            }}
+                            onChange={toggleClub}
                           />
                           <strong>{g.club}</strong>
                         </label>
                         <span className="btc-group-count">
+                          {checked ? "▾ " : "▸ "}
                           {g.uniqueAthletes.length} VĐV · {g.entryCount} lượt
                         </span>
-                      </summary>
-                      <div className="admin-table-wrap" style={{ marginTop: "10px" }}>
-                        <table className="admin-content-table admin-responsive-table">
-                          <thead>
-                            <tr>
-                              <th style={{ width: "48px" }}>STT</th>
-                              <th>Họ và tên</th>
-                              <th>Mã VĐV</th>
-                              <th style={{ width: "80px" }}>Giới tính</th>
-                              <th>Nội dung đăng ký</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {g.uniqueAthletes.map((u, idx) => (
-                              <tr key={u.key}>
-                                <td data-label="STT">{idx + 1}</td>
-                                <td data-label="Họ và tên"><strong>{u.name}</strong></td>
-                                <td data-label="Mã VĐV"><code>{u.code || "—"}</code></td>
-                                <td data-label="Giới tính">{u.gender}</td>
-                                <td data-label="Nội dung">{u.categories.join(", ")}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
                       </div>
-                    </details>
+                      {checked && (
+                        <div className="admin-table-wrap" style={{ marginTop: "10px" }}>
+                          <table className="admin-content-table admin-responsive-table">
+                            <thead>
+                              <tr>
+                                <th style={{ width: "48px" }}>STT</th>
+                                <th>Họ và tên</th>
+                                <th>Mã VĐV</th>
+                                <th style={{ width: "80px" }}>Giới tính</th>
+                                <th>Nội dung đăng ký</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {g.uniqueAthletes.map((u, idx) => (
+                                <tr key={u.key}>
+                                  <td data-label="STT">{idx + 1}</td>
+                                  <td data-label="Họ và tên"><strong>{u.name}</strong></td>
+                                  <td data-label="Mã VĐV"><code>{u.code || "—"}</code></td>
+                                  <td data-label="Giới tính">{u.gender}</td>
+                                  <td data-label="Nội dung">{u.categories.join(", ")}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -1298,9 +1380,26 @@ export function AdminBtcDashboard({
               <div className="btc-group-list">
                 {visibleCategoryGroups.map((g) => {
                   const checked = activeSelectedCategories.has(g.category);
+                  const toggleCategory = () => {
+                    const next = new Set(activeSelectedCategories);
+                    if (checked) next.delete(g.category);
+                    else next.add(g.category);
+                    setSelectedCategories(next);
+                  };
                   return (
-                    <details key={g.category} className="btc-group-card" open={visibleCategoryGroups.length <= 5}>
-                      <summary className="btc-group-summary">
+                    <div key={g.category} className="btc-group-card">
+                      <div
+                        className="btc-group-summary"
+                        onClick={toggleCategory}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            toggleCategory();
+                          }
+                        }}
+                      >
                         <label
                           className="btc-group-check"
                           onClick={(e) => e.stopPropagation()}
@@ -1308,44 +1407,44 @@ export function AdminBtcDashboard({
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={() => {
-                              const next = new Set(activeSelectedCategories);
-                              if (checked) next.delete(g.category);
-                              else next.add(g.category);
-                              setSelectedCategories(next);
-                            }}
+                            onChange={toggleCategory}
                           />
                           <strong>{g.category}</strong>
                         </label>
-                        <span className="btc-group-count">{g.athletes.length} VĐV</span>
-                      </summary>
-                      <div className="admin-table-wrap" style={{ marginTop: "10px" }}>
-                        <table className="admin-content-table admin-responsive-table">
-                          <thead>
-                            <tr>
-                              <th style={{ width: "48px" }}>STT</th>
-                              <th>Họ và tên</th>
-                              <th>Mã VĐV</th>
-                              <th>Đơn vị / CLB</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {g.athletes.map((a, idx) => (
-                              <tr key={a.id}>
-                                <td data-label="STT">{idx + 1}</td>
-                                <td data-label="Họ và tên">
-                                  <Link href={`/athletes/${encodeURIComponent(a.id)}`}>
-                                    <strong>{a.name}</strong>
-                                  </Link>
-                                </td>
-                                <td data-label="Mã VĐV"><code>{a.athleteCode || a.id}</code></td>
-                                <td data-label="Đơn vị / CLB">{a.club}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                        <span className="btc-group-count">
+                          {checked ? "▾ " : "▸ "}
+                          {g.athletes.length} VĐV
+                        </span>
                       </div>
-                    </details>
+                      {checked && (
+                        <div className="admin-table-wrap" style={{ marginTop: "10px" }}>
+                          <table className="admin-content-table admin-responsive-table">
+                            <thead>
+                              <tr>
+                                <th style={{ width: "48px" }}>STT</th>
+                                <th>Họ và tên</th>
+                                <th>Mã VĐV</th>
+                                <th>Đơn vị / CLB</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {g.athletes.map((a, idx) => (
+                                <tr key={a.id}>
+                                  <td data-label="STT">{idx + 1}</td>
+                                  <td data-label="Họ và tên">
+                                    <Link href={`/athletes/${encodeURIComponent(a.id)}`}>
+                                      <strong>{a.name}</strong>
+                                    </Link>
+                                  </td>
+                                  <td data-label="Mã VĐV"><code>{a.athleteCode || a.id}</code></td>
+                                  <td data-label="Đơn vị / CLB">{a.club}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -1354,7 +1453,92 @@ export function AdminBtcDashboard({
         </div>
       )}
 
-      {/* TAB 5: OVERVIEW / TATAMI */}
+      {/* TAB 5: REAL MEDAL TALLY (LIKE DESKTOP) */}
+      {activeTab === "medals" && (
+        <div className="btc-tab-content">
+          <div className="btc-section-card">
+            <div className="btc-card-header">
+              <div>
+                <h3>🥇 Bảng Tổng Sắp Huy Chương Thực Tế ({medalTallyRows.length} đơn vị)</h3>
+                <p>Tổng hợp theo kết quả giải đấu trên Public API (hiển thị đầy đủ các đoàn tham dự)</p>
+              </div>
+              <button
+                type="button"
+                className="btc-export-pdf-btn"
+                disabled={medalTallyRows.length === 0}
+                onClick={handleExportMedalsPDF}
+              >
+                📄 Xuất PDF Huy chương
+              </button>
+            </div>
+
+            <div className="btc-filter-toolbar">
+              <select
+                aria-label="Lọc thể thức huy chương"
+                className="filter-select-pro"
+                value={medalTypeFilter}
+                onChange={(e) => setMedalTypeFilter(e.target.value as "all" | "kata" | "kumite")}
+              >
+                <option value="all">Loại: Tất cả (Kata &amp; Kumite)</option>
+                <option value="kata">Chỉ Kata</option>
+                <option value="kumite">Chỉ Kumite</option>
+              </select>
+              <select
+                aria-label="Lọc giới tính huy chương"
+                className="filter-select-pro"
+                value={medalGenderFilter}
+                onChange={(e) => setMedalGenderFilter(e.target.value as "all" | "male" | "female")}
+              >
+                <option value="all">Giới tính: Tất cả</option>
+                <option value="male">Nam</option>
+                <option value="female">Nữ</option>
+              </select>
+            </div>
+
+            {medalTallyRows.length === 0 ? (
+              <p style={{ color: "var(--muted)" }}>Chưa có dữ liệu đoàn tham dự hoặc huy chương.</p>
+            ) : (
+              <div className="admin-table-wrap">
+                <table className="btc-delegation-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "58px" }}>Hạng</th>
+                      <th className="text-left">Đơn vị / Câu Lạc Bộ</th>
+                      <th style={{ width: "90px", background: "#ca8a04" }}>🥇 Vàng</th>
+                      <th style={{ width: "90px", background: "#64748b" }}>🥈 Bạc</th>
+                      <th style={{ width: "90px", background: "#b45309" }}>🥉 Đồng</th>
+                      <th style={{ width: "95px" }}>Tổng HC</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {medalTallyRows.map((r, idx) => (
+                      <tr key={r.club}>
+                        <td className="text-center font-semibold">{idx + 1}</td>
+                        <td className="text-left font-medium">{r.club}</td>
+                        <td className="text-center font-semibold" style={{ color: "#a16207" }}>{r.gold}</td>
+                        <td className="text-center font-semibold" style={{ color: "#475569" }}>{r.silver}</td>
+                        <td className="text-center font-semibold" style={{ color: "#9a3412" }}>{r.bronze}</td>
+                        <td className="text-center cell-grand-total">{r.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="row-grand-total">
+                      <td colSpan={2} className="text-center">TỔNG CỘNG</td>
+                      <td className="text-center">{medalTotals.gold}</td>
+                      <td className="text-center">{medalTotals.silver}</td>
+                      <td className="text-center">{medalTotals.bronze}</td>
+                      <td className="text-center cell-grand-sum">{medalTotals.total}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: OVERVIEW / TATAMI */}
       {activeTab === "overview" && (
         <div className="btc-tab-content">
           <div className="btc-section-card">
@@ -1461,78 +1645,6 @@ export function AdminBtcDashboard({
                 </table>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 7: MEDAL TABLE */}
-      {activeTab === "medals" && (
-        <div className="btc-tab-content">
-          <div className="btc-section-card">
-            <div className="btc-card-header">
-              <div>
-                <h3>Bảng tổng sắp theo dữ liệu Xếp hạng (Public API)</h3>
-                <p>Tổng hợp từ /api/public/ranking</p>
-              </div>
-            </div>
-            {clubStandings.length === 0 ? (
-              <p style={{ color: "var(--muted)" }}>
-                Chưa có dữ liệu bảng xếp hạng / huy chương cho giải đấu này.
-              </p>
-            ) : (
-              <div className="admin-table-wrap">
-                <table className="admin-content-table admin-responsive-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: "60px" }}>Hạng</th>
-                      <th>Đoàn / Câu Lạc Bộ</th>
-                      <th style={{ textAlign: "center" }}>🥇 Vàng</th>
-                      <th style={{ textAlign: "center" }}>🥈 Bạc</th>
-                      <th style={{ textAlign: "center" }}>🥉 Đồng</th>
-                      <th style={{ textAlign: "right" }}>Điểm</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {clubStandings.map((row, idx) => (
-                      <tr key={row.club}>
-                        <td data-label="Hạng">
-                          <strong>{idx + 1}</strong>
-                        </td>
-                        <td data-label="Đoàn / CLB">
-                          <strong>{row.club}</strong>
-                        </td>
-                        <td data-label="Vàng" style={{ textAlign: "center", fontWeight: "bold" }}>
-                          {row.gold}
-                        </td>
-                        <td data-label="Bạc" style={{ textAlign: "center", fontWeight: "bold" }}>
-                          {row.silver}
-                        </td>
-                        <td data-label="Đồng" style={{ textAlign: "center", fontWeight: "bold" }}>
-                          {row.bronze}
-                        </td>
-                        <td data-label="Điểm" style={{ textAlign: "right", fontWeight: "bold" }}>
-                          {count.format(row.points)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 8: WEIGH-IN & REFEREES */}
-      {activeTab === "sync" && (
-        <div className="btc-tab-content">
-          <div className="btc-section-card">
-            <div className="btc-card-header">
-              <h3>Cân ký &amp; Phân công Trọng tài</h3>
-            </div>
-            <p style={{ color: "var(--muted)", margin: 0 }}>
-              Máy chủ Public API hiện chưa cung cấp dữ liệu nội bộ về biên bản cân ký và phân công trọng tài. Dữ liệu chỉ hiển thị khi K-SPORT Desktop đồng bộ các bảng này lên máy chủ quản trị.
-            </p>
           </div>
         </div>
       )}
