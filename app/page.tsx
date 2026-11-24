@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { HomeHero } from "@/components/home/home-hero";
 import { HomeLiveCenter } from "@/components/home/home-live-center";
 import { HomeTournaments } from "@/components/home/home-tournaments";
@@ -23,7 +24,21 @@ import {
 
 export const revalidate = 30;
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+} = {}) {
+  const params = await searchParams;
+  const rawCode = params?.code;
+  const code = typeof rawCode === "string" ? rawCode.trim() : Array.isArray(rawCode) ? rawCode[0]?.trim() : "";
+  if (code) {
+    const rawTournament = params?.tournament;
+    const tournament = typeof rawTournament === "string" ? rawTournament.trim() : Array.isArray(rawTournament) ? rawTournament[0]?.trim() : "";
+    const query = tournament ? `?tournament=${encodeURIComponent(tournament)}` : "";
+    redirect(`/athletes/${encodeURIComponent(code)}${query}`);
+  }
+
   const [events, matches, news, ranking, banners, athletes] = await Promise.all([
     getEvents(),
     getSchedule(),

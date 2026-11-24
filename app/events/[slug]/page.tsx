@@ -7,6 +7,9 @@ import { InternalLayout, MatchRows, MoreLink } from "@/components/portal-ui";
 import { getEvent, getEvents, getSchedule, sortMatches } from "@/lib/public-data";
 import { getSponsorsStore } from "@/lib/admin-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function generateStaticParams() {
   return (await getEvents()).map(({ slug }) => ({ slug }));
 }
