@@ -4,6 +4,9 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { competitionType, getMatDisplayName, getTatamiColorClass, type Match, type TournamentEvent } from "@/lib/public-data";
 import type { SponsorItem } from "@/lib/admin-store";
+import { PaginationBar } from "@/components/pagination-bar";
+
+const SCHEDULE_PAGE_SIZE = 24;
 
 interface ScheduleViewProps {
   initialMatches: Match[];
@@ -27,6 +30,7 @@ export function ScheduleView({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [tatamiSponsors, setTatamiSponsors] = useState<SponsorItem[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
     let cancel = false;
@@ -116,12 +120,24 @@ export function ScheduleView({
     });
   }, [baseMatches, selectedTatami, selectedStatus, selectedType, searchQuery]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredMatches.length / SCHEDULE_PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedMatches = useMemo(
+    () =>
+      filteredMatches.slice(
+        (safePage - 1) * SCHEDULE_PAGE_SIZE,
+        safePage * SCHEDULE_PAGE_SIZE,
+      ),
+    [filteredMatches, safePage],
+  );
+
   const handleResetFilters = () => {
     setSelectedEvent("all");
     setSelectedTatami("all");
     setSelectedStatus("all");
     setSelectedType("all");
     setSearchQuery("");
+    setCurrentPage(1);
   };
 
   const hasActiveFilters =
@@ -461,10 +477,11 @@ export function ScheduleView({
 
       {/* 5. Matches Output: Cards Grid Mode or Table Mode */}
       {filteredMatches.length > 0 ? (
-        viewMode === "grid" ? (
-          /* ================= GRID VIEW ================= */
-          <div className="ks-matches-grid">
-            {filteredMatches.map((match) => {
+        <>
+          {viewMode === "grid" ? (
+            /* ================= GRID VIEW ================= */
+            <div className="ks-matches-grid">
+              {paginatedMatches.map((match) => {
               const isLive = match.state === "Đang thi đấu";
               const isEnded = match.state === "Đã kết thúc";
               const tatamiName = getMatDisplayName(match.tatami);
@@ -542,16 +559,9 @@ export function ScheduleView({
                     </div>
                   </div>
 
-                  {/* Footer link to scoreboard demo / live console */}
+                  {/* Footer date */}
                   <div className="ks-match-card-foot">
                     <span className="ks-match-date-badge">{match.date}</span>
-                    <Link href="/software" className="ks-match-live-link">
-                      <span>Bảng điểm LED</span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                        <polyline points="12 5 19 12 12 19" />
-                      </svg>
-                    </Link>
                   </div>
                 </article>
               );
@@ -574,7 +584,7 @@ export function ScheduleView({
                 </tr>
               </thead>
               <tbody>
-                {filteredMatches.map((match) => {
+                {paginatedMatches.map((match) => {
                   const isLive = match.state === "Đang thi đấu";
                   const isEnded = match.state === "Đã kết thúc";
 
@@ -637,7 +647,19 @@ export function ScheduleView({
               </tbody>
             </table>
           </div>
-        )
+          )}
+          <PaginationBar
+            page={safePage}
+            totalPages={totalPages}
+            totalItems={filteredMatches.length}
+            pageSize={SCHEDULE_PAGE_SIZE}
+            itemLabel="trận đấu"
+            onPageChange={(nextPage) => {
+              setCurrentPage(nextPage);
+              window.scrollTo({ top: 260, behavior: "smooth" });
+            }}
+          />
+        </>
       ) : (
         /* Empty State */
         <div className="ks-events-empty-state">

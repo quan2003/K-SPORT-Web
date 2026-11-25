@@ -4,6 +4,9 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { type AthleteDirectoryEntry, competitionType } from "@/lib/public-data";
 import { AthleteAvatar } from "@/components/athlete-avatar";
+import { PaginationBar } from "@/components/pagination-bar";
+
+const ATHLETES_PAGE_SIZE = 24;
 
 interface AthletesCatalogViewProps {
   initialAthletes: AthleteDirectoryEntry[];
@@ -23,6 +26,7 @@ export function AthletesCatalogView({
   const [selectedGender, setSelectedGender] = useState<string>("all");
   const [selectedClub, setSelectedClub] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Extract unique clubs
   const clubs = useMemo(() => {
@@ -87,11 +91,23 @@ export function AthletesCatalogView({
     });
   }, [initialAthletes, selectedType, selectedGender, selectedClub, searchQuery]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredAthletes.length / ATHLETES_PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedAthletes = useMemo(
+    () =>
+      filteredAthletes.slice(
+        (safePage - 1) * ATHLETES_PAGE_SIZE,
+        safePage * ATHLETES_PAGE_SIZE,
+      ),
+    [filteredAthletes, safePage],
+  );
+
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedType("all");
     setSelectedGender("all");
     setSelectedClub("all");
+    setCurrentPage(1);
   };
 
   const hasActiveFilters =
@@ -326,10 +342,11 @@ export function AthletesCatalogView({
 
       {/* 3. Athletes Content: Grid Mode or List Mode */}
       {filteredAthletes.length > 0 ? (
-        viewMode === "grid" ? (
-          /* ================= GRID VIEW ================= */
-          <div className="ks-athletes-grid">
-            {filteredAthletes.map((athlete) => {
+        <>
+          {viewMode === "grid" ? (
+            /* ================= GRID VIEW ================= */
+            <div className="ks-athletes-grid">
+              {paginatedAthletes.map((athlete) => {
               const matchesCount = athlete.totalMatches ?? 0;
               const winsCount = athlete.wins ?? 0;
               const winRate =
@@ -436,7 +453,7 @@ export function AthletesCatalogView({
                 </tr>
               </thead>
               <tbody>
-                {filteredAthletes.map((athlete) => {
+                {paginatedAthletes.map((athlete) => {
                   const matchesCount = athlete.totalMatches ?? 0;
                   const winsCount = athlete.wins ?? 0;
                   const winRate =
@@ -510,7 +527,19 @@ export function AthletesCatalogView({
               </tbody>
             </table>
           </div>
-        )
+          )}
+          <PaginationBar
+            page={safePage}
+            totalPages={totalPages}
+            totalItems={filteredAthletes.length}
+            pageSize={ATHLETES_PAGE_SIZE}
+            itemLabel="VĐV"
+            onPageChange={(nextPage) => {
+              setCurrentPage(nextPage);
+              window.scrollTo({ top: 260, behavior: "smooth" });
+            }}
+          />
+        </>
       ) : (
         /* Empty State */
         <div className="ks-events-empty-state">
