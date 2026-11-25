@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ message: "Dữ liệu không hợp lệ." }, { status: 400 });
   const op = typeof body.op === "string" ? body.op : "create";
-  const paths: Record<string, string> = { create: "/api/license/create", reset: "/api/license/reset", revoke: "/api/license/revoke", extend: "/api/license/extend" };
+  const paths: Record<string, string> = { create: "/api/license/create", reset: "/api/license/reset", revoke: "/api/license/revoke", extend: "/api/license/extend", smartSchedule: "/api/license/smart-schedule" };
   if (!paths[op]) return NextResponse.json({ message: "Thao tác license không hợp lệ." }, { status: 400 });
   const payload = { ...body };
   delete payload.op;

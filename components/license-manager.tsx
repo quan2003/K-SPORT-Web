@@ -17,6 +17,7 @@ type License = {
   activated_machines?: string[];
   status: string;
   notes?: string;
+  smart_schedule_enabled?: boolean;
 };
 
 type ConfirmAction =
@@ -93,6 +94,7 @@ export function LicenseManager() {
     days: "30",
     maxMachines: "1",
     notes: "",
+    smartScheduleEnabled: false,
   });
 
   const load = useCallback(async () => {
@@ -166,6 +168,7 @@ export function LicenseManager() {
         days: "30",
         maxMachines: "1",
         notes: "",
+        smartScheduleEnabled: false,
       });
     }
   }
@@ -390,7 +393,14 @@ export function LicenseManager() {
                     </td>
 
                     <td data-label="Loại">
-                      <span className={`license-type-badge is-${typeInfo.tone}`}>{typeInfo.label}</span>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "flex-start" }}>
+                        <span className={`license-type-badge is-${typeInfo.tone}`}>{typeInfo.label}</span>
+                        {license.smart_schedule_enabled && (
+                          <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "999px", background: "#dbeafe", color: "#1d4ed8", border: "1px solid #93c5fd" }}>
+                            ⚡ Smart Pro
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td data-label="Máy">
@@ -424,6 +434,21 @@ export function LicenseManager() {
 
                     <td data-label="Thao tác">
                       <div className="license-icon-actions">
+                        <button
+                          type="button"
+                          className="license-icon-btn"
+                          style={license.smart_schedule_enabled ? { background: "#eff6ff", color: "#2563eb", borderColor: "#93c5fd" } : undefined}
+                          onClick={() => void postLicenseOp(
+                            { op: "smartSchedule", key: license.raw_key || license.key, enabled: !license.smart_schedule_enabled },
+                            license.smart_schedule_enabled ? "Đã tắt Smart Schedule Pro." : "Đã bật Smart Schedule Pro.",
+                          )}
+                          aria-label={`${license.smart_schedule_enabled ? "Tắt" : "Bật"} Smart Schedule Pro cho ${license.client_name || "khách hàng"}`}
+                          title={license.smart_schedule_enabled ? "Đang bật Smart Schedule Pro (Bấm để tắt)" : "Bật Smart Schedule Pro (100K)"}
+                        >
+                          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+                            <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" fill={license.smart_schedule_enabled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
                         <button
                           type="button"
                           className="license-icon-btn is-reset"
@@ -580,6 +605,15 @@ export function LicenseManager() {
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", flexDirection: "row", cursor: "pointer", fontWeight: 600 }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.smartScheduleEnabled)}
+                  onChange={(e) => setForm({ ...form, smartScheduleEnabled: e.target.checked })}
+                  style={{ width: "16px", height: "16px" }}
+                />
+                <span>⚡ Bật sẵn Smart Schedule Pro (+100K)</span>
               </label>
               <div className="admin-modal-actions">
                 <button type="button" className="button ghost" onClick={() => setCreating(false)}>
