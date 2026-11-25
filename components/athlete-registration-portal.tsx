@@ -160,7 +160,10 @@ export function AthleteRegistrationPortal({
 }: {
   tournament: PublishedTournamentConfig;
 }) {
-  const isSchoolTournament = Boolean(tournament.isSchoolTournament);
+  const isSchoolTournament = Boolean(
+    tournament.isSchoolTournament ??
+      /h[oọ]c\s*sinh|ph[oổ]\s*th[oô]ng/i.test(tournament.tournamentName || ""),
+  );
   const [clubName, setClubName] = useState("");
   const [teamLeader, setTeamLeader] = useState("");
   const [coach1, setCoach1] = useState("");
