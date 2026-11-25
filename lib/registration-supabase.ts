@@ -41,6 +41,7 @@ export type PublishedTournamentConfig = {
   date?: string;
   startTime?: string;
   endTime?: string;
+  isSchoolTournament?: boolean;
   events: PublishedEventCategory[];
   publishedAt?: string;
   slug?: string;
@@ -60,6 +61,8 @@ export type RegistrationAthletePayload = {
   isTeam?: boolean;
   teamCode?: string;
   club: string;
+  school?: string;
+  athleteClass?: string;
   photoStatus?: string;
   photoError?: string;
 };

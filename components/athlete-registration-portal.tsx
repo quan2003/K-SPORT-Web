@@ -21,6 +21,8 @@ type DraftAthlete = {
   weight: string;
   isTeam: boolean;
   teamCode: string;
+  school?: string;
+  athleteClass?: string;
   photoStatus?: string;
 };
 
@@ -158,6 +160,7 @@ export function AthleteRegistrationPortal({
 }: {
   tournament: PublishedTournamentConfig;
 }) {
+  const isSchoolTournament = Boolean(tournament.isSchoolTournament);
   const [clubName, setClubName] = useState("");
   const [teamLeader, setTeamLeader] = useState("");
   const [coach1, setCoach1] = useState("");
@@ -170,6 +173,8 @@ export function AthleteRegistrationPortal({
   const [name, setName] = useState("");
   const [gender, setGender] = useState<"male" | "female">("male");
   const [birthDateStr, setBirthDateStr] = useState("");
+  const [school, setSchool] = useState("");
+  const [athleteClass, setAthleteClass] = useState("");
   const [eventId, setEventId] = useState("");
   const [categoryTab, setCategoryTab] = useState<CategoryTab>("all");
   const [eventSearch, setEventSearch] = useState("");
@@ -302,7 +307,9 @@ export function AthleteRegistrationPortal({
       (a) =>
         a.name.toLowerCase().includes(q) ||
         a.eventName.toLowerCase().includes(q) ||
-        (a.teamCode && a.teamCode.toLowerCase().includes(q)),
+        (a.teamCode && a.teamCode.toLowerCase().includes(q)) ||
+        (a.school && a.school.toLowerCase().includes(q)) ||
+        (a.athleteClass && a.athleteClass.toLowerCase().includes(q)),
     );
   }, [athletes, rosterSearch]);
 
@@ -350,6 +357,8 @@ export function AthleteRegistrationPortal({
     if (!preserveIdentity) {
       setName("");
       setBirthDateStr("");
+      setSchool("");
+      setAthleteClass("");
       setWeight("");
       clearPhotoSelection();
     }
@@ -399,6 +408,8 @@ export function AthleteRegistrationPortal({
       weight: weight.trim(),
       isTeam: Boolean(selectedCategory.isTeamEvent),
       teamCode: teamCode.trim(),
+      school: school.trim() || undefined,
+      athleteClass: athleteClass.trim() || undefined,
       photoStatus: photoFile ? "pending_upload" : undefined,
     };
 
@@ -423,6 +434,8 @@ export function AthleteRegistrationPortal({
     setName(item.name);
     setGender(item.gender);
     setBirthDateStr(item.birthDateStr);
+    setSchool(item.school || "");
+    setAthleteClass(item.athleteClass || "");
     setEventId(item.eventId);
     setWeight(item.weight);
     setTeamCode(item.teamCode);
@@ -437,6 +450,8 @@ export function AthleteRegistrationPortal({
     setName(item.name);
     setGender(item.gender);
     setBirthDateStr(item.birthDateStr);
+    setSchool(item.school || "");
+    setAthleteClass(item.athleteClass || "");
     setWeight(item.weight);
     setEventId("");
     setTeamCode("");
@@ -511,6 +526,8 @@ export function AthleteRegistrationPortal({
         isTeam: a.isTeam,
         teamCode: a.teamCode || undefined,
         club: clubName.trim(),
+        school: a.school?.trim() || undefined,
+        athleteClass: a.athleteClass?.trim() || undefined,
         photoStatus: photoStatuses.get(a.athleteId) || a.photoStatus || "not_provided",
       }));
 
@@ -556,12 +573,23 @@ export function AthleteRegistrationPortal({
 
   function handleExportCsv() {
     if (athletes.length === 0) return;
-    const header = ["STT", "Họ và tên", "Giới tính", "Ngày sinh", "Nội dung thi đấu", "Cân nặng", "Mã đội", "CLB/Đoàn"];
+    const header = [
+      "STT",
+      "Họ và tên",
+      "Giới tính",
+      "Ngày sinh",
+      ...(isSchoolTournament ? ["Trường", "Lớp"] : []),
+      "Nội dung thi đấu",
+      "Cân nặng",
+      "Mã đội",
+      "CLB/Đoàn",
+    ];
     const rows = athletes.map((a, idx) => [
       String(idx + 1),
       a.name,
       a.gender === "male" ? "Nam" : "Nữ",
       a.birthDateStr,
+      ...(isSchoolTournament ? [a.school || "", a.athleteClass || ""] : []),
       a.eventName,
       a.weight || "",
       a.teamCode || "",
@@ -954,6 +982,40 @@ export function AthleteRegistrationPortal({
                     />
                   </div>
                 </div>
+
+                {/* School & Class for student tournaments */}
+                {(isSchoolTournament || Boolean(school || athleteClass)) ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 170px), 1fr))", gap: "0.75rem" }}>
+                    <div>
+                      <label htmlFor="ath-school" style={{ display: "block", fontWeight: 600, marginBottom: "0.3rem", fontSize: "0.9rem" }}>
+                        Trường
+                      </label>
+                      <input
+                        id="ath-school"
+                        name="school"
+                        type="text"
+                        value={school}
+                        onChange={(e) => setSchool(e.target.value)}
+                        placeholder="VD: THPT Hai Bà Trưng"
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="ath-class" style={{ display: "block", fontWeight: 600, marginBottom: "0.3rem", fontSize: "0.9rem" }}>
+                        Lớp
+                      </label>
+                      <input
+                        id="ath-class"
+                        name="athleteClass"
+                        type="text"
+                        value={athleteClass}
+                        onChange={(e) => setAthleteClass(e.target.value)}
+                        placeholder="VD: 10A1"
+                        style={inputStyle}
+                      />
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* Visual Category Picker */}
                 <div>
@@ -1440,6 +1502,7 @@ export function AthleteRegistrationPortal({
                           <div style={{ fontSize: "0.88rem", color: "#475569", marginTop: "0.2rem" }}>
                             {a.eventName}
                             {a.weight ? ` · ${a.weight} kg` : ""}
+                            {(a.school || a.athleteClass) ? ` · ${[a.school, a.athleteClass].filter(Boolean).join(" - ")}` : ""}
                           </div>
                         </div>
                       </div>
